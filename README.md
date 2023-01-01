@@ -1,4 +1,4 @@
-![idk](https://user-images.githubusercontent.com/12774588/210178343-631d07f9-03d7-41ee-9e1e-6b8dde579dab.png)
+![banner](https://user-images.githubusercontent.com/12774588/210178528-2eb928f9-fbad-414b-9f69-a57550d05363.png)
 
 <p align="center">Build maintainable, typesafe forms faster 🏃💨</p>
 
