@@ -14,7 +14,7 @@
 
 <div align="center">
 
-<a href=""> [![codecov](https://codecov.io/github/iway1/@ts-react/form/branch/main/graph/badge.svg?token=U4UFRGI3HF)](https://codecov.io/github/iway1/@ts-react/form) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/isaac_ts_way.svg?style=social&label=Follow%20%40isaac_ts_way)](https://twitter.com/isaac_ts_way)</a>
+<a href=""> [![codecov](https://codecov.io/github/iway1/react-ts-form/branch/main/graph/badge.svg?token=U4UFRGI3HF)](https://codecov.io/github/iway1/react-ts-form) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/isaac_ts_way.svg?style=social&label=Follow%20%40isaac_ts_way)](https://twitter.com/isaac_ts_way)</a>
 
 </div>
 
