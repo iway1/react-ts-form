@@ -7,12 +7,12 @@
 </p>
 
 <p align="center">
-<b>react-ts-form</b> handles the boilerplate involved when building forms using <b>zod</b> and <b>react-hook-form</b> without&nbsp;sacrificing&nbsp;customizability. 
+<b>@ts-react/form</b> handles the boilerplate involved when building forms using <b>zod</b> and <b>react-hook-form</b> without&nbsp;sacrificing&nbsp;customizability. 
 </p>
 
 <div align="center">
 
-<a href=""> [![codecov](https://codecov.io/github/iway1/react-ts-form/branch/main/graph/badge.svg?token=U4UFRGI3HF)](https://codecov.io/github/iway1/react-ts-form) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/isaac_ts_way.svg?style=social&label=Follow%20%40isaac_ts_way)](https://twitter.com/isaac_ts_way)</a>
+<a href=""> [![codecov](https://codecov.io/github/iway1/@ts-react/form/branch/main/graph/badge.svg?token=U4UFRGI3HF)](https://codecov.io/github/iway1/@ts-react/form) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/isaac_ts_way.svg?style=social&label=Follow%20%40isaac_ts_way)](https://twitter.com/isaac_ts_way)</a>
 
 </div>
 
@@ -35,7 +35,7 @@ Make sure you have `"strict": true` in your tsconfig.json compilerOptions. Also,
 Install package and dependencies with your preferred package manager:
 
 ```sh
-yarn add react-ts-form
+yarn add @ts-react/form
 
 # required peer dependencies
 yarn add zod react-hook-form @hookform/resolvers
@@ -116,7 +116,7 @@ function TextField() {
 }
 ```
 
-`react-ts-form` will magically connecting your component to the appropriate field with this hook. You can also receive the control and name as props, if you prefer:
+`@ts-react/form` will magically connecting your component to the appropriate field with this hook. You can also receive the control and name as props, if you prefer:
 
 ```tsx
 function TextField({ control, name }: { control: Control<any>; name: string }) {
@@ -127,7 +127,7 @@ function TextField({ control, name }: { control: Control<any>; name: string }) {
 
 This approach is less typesafe than `useTsController`.
 
-If you want the control, name, or other `react-ts-form` data to be passed to props with a different name check out [prop forwarding](#prop-forwarding).
+If you want the control, name, or other `@ts-react/form` data to be passed to props with a different name check out [prop forwarding](#prop-forwarding).
 
 ## Docs
 
@@ -148,7 +148,7 @@ If you want the control, name, or other `react-ts-form` data to be passed to pro
 
 ## TypeSafe Props
 
-Based on your component mapping, `react-ts-form` knows which field should receive which props:
+Based on your component mapping, `@ts-react/form` knows which field should receive which props:
 
 ```tsx
 const mapping = [
@@ -175,7 +175,7 @@ const Schema = z.object({
 />
 ```
 
-`react-ts-form` is also aware of which props are required, so it will make sure you always pass required props to your components:
+`@ts-react/form` is also aware of which props are required, so it will make sure you always pass required props to your components:
 
 <p align="center">
   <img width="85%" src="https://user-images.githubusercontent.com/12774588/210124307-c456ec95-ed9e-47fe-b6f5-a4e7327aab85.png"/>
@@ -201,7 +201,7 @@ Fixed! We get all the same typesafety of writing out the full jsx.
 
 ## Error Handling
 
-You can handle errors with the `fieldState` returned from `useTsController` just like in `react-hook-form`, but `react-ts-form` also returns an `errors` object that's more accurately typed than `react-hook-forms`'s that should be used any time you are using an [object schema](#complex-field-types) to render one of your fields.
+You can handle errors with the `fieldState` returned from `useTsController` just like in `react-hook-form`, but `@ts-react/form` also returns an `errors` object that's more accurately typed than `react-hook-forms`'s that should be used any time you are using an [object schema](#complex-field-types) to render one of your fields.
 
 ```tsx
 const { error } = useTsController<string>();
@@ -429,9 +429,9 @@ const Schema = z.object({
 
 ## Prop Forwarding
 
-Prop forwarding is an advanced feature that allows you to control which props `react-ts-form` forward to your components as well as the name.
+Prop forwarding is an advanced feature that allows you to control which props `@ts-react/form` forward to your components as well as the name.
 
-You probably don't need to use this especially when building a project from scratch, but it can allow more customization. This can be useful for integrating with existing components, or for creating a selection of components that can be used both with and without `react-ts-form`.
+You probably don't need to use this especially when building a project from scratch, but it can allow more customization. This can be useful for integrating with existing components, or for creating a selection of components that can be used both with and without `@ts-react/form`.
 
 For example, if I wanted the react hook form control to be forwarded to a prop named `floob` I would do:
 
@@ -497,13 +497,13 @@ const MyForm = z.object({
 //...
 ```
 
-In the above example, `react-ts-form` will render two dropdowns, one with values \['blue', 'brown', 'green', 'hazel'\], and on with values \['jeans', 'khakis', 'none'\] based on the values passed to the enums.
+In the above example, `@ts-react/form` will render two dropdowns, one with values \['blue', 'brown', 'green', 'hazel'\], and on with values \['jeans', 'khakis', 'none'\] based on the values passed to the enums.
 
 You can also access these values via the `useEnumValues()` hook.
 
 ### Quick Labels / Placeholders
 
-`react-ts-form` provides a way to quickly add labels / placeholders via `zod`'s `.describe()` method:
+`@ts-react/form` provides a way to quickly add labels / placeholders via `zod`'s `.describe()` method:
 
 ```tsx
 const FormSchema = z.object({
@@ -512,7 +512,7 @@ const FormSchema = z.object({
 });
 ```
 
-The `//` syntax separates the label and placeholder. `react-ts-form` will make these available via the `useDescription()` hook:
+The `//` syntax separates the label and placeholder. `@ts-react/form` will make these available via the `useDescription()` hook:
 
 ```ts
 function TextField() {
@@ -545,4 +545,4 @@ If you prefer, you can just pass label and placeholder as normal props via `prop
 ## Limitations
 
 - Doesn't support class components
-- `react-ts-form` allows you to pass props to your components and render elements in between your components, which is good for almost all form designs out there. Some designs may not be easily achievable. For example, if you need a container around multiple sections of your form, this library doesn't allow splitting child components into containers at the moment. (Though if it's a common-enough use case and you'd like to see it added, open an issue!)
+- `@ts-react/form` allows you to pass props to your components and render elements in between your components, which is good for almost all form designs out there. Some designs may not be easily achievable. For example, if you need a container around multiple sections of your form, this library doesn't allow splitting child components into containers at the moment. (Though if it's a common-enough use case and you'd like to see it added, open an issue!)
