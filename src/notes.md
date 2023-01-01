@@ -24,6 +24,10 @@ If your component has required properties, typescript will make sure that you pa
 
 `props` is required if any of your components have required props other than `control` or `name`.
 
-## TS Limitations
+## Stripped types
 
-We can't support nullish, type script errors
+Optional, nullable, nullish are "stripped" from the type when doing type comparisions to reduce having to add repeat entries to the component mapping
+
+## Significantly reduce cognitive load
+
+You don't even have to remember the name of your components!

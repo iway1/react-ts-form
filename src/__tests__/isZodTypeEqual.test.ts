@@ -1,6 +1,6 @@
 import { z } from "zod";
 import {
-  createFieldSchema,
+  createUniqueFieldSchema,
   testingResetUsedIdsSet,
 } from "../createFieldSchema";
 import { isZodTypeEqual } from "../isZodTypeEqual";
@@ -12,7 +12,6 @@ const parameterlessTypes = [
   z.number,
   z.object as () => RTFSupportedZodTypes,
   z.boolean,
-  z.bigint,
 ];
 
 beforeEach(() => {
@@ -123,20 +122,43 @@ describe("isZodTypeEqual", () => {
   });
   it("should return false when a schema created via createFieldSchema is compared to a vanilla schema of the same type", () => {
     const A = z.string();
-    const B = createFieldSchema(z.string(), "b");
+    const B = createUniqueFieldSchema(z.string(), "b");
     expect(isZodTypeEqual(A, B)).toStrictEqual(false);
   });
 
   it("should return false for two separate field schemas of the same base type", () => {
-    const A = createFieldSchema(z.string(), "a");
-    const B = createFieldSchema(z.string(), "b");
+    const A = createUniqueFieldSchema(z.string(), "a");
+    const B = createUniqueFieldSchema(z.string(), "b");
 
     expect(isZodTypeEqual(A, B)).toStrictEqual(false);
   });
 
   it("should return true if a field schema is compared with itself", () => {
-    const A = createFieldSchema(z.string(), "a");
+    const A = createUniqueFieldSchema(z.string(), "a");
 
     expect(isZodTypeEqual(A, A)).toStrictEqual(true);
+  });
+  it("should return true when a nullable is compared to a nonnullable version", () => {
+    const A = z.string();
+    const B = A.nullable();
+
+    expect(isZodTypeEqual(A, B)).toStrictEqual(true);
+  });
+  it("should return false when an object with no properties is compared to an object with properties", () => {
+    //@ts-ignore
+    const A = z.object();
+    const B = z.object({ field: z.string() });
+
+    expect(isZodTypeEqual(A, B)).toStrictEqual(false);
+  });
+  it("should return false when B doesn't have a key that's in A", () => {
+    const A = z.object({
+      id: z.string(),
+      nope: z.boolean(),
+    });
+    const B = z.object({
+      id: z.string(),
+    });
+    expect(isZodTypeEqual(A, B)).toStrictEqual(false);
   });
 });

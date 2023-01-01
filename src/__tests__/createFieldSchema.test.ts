@@ -1,7 +1,7 @@
 import { z } from "zod";
 import {
   addHiddenProperties,
-  createFieldSchema,
+  createUniqueFieldSchema,
   duplicateIdErrorMessage,
   HIDDEN_ID_PROPERTY,
   isSchemaWithHiddenProperties,
@@ -9,10 +9,12 @@ import {
 
 describe("createFieldSchema", () => {
   it("should throw an error if an ID is used twice", () => {
+    jest.spyOn(console, "error").mockImplementation(() => {});
     expect(() => {
-      createFieldSchema(z.string(), "id");
-      createFieldSchema(z.string(), "id");
+      createUniqueFieldSchema(z.string(), "id");
+      createUniqueFieldSchema(z.string(), "id");
     }).toThrowError(duplicateIdErrorMessage("id"));
+    jest.spyOn;
   });
 });
 

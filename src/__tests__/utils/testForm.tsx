@@ -1,12 +1,12 @@
 import React from "react";
-import { Control } from "react-hook-form";
+import { Control, useController } from "react-hook-form";
 import { z } from "zod";
-import { createFieldSchema } from "../../createFieldSchema";
-import { createSchemaForm } from "../../createSchemaForm";
+import { createUniqueFieldSchema } from "../../createFieldSchema";
+import { createTsForm } from "../../createSchemaForm";
 
 export const textFieldTestId = "text-field";
 
-function TextField(props: {
+export function TextField(props: {
   control: Control<any>;
   name: string;
   testId?: string;
@@ -14,10 +14,20 @@ function TextField(props: {
   placeholder?: string;
 }) {
   const { label, placeholder } = props;
+  const {
+    field: { onChange, value },
+  } = useController({ control: props.control, name: props.name });
   return (
     <div data-testid={textFieldTestId}>
       {label && <label>{label}</label>}
-      <input data-testid={props.testId} placeholder={placeholder} />
+      <input
+        data-testid={props.testId}
+        onChange={(e) => {
+          onChange(e.target.value);
+        }}
+        value={value ? value : ""}
+        placeholder={placeholder}
+      />
     </div>
   );
 }
@@ -44,13 +54,45 @@ function CustomTextField(props: {
     </div>
   );
 }
+export const enumFieldValues = ["a", "b", "c"] as const;
 
-export const TestCustomFieldSchema = createFieldSchema(z.string(), "id");
+function EnumField({
+  enumValues = [],
+  label,
+  placeholder,
+}: {
+  enumValues?: string[];
+  label?: string;
+  placeholder?: string;
+}) {
+  return (
+    <div>
+      <span>{label}</span>
+      <span>{placeholder}</span>
+      {enumValues.map((e, i) => (
+        <p key={i + ""}>{e}</p>
+      ))}
+    </div>
+  );
+}
+
+export const TestCustomFieldSchema = createUniqueFieldSchema(z.string(), "id");
 
 const mapping = [
   [z.string(), TextField] as const,
   [z.boolean(), BooleanField] as const,
   [TestCustomFieldSchema, CustomTextField] as const,
+  [z.enum(enumFieldValues), EnumField] as const,
 ] as const;
 
-export const TestForm = createSchemaForm(mapping);
+const propsMap = [
+  ["name", "name"] as const,
+  ["control", "control"] as const,
+  ["enumValues", "enumValues"] as const,
+  ["descriptionLabel", "label"] as const,
+  ["descriptionPlaceholder", "placeholder"] as const,
+] as const;
+
+export const TestForm = createTsForm(mapping, {
+  propsMap: propsMap,
+});

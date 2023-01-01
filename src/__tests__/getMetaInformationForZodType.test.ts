@@ -35,4 +35,27 @@ describe("getMetaInformationForZodType", () => {
 
     expect(parsed.description).toBeUndefined();
   });
+  it("should parse the description if it's called on the inner string schema", () => {
+    const desc = "description";
+    const Schema = z.string().describe(desc).optional();
+
+    const parsed = getMetaInformationForZodType(Schema);
+
+    expect(parsed.description).toStrictEqual({
+      label: desc,
+      placeholder: undefined,
+    });
+  });
+  it("should parse the outermost description if there are multiple on the same schema", () => {
+    const descA = "description";
+    const descB = "b";
+    const Schema = z.string().describe(descA).optional().describe(descB);
+
+    const parsed = getMetaInformationForZodType(Schema);
+
+    expect(parsed.description).toStrictEqual({
+      label: descB,
+      placeholder: undefined,
+    });
+  });
 });

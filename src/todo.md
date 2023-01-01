@@ -1,20 +1,30 @@
-- create "custom fields" to deal with collisions +
-- labels / placeholders via the "describe" field +
-- Pass enum values to enum fields, also make sure that enum field props are typechecked with "options", maybe?
-- Make sure components with required props have props passed (TS) +
-  - Make sure props is required if props has a required key +
-- Figure out how to deal w/ required values that should be initialized as undefined (IE drop downs)
-  - Maybe just allow explicity setting of undefined
-- Defaults
+- Recursive zod error messages for nested zod objects
+- Exportable hook to make it easier to handle said error messages
 
-- Add optional support for passing a control (in case the dev wants to be able to control the form, perhaps a custom hook here yeh?)
-- Don't use the z.ZodAnyFirstPartyTypeSchema (b/c it's super expensive to use it's quadratic.. Just support the minimal amount) +
-  - Finish removing unnecessary zod types to improve performance
-- Rename `createFieldSchema` to `createUniqueFieldSchema` in exports +
-- Unwrap optional TYPES so that optional types are correctly found in indexOf and such. +
-- Default form values test
+## maybe in initial version?
+
+## Tests
+
+- Render before submit button +
+- Refine +
+- input context successful usage +
+- Test w/ default values useFormResult +
+- Make sure descriptions can be reused! derp.
+
+## Manual Tests
+
+- Test SSR duplicate ID field?
 
 ## Backlog
 
-- Enum value transformer? (Map enum values to labels etc?)
-- Require "enumValues" as a prop for enumerations
+- Require "enumValues" as a prop for enumerations. Maybe somehow require all props?
+- Default values attached to schemas
+- Automatically initialize with default values
+- Add default components
+- Create typesafe field components that know what their value is based on the mapping ?
+- Autofill defaults? Or just allow them to be provided derp
+- onDirtyChange
+
+## Docs
+
+- Accessing form state docs (zod resolver)

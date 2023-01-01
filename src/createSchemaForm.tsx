@@ -1,104 +1,336 @@
-import React from "react";
+import React, {
+  ForwardRefExoticComponent,
+  Fragment,
+  ReactNode,
+  RefAttributes,
+  useRef,
+} from "react";
 import { ComponentProps } from "react";
-import { Control, useForm } from "react-hook-form";
-import { z } from "zod";
+import { DeepPartial, useForm, UseFormReturn } from "react-hook-form";
+import { AnyZodObject, z, ZodEffects } from "zod";
 import { getComponentForZodType } from "./getComponentForZodType";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  DistributiveOmit,
-  IndexOf,
-  RequireKeysWithRequiredChildren,
-} from "./typeUtilities";
+import { IndexOf, RequireKeysWithRequiredChildren } from "./typeUtilities";
 import { getMetaInformationForZodType } from "./getMetaInformationForZodType";
-import { UnwrapZodType } from "./unwrap";
+import { unwrapEffects, UnwrapZodType } from "./unwrap";
 import { RTFSupportedZodTypes } from "./supportedZodTypes";
+import { FieldContextProvider } from "./FieldContext";
+import { isZodTypeEqual } from "./isZodTypeEqual";
 
-type ReactComponentWithRequiredProps<
-  Props extends { control: Control; name: string },
-  ExtraProps extends Record<string, any> = {}
-> = (props: Props & ExtraProps) => JSX.Element;
+/**
+ * @internal
+ */
+export type ReactProps = Record<string, any>;
 
-export type LibraryProvidedComponentProps = "control" | "name";
+/**
+ * @internal
+ */
+export type ReactComponentWithRequiredProps<
+  Props extends ReactProps
+  // ExtraProps extends Record<string, any> = {}
+> =
+  | ((props: Props) => JSX.Element)
+  | (ForwardRefExoticComponent<Props> & RefAttributes<unknown>);
 
-type ExtraRequiredPropertiesForTypes = {
-  [z.ZodFirstPartyTypeKind.ZodEnum]: {
-    enumValues: string[];
-  };
-};
+export type MappingItem<PropType extends ReactProps> = readonly [
+  RTFSupportedZodTypes,
+  ReactComponentWithRequiredProps<PropType>
+];
 
-type ZodTypesWithExtraProps = z.ZodEnum<any>;
-
-type ExtraRequiredPropertiesForType<T extends RTFSupportedZodTypes> =
-  T["_def"]["typeName"] extends keyof ExtraRequiredPropertiesForTypes
-    ? ExtraRequiredPropertiesForTypes[T["_def"]["typeName"]]
-    : {};
-
-type TestT = ExtraRequiredPropertiesForType<z.ZodEnum<any>>;
-
-type MappingItem =
-  | readonly [
-      Exclude<RTFSupportedZodTypes, ZodTypesWithExtraProps>,
-      ReactComponentWithRequiredProps<any>
-    ]
-  | readonly [
-      z.ZodEnum<any>,
-      ReactComponentWithRequiredProps<
-        any,
-        ExtraRequiredPropertiesForType<z.ZodEnum<any>>
-      >
-    ];
-
-export type FormComponentMapping = readonly MappingItem[];
+export type FormComponentMapping = readonly MappingItem<any>[];
+export type MappableProp =
+  | "control"
+  | "name"
+  | "enumValues"
+  | "descriptionLabel"
+  | "descriptionPlaceholder";
+export type PropsMapping = readonly (readonly [MappableProp, string])[];
 
 export function noMatchingSchemaErrorMessage(propertyName: string) {
-  return `No matching zod schema found in mapping for property ${propertyName}. Make sure there's a matching zod schema for every property.`;
+  return `No matching zod schema found in mapping for property ${propertyName}. Make sure there's a matching zod schema for every property in your schema.`;
 }
 
-export function createSchemaForm<Mapping extends FormComponentMapping>(
-  componentMap: Mapping
-) {
-  return function Component<SchemaType extends z.AnyZodObject>({
-    schema,
-    props,
-  }: // defaultValues,
-  {
-    schema: SchemaType;
+export function useFormResultValueChangedErrorMesssage() {
+  return `useFormResult prop changed - its value shouldn't changed during the lifetime of the component.`;
+}
 
-    // defaultValues?: DeepPartial<z.infer<SchemaType>>;
+/**
+ * @internal
+ */
+type FormComponent = "form" | ((props: any) => JSX.Element);
+
+export type ExtraProps = {
+  /**
+   * An element to render before the field.
+   */
+  beforeElement?: ReactNode;
+  /**
+   * An element to render after the field.
+   */
+  afterElement?: ReactNode;
+};
+
+/**
+ * @internal
+ */
+type UnwrapEffects<T extends AnyZodObject | ZodEffects<any, any>> =
+  T extends AnyZodObject
+    ? T
+    : T extends ZodEffects<any, any>
+    ? T["_def"]["schema"]
+    : never;
+
+export function duplicateTypeError() {
+  return "Found duplicate zod schema in zod-component mapping. Each zod type in the mapping must be unique, if you need to map multiple of the same types to different schemas use createUniqueFieldSchema.";
+}
+
+function checkForDuplicateTypes(array: RTFSupportedZodTypes[]) {
+  var combinations = array.flatMap((v, i) =>
+    array.slice(i + 1).map((w) => [v, w] as const)
+  );
+  for (const [a, b] of combinations) {
+    if (isZodTypeEqual(a!, b)) {
+      throw new Error(duplicateTypeError());
+    }
+  }
+}
+
+const defaultPropsMap = [
+  ["name", "name"] as const,
+  ["control", "control"] as const,
+  ["enumValues", "enumValues"] as const,
+] as const;
+
+function propsMapToObect(propsMap: PropsMapping) {
+  const r: { [key in MappableProp]+?: string } = {};
+  for (const [mappable, toProp] of propsMap) {
+    r[mappable] = toProp;
+  }
+  return r;
+}
+
+/**
+ * Creates a reusable, typesafe form component based on a zod-component mapping.
+ * @example
+ * ```tsx
+ * const mapping = [
+ *  [z.string, TextField] as const
+ * ] as const
+ * const MyForm = createTsForm(mapping)
+ * ```
+ * @param componentMap A zod-component mapping. An array of 2-tuples where the first element is a zod schema and the second element is a React Functional Component.
+ * @param options Optional - A custom form component to use as the container for the input fields.
+ */
+export function createTsForm<
+  Mapping extends FormComponentMapping,
+  PropsMapType extends PropsMapping = typeof defaultPropsMap,
+  FormType extends FormComponent = "form"
+>(
+  /**
+   * An array mapping zod schemas to components.
+   * @example
+   * ```tsx
+   * const mapping = [
+   *  [z.string(), TextField] as const
+   *  [z.boolean(), CheckBoxField] as const
+   * ] as const
+   *
+   * const MyForm = createTsForm(mapping);
+   * ```
+   */
+  componentMap: Mapping,
+  /**
+   * Options to customize your form.
+   */
+  options?: {
+    /**
+     * The component to wrap your fields in. By default, it is a `<form/>`.
+     * @example
+     * ```tsx
+     * function MyCustomFormContainer({children, onSubmit}:{children: ReactNode, onSubmit: ()=>void}) {
+     *  return (
+     *    <form onSubmit={onSubmit}>
+     *      {children}
+     *      <button>Submit</button>
+     *    </form>
+     *  )
+     * }
+     * const MyForm = createTsForm(mapping, {
+     *  FormComponent: MyCustomFormContainer
+     * })
+     * ```
+     */
+    FormComponent?: FormType;
+    /**
+     * Modify which props the form control and such get passed to when rendering components. This can make it easier to integrate existing
+     * components with `@ts-react/form` or modify its behavior. The values of the object are the names of the props to forward the corresponding
+     * data to.
+     * @default {
+     *  name: "name",
+     *  control: "control",
+     *  enumValues: "enumValues",
+     * }
+     * @example
+     * ```tsx
+     * function MyTextField({someControlProp}:{someControlProp: Control<any>}) {
+     *  //...
+     * }
+     *
+     * const createTsForm(mapping, {
+     *  propsMap: {
+     *    control: "someControlProp"
+     *  }
+     * })
+     * ```
+     */
+    propsMap?: PropsMapType;
+  }
+) {
+  const ActualFormComponent = options?.FormComponent
+    ? options.FormComponent
+    : "form";
+  checkForDuplicateTypes(componentMap.map((e) => e[0]));
+  const propsMap = propsMapToObect(
+    options?.propsMap ? options.propsMap : defaultPropsMap
+  );
+  return function Component<
+    SchemaType extends z.AnyZodObject | ZodEffects<any, any>
+  >({
+    schema,
+    onSubmit,
+    props,
+    formProps,
+    defaultValues,
+    renderAfter,
+    renderBefore,
+    form,
+  }: {
+    /**
+     * A Zod Schema - An input field will be rendered for each property in the schema, based on the mapping passed to `createTsForm`
+     */
+    schema: SchemaType;
+    /**
+     * A callback function that will be called with the data once the form has been submitted and validated successfully.
+     */
+    onSubmit: (values: z.infer<UnwrapEffects<SchemaType>>) => void;
+    /**
+     * Initializes your form with default values. Is a deep partial, so all properties and nested properties are optional.
+     */
+    defaultValues?: DeepPartial<z.infer<UnwrapEffects<SchemaType>>>;
+    /**
+     * A function that renders components after the form, the function is passed a `submit` function that can be used to trigger
+     * form submission.
+     * @example
+     * ```tsx
+     * <Form
+     *   // ...
+     *   renderAfter={({submit})=><button onClick={submit}>Submit</button>}
+     * />
+     * ```
+     */
+    renderAfter?: (vars: { submit: () => void }) => ReactNode;
+    /**
+     * A function that renders components before the form, the function is passed a `submit` function that can be used to trigger
+     * form submission.
+     * @example
+     * ```tsx
+     * <Form
+     *   // ...
+     *   renderBefore={({submit})=><button onClick={submit}>Submit</button>}
+     * />
+     * ```
+     */
+    renderBefore?: (vars: { submit: () => void }) => ReactNode;
+    /**
+     * Use this if you need access to the `react-hook-form` useForm() in the component containing the form component (if you need access to any of its other properties.)
+     * This will give you full control over you form state (in case you need check if it's dirty or reset it or anything.)
+     * @example
+     * ```tsx
+     * function Component() {
+     *   const form = useForm();
+     *   return <MyForm useFormResult={form}/>
+     * }
+     * ```
+     */
+    form?: UseFormReturn<z.infer<SchemaType>>;
   } & RequireKeysWithRequiredChildren<{
+    /**
+     * Props to pass to the individual form components. The keys of `props` will be the names of your form properties in the form schema, and they will
+     * be typesafe to the form components in the mapping passed to `createTsForm`. If any of the rendered form components have required props, this is required.
+     * @example
+     * ```tsx
+     * <MyForm
+     *  schema={z.object({field: z.string()})}
+     *  props={{
+     *    field: {
+     *      // TextField props
+     *    }
+     *  }}
+     * />
+     * ```
+     */
     props?: RequireKeysWithRequiredChildren<
       Partial<{
-        [key in keyof z.infer<SchemaType>]: DistributiveOmit<
-          Mapping[IndexOf<
-            Mapping,
-            readonly [
-              UnwrapZodType<ReturnType<SchemaType["_def"]["shape"]>[key]>,
-              any
-            ]
-          >] extends readonly [any, any] // I guess this tells typescript it has a second element? errors without this check.
-            ? ComponentProps<
+        [key in keyof z.infer<SchemaType>]: Mapping[IndexOf<
+          Mapping,
+          readonly [
+            UnwrapZodType<
+              ReturnType<UnwrapEffects<SchemaType>["_def"]["shape"]>[key]
+            >,
+            any
+          ]
+        >] extends readonly [any, any] // I guess this tells typescript it has a second element? errors without this check.
+          ? Omit<
+              ComponentProps<
                 Mapping[IndexOf<
                   Mapping,
                   readonly [
-                    UnwrapZodType<ReturnType<SchemaType["_def"]["shape"]>[key]>,
+                    UnwrapZodType<
+                      ReturnType<
+                        UnwrapEffects<SchemaType>["_def"]["shape"]
+                      >[key]
+                    >,
                     any
                   ]
                 >][1]
-              >
-            : never,
-          LibraryProvidedComponentProps
-        >;
+              >,
+              PropsMapType[number][1]
+            > &
+              ExtraProps
+          : never;
       }>
     >;
-  }>) {
-    const shape = schema._def.shape();
-    const { control } = useForm({
-      resolver: zodResolver(schema),
-      // IDK why the type errors here
-      // ...(defaultValues && ({ defaultValues } as any)),
-    });
+  }> &
+    RequireKeysWithRequiredChildren<{
+      /**
+       * Props to pass to the form container component (by default the props that "form" tags accept)
+       */
+      formProps?: Omit<ComponentProps<FormType>, "children" | "onSubmit">;
+    }>) {
+    const useFormResultInitialValue = useRef<
+      undefined | ReturnType<typeof useForm>
+    >(form);
+    if (!!useFormResultInitialValue.current !== !!form) {
+      throw new Error(useFormResultValueChangedErrorMesssage());
+    }
+    const { control, handleSubmit } = (() => {
+      if (form) return form;
+      const uf = useForm({
+        resolver: zodResolver(schema),
+        defaultValues,
+      });
+      return uf;
+    })();
+    const _schema = unwrapEffects(schema);
+    const shape = _schema._def.shape();
+
+    function _submit(data: z.infer<SchemaType>) {
+      onSubmit(data);
+    }
+    const submitFn = handleSubmit(_submit);
     return (
-      <form>
+      <ActualFormComponent {...formProps} onSubmit={submitFn}>
+        {renderBefore && renderBefore({ submit: submitFn })}
         {Object.keys(shape).map((key) => {
           const type = shape[key];
           const Component = getComponentForZodType(type, componentMap);
@@ -107,51 +339,44 @@ export function createSchemaForm<Mapping extends FormComponentMapping>(
           }
           const meta = getMetaInformationForZodType(type);
 
+          const fieldProps = props && props[key] ? (props[key] as any) : {};
+
+          const { beforeElement, afterElement } = fieldProps;
+
+          const mergedProps = {
+            ...(propsMap.name && { [propsMap.name]: key }),
+            ...(propsMap.control && { [propsMap.control]: control }),
+            ...(propsMap.enumValues && {
+              [propsMap.enumValues]: meta.enumValues,
+            }),
+            ...(propsMap.descriptionLabel && {
+              [propsMap.descriptionLabel]: meta.description?.label,
+            }),
+            ...(propsMap.descriptionPlaceholder && {
+              [propsMap.descriptionPlaceholder]: meta.description?.placeholder,
+            }),
+            ...fieldProps,
+          };
+          const ctxLabel = meta.description?.label;
+          const ctxPlaceholder = meta.description?.placeholder;
           return (
-            <Component
-              control={control}
-              name={key}
-              key={key}
-              {...meta.description}
-              {...(props && props[key])}
-            />
+            <Fragment key={key}>
+              {beforeElement}
+              <FieldContextProvider
+                control={control}
+                name={key}
+                label={ctxLabel}
+                placeholder={ctxPlaceholder}
+                enumValues={meta.enumValues as string[] | undefined}
+              >
+                <Component key={key} {...mergedProps} />
+              </FieldContextProvider>
+              {afterElement}
+            </Fragment>
           );
         })}
-      </form>
+        {renderAfter && renderAfter({ submit: submitFn })}
+      </ActualFormComponent>
     );
   };
 }
-
-function TextField(_: { control: Control<any>; name: string; extra?: string }) {
-  return <input />;
-}
-
-function BooleanField(_: { control: Control<any>; name: string; req: string }) {
-  return <input />;
-}
-
-function AField(_: { control: Control<any>; name: string }) {
-  return <input />;
-}
-
-const map = [
-  [z.string(), TextField] as const,
-  [z.boolean(), BooleanField] as const,
-  [z.enum(["one"]), AField] as const,
-] as const;
-
-const F = createSchemaForm(map);
-F;
-
-<F
-  schema={z.object({
-    id: z.string(),
-    bool: z.boolean(),
-    enum: z.enum(["one"]),
-  })}
-  props={{
-    bool: {
-      req: "",
-    },
-  }}
-/>;

@@ -1,4 +1,10 @@
-import { z, ZodNullable, ZodOptional } from "zod";
+import {
+  z,
+  ZodEnum,
+  ZodFirstPartyTypeKind,
+  ZodNullable,
+  ZodOptional,
+} from "zod";
 import {
   HIDDEN_ID_PROPERTY,
   isSchemaWithHiddenProperties,
@@ -43,19 +49,25 @@ export function unwrap(type: RTFSupportedZodTypes): {
   };
 }
 
-// IDK if we'll need this but good to have reference
-// type UnwrappableType = ZodOptional<any> | ZodNullable<any>;
+export function unwrapEffects(effects: RTFSupportedZodTypes) {
+  if (effects._def.typeName === ZodFirstPartyTypeKind.ZodEffects) {
+    return effects._def.schema;
+  }
+  return effects;
+}
 
 /**
  * I'd like this to be recursive but it creates an "infinite instantiation error" if I make it call itself.
- * Might dumpster performance.
- * Anyways this is probably just as good for normal usage, although it'll shit the bed on nullish.
+ * This is probably just as good for normal usage?
  */
 export type UnwrapZodType<T extends RTFSupportedZodTypes> =
   T extends ZodOptional<any>
     ? T["_def"]["innerType"]
     : T extends ZodNullable<any>
     ? T["_def"]["innerType"] extends ZodOptional<any>
-      ? T["_def"]["innerType"]["_def"]["innerType"]
-      : T["_def"]["innerType"]
-    : T;
+      ? EnumAsAnyEnum<T["_def"]["innerType"]["_def"]["innerType"]>
+      : EnumAsAnyEnum<T["_def"]["innerType"]>
+    : EnumAsAnyEnum<T>;
+
+export type EnumAsAnyEnum<T extends RTFSupportedZodTypes> =
+  T extends ZodEnum<any> ? ZodEnum<any> : T;

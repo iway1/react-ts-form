@@ -1,0 +1,38 @@
+name: Publish NPM Package
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - run: yarn test
+
+  publish-npm:
+    runs-on: ubuntu-latest
+    concurrency: "run"
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          registry-url: https://registry.npmjs.org/
+      - name: Setup git config
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+      - name: Build App
+        run: |
+          yarn build
+      - name: Publish with yarn
+        run: |
+          echo "publishing with version ${{ github.event.release.tag_name }}"
+          yarn publish --access public --new-version ${{ github.event.release.tag_name }}
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.npm_token}}

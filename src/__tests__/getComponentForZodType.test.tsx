@@ -1,20 +1,17 @@
 import React from "react";
-import {
-  LibraryProvidedComponentProps,
-  FormComponentMapping,
-} from "../createSchemaForm";
+import { FormComponentMapping } from "../createSchemaForm";
 import { z } from "zod";
 import { getComponentForZodType } from "../getComponentForZodType";
 
-function TextField(_: LibraryProvidedComponentProps) {
+function TextField(_: {}) {
   return <input />;
 }
 
-function BooleanField(_: LibraryProvidedComponentProps) {
+function BooleanField(_: {}) {
   return <input />;
 }
 
-function EnumField(_: LibraryProvidedComponentProps) {
+function EnumField(_: {}) {
   return <input />;
 }
 
