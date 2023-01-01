@@ -1,6 +1,3 @@
-- Recursive zod error messages for nested zod objects
-- Exportable hook to make it easier to handle said error messages
-
 ## maybe in initial version?
 
 ## Tests

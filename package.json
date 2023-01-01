@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "jest --watchAll",
     "test:cov": "jest --coverage",
+    "test": "jest",
     "build": "npx rollup -c rollup.config.js"
   },
   "repository": {
