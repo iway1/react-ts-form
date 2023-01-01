@@ -20,7 +20,7 @@ import {
 /**
  * Reducing this helps with TS performance
  */
-export type RTFSupportedZodTypes =
+export type RTFBaseZodType =
   | ZodString
   | ZodNumber
   | ZodBoolean
@@ -33,7 +33,10 @@ export type RTFSupportedZodTypes =
   | ZodMap<any>
   | ZodSet<any>
   | ZodEnum<any>
-  | ZodOptional<any>
-  | ZodNullable<any>
   | ZodBranded<any, any>
   | ZodEffects<any, any>;
+
+export type RTFSupportedZodTypes =
+  | RTFBaseZodType
+  | ZodOptional<any>
+  | ZodNullable<any>;

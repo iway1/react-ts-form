@@ -13,7 +13,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { IndexOf, RequireKeysWithRequiredChildren } from "./typeUtilities";
 import { getMetaInformationForZodType } from "./getMetaInformationForZodType";
 import { unwrapEffects, UnwrapZodType } from "./unwrap";
-import { RTFSupportedZodTypes } from "./supportedZodTypes";
+import { RTFBaseZodType, RTFSupportedZodTypes } from "./supportedZodTypes";
 import { FieldContextProvider } from "./FieldContext";
 import { isZodTypeEqual } from "./isZodTypeEqual";
 
@@ -33,7 +33,7 @@ export type ReactComponentWithRequiredProps<
   | (ForwardRefExoticComponent<Props> & RefAttributes<unknown>);
 
 export type MappingItem<PropType extends ReactProps> = readonly [
-  RTFSupportedZodTypes,
+  RTFBaseZodType,
   ReactComponentWithRequiredProps<PropType>
 ];
 

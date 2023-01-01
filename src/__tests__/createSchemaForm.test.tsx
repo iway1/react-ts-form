@@ -504,7 +504,7 @@ describe("createSchemaForm", () => {
   it("should throw a duplicate type error if multiple of the same schema are passed.", () => {
     const mapping = [
       [z.string(), () => <div />] as const,
-      [z.string().optional(), () => <div />] as const,
+      [z.string(), () => <div />] as const,
     ] as const;
 
     expect(() => createTsForm(mapping)).toThrowError(duplicateTypeError());

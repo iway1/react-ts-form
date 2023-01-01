@@ -23,7 +23,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-          registry-url: https://registry.npmjs.org/
+          registry-url: https://registry.yarnpkg.com/
       - name: Setup git config
         run: |
           git config user.name "GitHub Actions Bot"
