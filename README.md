@@ -32,7 +32,7 @@
 
 ## Installation
 
-Make sure you have `"strict": true` in your tsconfig.json compilerOptions and make sure you set your [typescript version to v4.9](#typescript-versions) (or intellisense won't be as reliable).
+Make sure you have `"strict": true` in your tsconfig.json compilerOptions and make sure you set your editors [typescript version to v4.9](#typescript-versions) (or intellisense won't be as reliable).
 
 Install package and dependencies with your preferred package manager:
 
