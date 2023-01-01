@@ -15,6 +15,7 @@ jobs:
       - run: yarn test
 
   publish-npm:
+    needs: test
     runs-on: ubuntu-latest
     concurrency: "run"
     steps:
