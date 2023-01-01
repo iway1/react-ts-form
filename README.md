@@ -549,6 +549,8 @@ Older versions of typescript have worse intellisense and may not show an error i
  
 ![Screenshot 2023-01-01 at 10 55 11 AM](https://user-images.githubusercontent.com/12774588/210178740-edafa8d1-5a69-4e36-8852-c0a01f36c35d.png)
 
+Note that you can still compile with older versions of typescript and the type checking will work, the version change should only affect intellisense.
+
 ## Limitations
 
 - Doesn't support class components
