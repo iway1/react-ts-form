@@ -511,7 +511,10 @@ function DropDownSelect({ enumValues }: { enumValues: string[] }) {
   );
 }
 
-const mapping = [[z.enum(), DropDownSelect] as const] as const;
+const mapping = [
+  // The mapping enum values don't matter, they don't get passed to components.
+  [z.enum(['placeholder']), DropDownSelect]
+] as const;
 
 const MyForm = z.object({
   eyeColor: z.enum(["blue", "brown", "green", "hazel"]),
