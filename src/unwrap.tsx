@@ -62,7 +62,7 @@ export function unwrapEffects(effects: RTFSupportedZodTypes) {
  */
 export type UnwrapZodType<T extends RTFSupportedZodTypes> =
   T extends ZodOptional<any>
-    ? T["_def"]["innerType"]
+    ? EnumAsAnyEnum<T["_def"]["innerType"]>
     : T extends ZodNullable<any>
     ? T["_def"]["innerType"] extends ZodOptional<any>
       ? EnumAsAnyEnum<T["_def"]["innerType"]["_def"]["innerType"]>
