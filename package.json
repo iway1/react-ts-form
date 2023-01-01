@@ -1,7 +1,7 @@
 {
-  "name": "@ts-react/form",
+  "name": "react-ts-form",
   "version": "1.0.0",
-  "description": "",
+  "description": "Build forms faster!",
   "module": "lib/index.mjs",
   "main": "lib/index.js",
   "types": "lib/src/index.d.ts",

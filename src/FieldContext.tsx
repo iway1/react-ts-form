@@ -44,7 +44,7 @@ function useContextProt(name: string) {
   const context = useContext(FieldContext);
   if (!context)
     throw Error(
-      `${name} must be called from within a FieldContextProvider... if you use this hook, the component must be rendered by @ts-react/form.`
+      `${name} must be called from within a FieldContextProvider... if you use this hook, the component must be rendered by react-ts-form.`
     );
   return context;
 }

@@ -538,7 +538,7 @@ describe("createSchemaForm", () => {
 
     expect(screen.getByDisplayValue(val)).toBeInTheDocument();
   });
-  it("should throw an error if useTsController is called outside of a @ts-react/form rendered component", () => {
+  it("should throw an error if useTsController is called outside of a react-ts-form rendered component", () => {
     // hello 100% test coverage =D
     jest.spyOn(console, "error").mockImplementation(() => {});
     function C() {

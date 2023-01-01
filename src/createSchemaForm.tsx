@@ -163,7 +163,7 @@ export function createTsForm<
     FormComponent?: FormType;
     /**
      * Modify which props the form control and such get passed to when rendering components. This can make it easier to integrate existing
-     * components with `@ts-react/form` or modify its behavior. The values of the object are the names of the props to forward the corresponding
+     * components with `react-ts-form` or modify its behavior. The values of the object are the names of the props to forward the corresponding
      * data to.
      * @default {
      *  name: "name",
