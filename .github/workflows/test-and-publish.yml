@@ -12,7 +12,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-      - run: yarn test
+      - run: yarn && yarn test
 
   publish-npm:
     needs: test
@@ -30,7 +30,7 @@ jobs:
           git config user.email "<>"
       - name: Build App
         run: |
-          yarn build
+          yarn && yarn build
       - name: Publish with yarn
         run: |
           echo "publishing with version ${{ github.event.release.tag_name }}"
