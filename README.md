@@ -53,13 +53,11 @@ const mapping = [
   [z.string(), TextField],
   [z.boolean(), CheckBoxField],
   [z.enum(["placeholder"]), DropDownSelect],
-] as const;
+] as const; // 👈 `as const` is necessary
 
 // A typesafe React component
 const MyForm = createTsForm(mapping);
 ```
-
-Each element in the mapping is a `[ZodSchema, ReactComponent]`. **Don't forget your `as const` after the array**
 
 Now just create form schemas with zod and pass them to your form:
 
