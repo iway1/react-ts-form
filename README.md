@@ -1,3 +1,5 @@
+![banner](https://user-images.githubusercontent.com/12774588/210178528-2eb928f9-fbad-414b-9f69-a57550d05363.png)
+
 <p align="center">Build maintainable, typesafe forms faster 🏃💨</p>
 
 <p align="center">
@@ -12,7 +14,7 @@
 
 <div align="center">
 
-<a href=""> [![codecov](https://codecov.io/github/iway1/@ts-react/form/branch/main/graph/badge.svg?token=U4UFRGI3HF)](https://codecov.io/github/iway1/@ts-react/form) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/isaac_ts_way.svg?style=social&label=Follow%20%40isaac_ts_way)](https://twitter.com/isaac_ts_way)</a>
+<a href=""> [![codecov](https://codecov.io/github/iway1/react-ts-form/branch/main/graph/badge.svg?token=U4UFRGI3HF)](https://codecov.io/github/iway1/react-ts-form) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/isaac_ts_way.svg?style=social&label=Follow%20%40isaac_ts_way)](https://twitter.com/isaac_ts_way)</a>
 
 </div>
 
@@ -30,7 +32,7 @@
 
 ## Installation
 
-Make sure you have `"strict": true` in your tsconfig.json compilerOptions. Also, use the latest version of typescript if possible.
+Make sure you have `"strict": true` in your tsconfig.json compilerOptions and make sure you set your editors [typescript version to v4.9](#typescript-versions) (or intellisense won't be as reliable).
 
 Install package and dependencies with your preferred package manager:
 
@@ -51,13 +53,11 @@ const mapping = [
   [z.string(), TextField],
   [z.boolean(), CheckBoxField],
   [z.enum(["placeholder"]), DropDownSelect],
-] as const;
+] as const; // 👈 `as const` is necessary
 
 // A typesafe React component
 const MyForm = createTsForm(mapping);
 ```
-
-Each element in the mapping is a `[ZodSchema, ReactComponent]`. **Don't forget your `as const` after the array**
 
 Now just create form schemas with zod and pass them to your form:
 
@@ -135,16 +135,17 @@ If you want the control, name, or other `@ts-react/form` data to be passed to pr
 2. [Creating Input Components](#creating-input-components)
 3. [TypeSafe Props](#typesafe-props)
 4. [Dealing With Collisions](#dealing-with-collisions)
-5. [Error Handling](#error-handling)
-6. [Accessing useForm State](#accessing-useform-state)
-7. [Complex Field Types](#complex-field-types)
-8. [Rendering Non Input Components](#adding-non-input-components-into-your-form)
-9. [Customizing Form Components](#customizing-form-components)
-10. [Default Values](#default-values)
-11. [Prop Forwarding](#prop-forwarding)
-12. [Manual Form Submission](#manual-form-submission)
-13. [React Native Usage](#react-native-usage)
-14. [❤️ Quality of Life / Productivity ❤️](#qol)
+5. [Handling Optionals](#handling-optionals)
+6. [Error Handling](#error-handling)
+7. [Accessing useForm State](#accessing-useform-state)
+8. [Complex Field Types](#complex-field-types)
+9. [Rendering Non Input Components](#adding-non-input-components-into-your-form)
+10. [Customizing Form Components](#customizing-form-components)
+11. [Default Values](#default-values)
+12. [Prop Forwarding](#prop-forwarding)
+13. [Manual Form Submission](#manual-form-submission)
+14. [React Native Usage](#react-native-usage)
+15. [❤️ Quality of Life / Productivity ❤️](#qol)
 
 ## TypeSafe Props
 
@@ -226,6 +227,29 @@ const MyFormSchema = z.object({
   mapsToNormal: z.string(), // renders as a NormalTextField component
   mapsToUnique: MyUniqueTextFieldSchema, // renders as a UltraTextField component.
 });
+```
+
+## Handling Optionals
+`@ts-react/form` will match optionals to their non optional zod schemas: 
+```tsx
+const mapping = [
+  [z.string(), TextField],
+] as const
+
+const FormSchema = z.object({
+  optionalEmail: z.string().email().optional(), // renders to TextField
+  nullishZipCode: z.string().min(5, "5 chars please").nullish() // renders to TextField
+})
+```
+
+Your zod-component-mapping should not include any optionals. If you want a reusable optional schema, you can do something like this:
+
+```tsx
+const mapping = [
+  [z.string(), TextField],
+] as const
+
+export const OptionalTextField = z.string().optional();
 ```
 
 ## Accessing useForm state
@@ -541,6 +565,13 @@ const FormSchemaTwo = z.object({
 ```
 
 If you prefer, you can just pass label and placeholder as normal props via `props`.
+
+## TypeScript versions
+Older versions of typescript have worse intellisense and may not show an error in your editor. Make sure your editors typescript version is set to v4.9 plus. In VSCode you can do (Command + Shift + P) and search for "Select Typescript Version" to change your editors Typescript Version:
+ 
+![Screenshot 2023-01-01 at 10 55 11 AM](https://user-images.githubusercontent.com/12774588/210178740-edafa8d1-5a69-4e36-8852-c0a01f36c35d.png)
+
+Note that you can still compile with older versions of typescript and the type checking will work, the version change should only affect intellisense.
 
 ## Limitations
 
