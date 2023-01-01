@@ -137,16 +137,17 @@ If you want the control, name, or other `@ts-react/form` data to be passed to pr
 2. [Creating Input Components](#creating-input-components)
 3. [TypeSafe Props](#typesafe-props)
 4. [Dealing With Collisions](#dealing-with-collisions)
-5. [Error Handling](#error-handling)
-6. [Accessing useForm State](#accessing-useform-state)
-7. [Complex Field Types](#complex-field-types)
-8. [Rendering Non Input Components](#adding-non-input-components-into-your-form)
-9. [Customizing Form Components](#customizing-form-components)
-10. [Default Values](#default-values)
-11. [Prop Forwarding](#prop-forwarding)
-12. [Manual Form Submission](#manual-form-submission)
-13. [React Native Usage](#react-native-usage)
-14. [❤️ Quality of Life / Productivity ❤️](#qol)
+5. [Handling Optionals](#handling-optionals)
+6. [Error Handling](#error-handling)
+7. [Accessing useForm State](#accessing-useform-state)
+8. [Complex Field Types](#complex-field-types)
+9. [Rendering Non Input Components](#adding-non-input-components-into-your-form)
+10. [Customizing Form Components](#customizing-form-components)
+11. [Default Values](#default-values)
+12. [Prop Forwarding](#prop-forwarding)
+13. [Manual Form Submission](#manual-form-submission)
+14. [React Native Usage](#react-native-usage)
+15. [❤️ Quality of Life / Productivity ❤️](#qol)
 
 ## TypeSafe Props
 
@@ -228,6 +229,29 @@ const MyFormSchema = z.object({
   mapsToNormal: z.string(), // renders as a NormalTextField component
   mapsToUnique: MyUniqueTextFieldSchema, // renders as a UltraTextField component.
 });
+```
+
+## Handling Optionals
+`@ts-react/form` will match optionals to their non optional zod schemas: 
+```tsx
+const mapping = [
+  [z.string(), TextField],
+] as const
+
+const FormSchema = z.object({
+  optionalEmail: z.string().email().optional(), // renders to TextField
+  nullishZipCode: z.string().min(5, "5 chars please").nullish() // renders to TextField
+})
+```
+
+Your zod-component-mapping should not include any optionals. If you want a reusable optional schema, you can do something like this:
+
+```tsx
+const mapping = [
+  [z.string(), TextField],
+] as const
+
+export const OptionalTextField = z.string().optional();
 ```
 
 ## Accessing useForm state
