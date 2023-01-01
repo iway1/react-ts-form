@@ -45,7 +45,7 @@ yarn add zod react-hook-form @hookform/resolvers
 
 ## Usage
 
-Create a zod-to-component mapping and create your form with `createTsForm` (typically once per project):
+Create a zod-to-component mapping to map zod schemas to your components then create your form with `createTsForm` (typically once per project):
 
 ```tsx
 // create the mapping
