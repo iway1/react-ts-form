@@ -136,7 +136,7 @@ Returns enum values passed to `z.enum()` for the field that's being rendered:
 
 ```tsx
 function MyDropdown() {
-  const values = useEnumValues();
+  const values = useEnumValues(); // ['red', 'green', 'blue']
   return (
     <select>
       {values.map(e=>{
@@ -145,6 +145,9 @@ function MyDropdown() {
     </select>
   )
 }
+const FormSchema = z.object({
+  favoriteColor: z.enum(['red', 'green', 'blue'])  
+})
 ```
 
 Note this won't return the values from the mapping. Throws an error if they're not passed.
