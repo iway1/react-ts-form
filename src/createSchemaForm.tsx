@@ -46,8 +46,11 @@ export type MappableProp =
   | "descriptionPlaceholder";
 export type PropsMapping = readonly (readonly [MappableProp, string])[];
 
-export function noMatchingSchemaErrorMessage(propertyName: string) {
-  return `No matching zod schema found in mapping for property ${propertyName}. Make sure there's a matching zod schema for every property in your schema.`;
+export function noMatchingSchemaErrorMessage(
+  propertyName: string,
+  propertyType: string
+) {
+  return `No matching zod schema for type \`${propertyType}\` found in mapping for property \`${propertyName}\`. Make sure there's a matching zod schema for every property in your schema.`;
 }
 
 export function useFormResultValueChangedErrorMesssage() {
@@ -322,7 +325,7 @@ export function createTsForm<
       return uf;
     })();
     const _schema = unwrapEffects(schema);
-    const shape = _schema._def.shape();
+    const shape: Record<string, RTFSupportedZodTypes> = _schema._def.shape();
 
     function _submit(data: z.infer<SchemaType>) {
       onSubmit(data);
@@ -332,10 +335,12 @@ export function createTsForm<
       <ActualFormComponent {...formProps} onSubmit={submitFn}>
         {renderBefore && renderBefore({ submit: submitFn })}
         {Object.keys(shape).map((key) => {
-          const type = shape[key];
+          const type = shape[key] as RTFSupportedZodTypes;
           const Component = getComponentForZodType(type, componentMap);
           if (!Component) {
-            throw new Error(noMatchingSchemaErrorMessage(key));
+            throw new Error(
+              noMatchingSchemaErrorMessage(key, type._def.typeName)
+            );
           }
           const meta = getMetaInformationForZodType(type);
 
