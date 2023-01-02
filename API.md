@@ -147,6 +147,18 @@ This is the component returned via `createSchemaForm`
 | form          | No      | UseFormReturn                            | Optionally pass a `react-hook-form` useForm() result so that you can have control of your form state in the parent component.                                               |
 
 ## Hooks
+  
+### `useTsController`
+A typesafe hook that automatically connects to your form state:
+
+```tsx
+function TextField() {
+  const {field: {onChange, value}, error} = useTsController<string>();
+  // ...
+}
+```
+
+Returns everything that `react-hook-form`'s [useController](https://react-hook-form.com/api/usecontroller) returns plus an extra `error` object and slightly modified typings to make the form state more intuitive to work with.
 
 ### `useDescription`
 Returns the `label` and `placeholder` extracted from a call to `.describe()`:
