@@ -12,6 +12,8 @@ Create schema form creates a typesafe reusable form component based on your zod-
 const Form = createTsForm(mapping, options)
 ```
 
+Typically you'll do this once per project, as the mapping can map any number of schemas to any number of components.
+
 ### createTsForm params 
 
 **mapping** - A zod-to-component mapping. An array of two-tuples where the first element is a zod schema and the second element is a React functional component:
@@ -31,7 +33,7 @@ const FormSchema = z.object({
 })
 ```
 
-You can use any zod schema.
+You can use any zod schema. Objects get matched based on their properties.
 
 **options** - (**optional**) Allows further customization of the form:
 
@@ -109,6 +111,8 @@ You can use any zod schema.
   - `label` - The label extracted from `.describe()`
   - `placeholder` - The placeholder extracted from `.describe()`
 
+This can be useful in cases where you would like to integrate with existing components, or just don't want `@ts-react/form` to forward any props for you.
+
 ## createUniqueFieldSchema
 This is useful when dealing with multiple schemas of the same type that you would like to have mapped to different components:
 
@@ -180,4 +184,3 @@ const FormSchema = z.object({
 })
 ```
 
-Note this won't return the values from the mapping. Throws an error if they're not passed.
