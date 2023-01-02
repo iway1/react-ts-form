@@ -1,9 +1,9 @@
 {
   "name": "@ts-react/form",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Build forms faster!",
   "module": "lib/index.mjs",
-  "main": "lib/index.js",
+  "main": "lib/index.cjs",
   "types": "lib/src/index.d.ts",
   "scripts": {
     "dev": "jest --watchAll",
