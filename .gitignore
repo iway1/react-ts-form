@@ -3,3 +3,4 @@ coverage
 .yarn
 .vscode
 lib
+.env

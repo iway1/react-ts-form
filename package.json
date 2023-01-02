@@ -1,6 +1,6 @@
 {
   "name": "@ts-react/form",
-  "version": "1.0.1",
+  "version": "1.0.5",
   "description": "Build forms faster!",
   "module": "lib/index.mjs",
   "main": "lib/index.js",
@@ -9,19 +9,20 @@
     "dev": "jest --watchAll",
     "test:cov": "jest --coverage",
     "test": "jest",
-    "build": "npx rollup -c rollup.config.js"
+    "build": "npx rollup -c rollup.config.js",
+    "build-test:dryrun": "act -j build-test -P ubuntu-latest=ghcr.io/catthehacker/ubuntu:js-latest"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/iway1/react-schema-form.git"
+    "url": "git+https://github.com/iway1/react-ts-form.git"
   },
   "type": "module",
   "author": "Isaac Way",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/iway1/react-schema-form/issues"
+    "url": "https://github.com/iway1/react-ts-form/issues"
   },
-  "homepage": "https://github.com/iway1/react-schema-form#readme",
+  "homepage": "https://github.com/iway1/react-ts-form#readme",
   "devDependencies": {
     "@hookform/resolvers": "^2.9.10",
     "@rollup/plugin-terser": "^0.2.1",
