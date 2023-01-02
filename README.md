@@ -28,6 +28,8 @@
 - 🤌🏻 Very tiny utility library (~3kb gzipped)
 - 👀 100% test coverage
 
+[API Docs](API.md)
+
 # Quick Start
 
 ## Installation
