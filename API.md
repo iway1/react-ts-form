@@ -1,6 +1,7 @@
 # API
 
 - [createTsForm](#createtsform)
+- [createUniqueFieldSchema](#createuniquefieldschema)
 - [FormComponent](#form-component)
 - [Hooks](#hooks)
 
@@ -13,14 +14,26 @@ const Form = createTsForm(mapping, options)
 
 ### createTsForm params 
 
-- **mapping** - A zod-to-component mapping. An array of two-tuples where the first element is a zod schema and the second element is a React functional component:
-  ```ts
-  const mapping = [
-    [z.string(), TextField]
-  ] as const
-  ```
+**mapping** - A zod-to-component mapping. An array of two-tuples where the first element is a zod schema and the second element is a React functional component:
+```ts
+const mapping = [
+  [z.string(), TextField],
+  [z.boolean(), CheckboxField],
+] as const
+```
 
-- **options** - (**optional**) Allows further customization of the form:
+The zod schema on the left determines which properties in your form schemas get mapped to which components:
+
+```tsx
+const FormSchema = z.object({
+  name: z.string(), // Maps to TextField
+  isOver18: z.boolean(), // Maps to CheckBoxField
+})
+```
+
+You can use any zod schema.
+
+**options** - (**optional**) Allows further customization of the form:
 
   ```tsx
   const Form = createTsForm(mapping, {
@@ -95,6 +108,23 @@ const Form = createTsForm(mapping, options)
   - `enumValues` - `enumValues` extracted from your zod enum schema.
   - `label` - The label extracted from `.describe()`
   - `placeholder` - The placeholder extracted from `.describe()`
+
+## createUniqueFieldSchema
+This is useful when dealing with multiple schemas of the same type that you would like to have mapped to different components:
+
+```tsx
+const BigTextFieldSchema = createUniqueFieldSchema(z.string(), 'id');
+
+const mapping = [
+  [z.string(), TextField],
+  [BigTextFieldSchema, BigTextField]
+] as const
+
+const FormSchema = z.object({
+  name: z.string(), // renders as TextField
+  bigName: BigTextFieldSchema // renders as BigTextField
+})
+```
 
 ## FormComponent
 This is the component returned via `createSchemaForm`
