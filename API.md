@@ -1,5 +1,9 @@
 # API
 
+- [createTsForm](#createtsform)
+- [FormComponent](#form-component)
+- [Hooks](#hooks)
+
 ## createTsForm
 Create schema form creates a typesafe reusable form component based on your zod-to-component mapping.
 
