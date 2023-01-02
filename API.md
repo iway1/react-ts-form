@@ -2,7 +2,7 @@
 
 - [createTsForm](#createtsform)
 - [createUniqueFieldSchema](#createuniquefieldschema)
-- [FormComponent](#form-component)
+- [FormComponent](#formcomponent)
 - [Hooks](#hooks)
 
 ## createTsForm
