@@ -103,8 +103,11 @@ describe("createSchemaForm", () => {
   });
   it("should throw an error when no matching schema is found in mapping", () => {
     const mapping = [[z.string(), () => <input />] as const] as const;
+
+    const enumSchema = z.enum(["Yes"]);
+
     const Schema = z.object({
-      enum: z.enum(["Yes"]),
+      enum: enumSchema,
     });
     const Form = createTsForm(mapping);
 
@@ -122,7 +125,9 @@ describe("createSchemaForm", () => {
           }}
         />
       )
-    ).toThrowError(noMatchingSchemaErrorMessage("enum"));
+    ).toThrowError(
+      noMatchingSchemaErrorMessage("enum", enumSchema._def.typeName)
+    );
   });
   it("should render the CustomTextField for the field with TestCustomFieldSchema, and also still render the regular TextField for a vanilla string", () => {
     const testSchema = z.object({
