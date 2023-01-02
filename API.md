@@ -117,7 +117,7 @@ This can be useful in cases where you would like to integrate with existing comp
 This is useful when dealing with multiple schemas of the same type that you would like to have mapped to different components:
 
 ```tsx
-const BigTextFieldSchema = createUniqueFieldSchema(z.string(), 'id');
+const BigTextFieldSchema = createUniqueFieldSchema(z.string(), 'id'); // need to pass a unique string literal
 
 const mapping = [
   [z.string(), TextField],
