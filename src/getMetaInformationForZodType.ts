@@ -16,8 +16,14 @@ export function parseDescription(description?: string) {
 }
 
 export function getEnumValues(type: RTFSupportedZodTypes) {
-  if (!(type._def.typeName === z.ZodFirstPartyTypeKind.ZodEnum)) return;
-  return type._def.values as readonly string[];
+  switch (type._def.typeName) {
+    case z.ZodFirstPartyTypeKind.ZodEnum:
+      return type._def.values as readonly string[];
+    case z.ZodFirstPartyTypeKind.ZodNativeEnum:
+      return Object.values(type._def.values) as readonly string[];
+    default:
+      return;
+  }
 }
 
 function isSchemaWithUnwrapMethod(

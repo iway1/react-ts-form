@@ -15,12 +15,14 @@ import {
   ZodString,
   ZodTuple,
   ZodEffects,
+  ZodNativeEnum,
 } from "zod";
 
 /**
  * Reducing this helps with TS performance
  */
 export type RTFBaseZodType =
+  | ZodNativeEnum<any>
   | ZodString
   | ZodNumber
   | ZodBoolean

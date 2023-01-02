@@ -725,7 +725,7 @@ describe("createSchemaForm", () => {
     expect(screen.getByText("a")).toBeInTheDocument();
     expect(screen.getByText("b")).toBeInTheDocument();
   });
-  it("should allow accessing enumValues via the `useEnumValues()` hook", () => {
+  it("should allow accessing enumValues via the `useEnumValues()` hook with `enum` type", () => {
     const Schema = z.object({
       enum: z.enum(["one", "two"]),
     });
@@ -740,6 +740,36 @@ describe("createSchemaForm", () => {
       );
     }
     const mapping = [[z.enum(["yep"]), Component] as const] as const;
+    const Form = createTsForm(mapping);
+
+    render(
+      <Form
+        schema={Schema}
+        onSubmit={() => {}}
+        props={{ enum: { req: "yes" } }}
+      />
+    );
+  });
+  it("should allow accessing enumValues via the `useEnumValues()` hook with `nativeEnum` type", () => {
+    enum nativeEnum {
+      one = "one",
+      two = "two",
+    }
+
+    const Schema = z.object({
+      enum: z.nativeEnum(nativeEnum),
+    });
+    function Component({ req: _ }: { req: string }) {
+      const enumValues = useEnumValues();
+      return (
+        <div>
+          {enumValues.map((e) => (
+            <span key={e}>{e}</span>
+          ))}
+        </div>
+      );
+    }
+    const mapping = [[z.nativeEnum({}), Component] as const] as const;
     const Form = createTsForm(mapping);
 
     render(
