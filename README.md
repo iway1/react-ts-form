@@ -107,7 +107,7 @@ function TextField() {
   return (
     <>
       <input
-        value={field.value}
+        value={field.value?field.value:''} // conditional to prevent "uncontrolled to controlled" react warning
         onChange={(e) => {
           field.onChange(e.target.value);
         }}
