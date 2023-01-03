@@ -1,0 +1,51 @@
+name: Bug Report
+description: File a bug report
+title: "issue: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: input
+    id: version
+    attributes:
+      label: Version Number
+      description: What's the version number?
+      placeholder: Version number.
+    validations:
+      required: true
+  - type: input
+    id: codesandbox
+    attributes:
+      label: Codesandbox/Expo snack
+      description: Codesandbox/Expo snack link (if relevant)
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        - [Code Sandbox Template](https://codesandbox.io/s/agitated-orla-zi4pvk?file=/src/App.tsx) Template
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Steps to reproduce
+      placeholder: Tell us what you see!
+      value: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: true
+  - type: textarea
+    id: what-expect
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      render: shell
