@@ -19,6 +19,14 @@ export function isZodTypeEqual(
 
   if (a._def.typeName !== b._def.typeName) return false;
 
+  if (
+    a._def.typeName === ZodFirstPartyTypeKind.ZodArray &&
+    b._def.typeName === ZodFirstPartyTypeKind.ZodArray
+  ) {
+    if (isZodTypeEqual(a._def.type, b._def.type)) return true;
+    return false;
+  }
+
   // Recursively check if objects are equal
   if (
     a._def.typeName === ZodFirstPartyTypeKind.ZodObject &&
