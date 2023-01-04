@@ -109,6 +109,8 @@ function NumberField({ req }: { req: number }) {
 }
 ```
 
+## Checkbox
+
 ```tsx
 function Checkbox({ name }: { name: string }) {
   const {
