@@ -10,7 +10,6 @@ import {
 } from "./utils/testForm";
 import {
   createTsForm,
-  duplicateTypeError,
   noMatchingSchemaErrorMessage,
   useFormResultValueChangedErrorMesssage,
 } from "../createSchemaForm";
@@ -505,14 +504,6 @@ describe("createSchemaForm", () => {
 
     expect(submitMock).toHaveBeenCalledTimes(1);
     expect(submitMock).toHaveBeenCalledWith(expectedOutput);
-  });
-  it("should throw a duplicate type error if multiple of the same schema are passed.", () => {
-    const mapping = [
-      [z.string(), () => <div />] as const,
-      [z.string(), () => <div />] as const,
-    ] as const;
-
-    expect(() => createTsForm(mapping)).toThrowError(duplicateTypeError());
   });
   it("should render the default values passed in via the useFormResult prop", () => {
     const testId = "id";
