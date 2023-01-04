@@ -1,6 +1,6 @@
 # Example Fields
 
-These can be a good starting points for how to implement certain types of fields.
+These can be a good starting points for your fields with `@ts-react/form`
 
 1. [Select](#select)
 2. [Text Field](#text-field)
@@ -23,7 +23,7 @@ function Select({ options }: { options: string[] }) {
       >
         {!field.value && <option value="none">Please select...</option>}
         {options.map((e) => (
-          <option value={e}>{e}</option>
+          <option key={e} value={e}>{e}</option>
         ))}
       </select>
       <span>{error?.errorMessage && error.errorMessage}</span>
@@ -155,6 +155,7 @@ function MultiCheckbox({ options }: { options: string[] }) {
         <label
           htmlFor={optionValue}
           style={{ display: "flex", flexDirection: "row" }}
+          key={optionValue}
         >
           {optionValue}
           <input
