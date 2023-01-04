@@ -16,6 +16,7 @@ import { unwrapEffects, UnwrapZodType } from "./unwrap";
 import { RTFBaseZodType, RTFSupportedZodTypes } from "./supportedZodTypes";
 import { FieldContextProvider } from "./FieldContext";
 import { isZodTypeEqual } from "./isZodTypeEqual";
+import { printWarningsForSchema } from "./logging";
 
 /**
  * @internal
@@ -92,6 +93,8 @@ function checkForDuplicateTypes(array: RTFSupportedZodTypes[]) {
     array.slice(i + 1).map((w) => [v, w] as const)
   );
   for (const [a, b] of combinations) {
+    printWarningsForSchema(a);
+    printWarningsForSchema(b);
     if (isZodTypeEqual(a!, b)) {
       throw new Error(duplicateTypeError());
     }
