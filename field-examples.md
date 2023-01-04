@@ -3,21 +3,21 @@
 These can be a good starting points for how to implement certain types of fields.
 
 1. [Select](#select)
+2. [Text Field](#text-field)
+3. [Number Field](#number-field)
+4. [Checkbox](#checkbox)
+5. [Multi Checkbox](#multi-checkbox)
 
 ## Select
 
 ```tsx
-function Select({
-  options
-} : {
-  options: string[]
-}) {
-  const {field, error} = useTsController<string>();
+function Select({ options }: { options: string[] }) {
+  const { field, error } = useTsController<string>();
   return (
     <>
       <select
-        value={field.value?field.value:'none'}
-        onChange={(e)=>{
+        value={field.value ? field.value : "none"}
+        onChange={(e) => {
           field.onChange(e.target.value);
         }}
       >
@@ -26,10 +26,8 @@ function Select({
           <option value={e}>{e}</option>
         ))}
       </select>
-      <span>
-        {error?.errorMessage && error.errorMessage}
-      </span>
-    <>
+      <span>{error?.errorMessage && error.errorMessage}</span>
+    </>
   );
 }
 
@@ -45,20 +43,127 @@ const MyForm = z.object({
 
 function MyPage() {
   return (
-    <Form 
+    <Form
       schema={MyForm}
-      onSubmit={()=>{}}
-      renderAfter={()=><button>Submit</button>}
+      onSubmit={() => {}}
+      renderAfter={() => <button>Submit</button>}
       props={{
         eyeColor: {
-          options: ["blue", "red", "green"]
+          options: ["blue", "red", "green"],
         },
         favoritePants: {
-          options: ["khakis", "blue jeans"]
-        }
+          options: ["khakis", "blue jeans"],
+        },
       }}
     />
-  )
+  );
 }
 ```
 
+## Text Field
+
+```tsx
+function TextField() {
+  const {
+    field: { onChange, value },
+    error,
+  } = useTsController<string>();
+
+  return (
+    <>
+      <input
+        onChange={(e) => onChange(e.target.value)}
+        value={value ? value : ""}
+      />
+      {error && error.errorMessage}
+    </>
+  );
+}
+```
+
+## Number Field
+
+```tsx
+function NumberField({ req }: { req: number }) {
+  const {
+    field: { onChange, value },
+    error,
+  } = useTsController<number>();
+  return (
+    <>
+      <span>
+        <span>{`req is ${req}`}</span>
+        <input
+          value={value !== undefined ? value + "" : ""}
+          onChange={(e) => {
+            console.log("");
+            const value = parseInt(e.target.value);
+            if (isNaN(value)) onChange(undefined);
+            else onChange(value);
+          }}
+        />
+        {error && error.errorMessage}
+      </span>
+    </>
+  );
+}
+```
+
+```tsx
+function Checkbox({ name }: { name: string }) {
+  const {
+    field: { onChange, value },
+  } = useTsController<boolean>();
+
+  return (
+    <label>
+      {name}
+      <input
+        onChange={(e) => onChange(e.target.checked)}
+        checked={value ? value : false}
+        type="checkbox"
+      />
+    </label>
+  );
+}
+```
+
+## Multi Checkbox
+
+```tsx
+function MultiCheckbox({ options }: { options: string[] }) {
+  const {
+    field: { onChange, value },
+  } = useTsController<string[]>();
+
+  function toggleField(option: string) {
+    if (!value) onChange([option]);
+    else {
+      onChange(
+        value.includes(option)
+          ? value.filter((e) => e !== option)
+          : [...value, option]
+      );
+    }
+  }
+
+  return (
+    <>
+      {options.map((optionValue) => (
+        <label
+          htmlFor={optionValue}
+          style={{ display: "flex", flexDirection: "row" }}
+        >
+          {optionValue}
+          <input
+            name={optionValue}
+            type="checkbox"
+            onChange={() => toggleField(optionValue)}
+            checked={value?.includes(optionValue) ? true : false}
+          />
+        </label>
+      ))}
+    </>
+  );
+}
+```
