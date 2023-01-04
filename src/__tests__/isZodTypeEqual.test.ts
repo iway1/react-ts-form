@@ -161,4 +161,44 @@ describe("isZodTypeEqual", () => {
     });
     expect(isZodTypeEqual(A, B)).toStrictEqual(false);
   });
+  it("should return true when an array schemas inner type are equal for primitive types", () => {
+    const A = z.string().array();
+    const B = z.string().array();
+
+    expect(isZodTypeEqual(A, B)).toStrictEqual(true);
+  });
+  it("should return false when an arrays inner types are not equal for primitive types.", () => {
+    const A = z.string().array();
+    const B = z.boolean().array();
+
+    expect(isZodTypeEqual(A, B)).toStrictEqual(false);
+  });
+  it("should return true when an arrays inner type are equal for object types", () => {
+    const A = z
+      .object({
+        one: z.string(),
+      })
+      .array();
+    const B = z
+      .object({
+        one: z.string(),
+      })
+      .array();
+
+    expect(isZodTypeEqual(A, B)).toStrictEqual(true);
+  });
+  it("should return false when an arrays inner types are not equal for object types", () => {
+    const A = z
+      .object({
+        a: z.string(),
+      })
+      .array();
+    const B = z
+      .object({
+        a: z.boolean(),
+      })
+      .array();
+
+    expect(isZodTypeEqual(A, B)).toStrictEqual(false);
+  });
 });
