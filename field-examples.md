@@ -10,10 +10,7 @@ These can be a good starting points for how to implement certain types of fields
 function Select({
   options
 } : {
-  options: {
-    label: string,
-    id: string,
-  }[]
+  options: string[]
 }) {
   const {field, error} = useTsController<string>();
   return (
@@ -26,7 +23,7 @@ function Select({
       >
         {!field.value && <option value="none">Please select...</option>}
         {options.map((e) => (
-          <option value={e.id}>{e.label}</option>
+          <option value={e}>{e}</option>
         ))}
       </select>
       <span>
@@ -37,12 +34,31 @@ function Select({
 }
 
 const mapping = [
-  // z.number() is also viable. You may have to use "createUniqueFieldSchema" (since you probably already have a Text Field)
+  // z.number() is also viable. You'll probably have to use "createUniqueFieldSchema" (since you probably already have a Text Field)
   [z.string(), DropDownSelect],
 ] as const;
 
 const MyForm = z.object({
-  eyeColor: z.enum(["blue", "brown", "green", "hazel"]),
-  favoritePants: z.enum(["jeans", "khakis", "none"]),
+  eyeColor: z.string(),
+  favoritePants: z.string(),
 });
+
+function MyPage() {
+  return (
+    <Form 
+      schema={MyForm}
+      onSubmit={()=>{}}
+      renderAfter={()=><button>Submit</button>}
+      props={{
+        eyeColor: {
+          options: ["blue", "red", "green"]
+        },
+        favoritePants: {
+          options: ["khakis", "blue jeans"]
+        }
+      }}
+    />
+  )
+}
 ```
+
