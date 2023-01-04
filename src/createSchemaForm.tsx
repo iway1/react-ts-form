@@ -16,7 +16,7 @@ import { unwrapEffects, UnwrapZodType } from "./unwrap";
 import { RTFBaseZodType, RTFSupportedZodTypes } from "./supportedZodTypes";
 import { FieldContextProvider } from "./FieldContext";
 import { isZodTypeEqual } from "./isZodTypeEqual";
-import { printWarningsForSchema } from "./logging";
+import { duplicateTypeError, printWarningsForSchema } from "./logging";
 
 /**
  * @internal
@@ -84,10 +84,6 @@ type UnwrapEffects<T extends AnyZodObject | ZodEffects<any, any>> =
     ? T["_def"]["schema"]
     : never;
 
-export function duplicateTypeError() {
-  return "Found duplicate zod schema in zod-component mapping. Each zod type in the mapping must be unique, if you need to map multiple of the same types to different schemas use createUniqueFieldSchema.";
-}
-
 function checkForDuplicateTypes(array: RTFSupportedZodTypes[]) {
   var combinations = array.flatMap((v, i) =>
     array.slice(i + 1).map((w) => [v, w] as const)
@@ -96,7 +92,7 @@ function checkForDuplicateTypes(array: RTFSupportedZodTypes[]) {
     printWarningsForSchema(a);
     printWarningsForSchema(b);
     if (isZodTypeEqual(a!, b)) {
-      throw new Error(duplicateTypeError());
+      duplicateTypeError();
     }
   }
 }
