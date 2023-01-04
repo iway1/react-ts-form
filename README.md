@@ -30,6 +30,8 @@
 
 [API Docs](API.md)
 
+[Input Field Examples](field-examples.md)
+
 # Quick Start
 
 ## Installation
