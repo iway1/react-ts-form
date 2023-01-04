@@ -26,7 +26,7 @@
 - 🤯 Headless UI that can render any react component
 - ❤️ [Quality Of Life / Productivity](#qol) features not feasible in vanilla `zod` and `react-hook-form`
 - 🤌🏻 Very tiny utility library (~3kb gzipped)
-- 👀 100% test coverage
+- 👀 Great test coverage
 
 [API Docs](API.md)
 
