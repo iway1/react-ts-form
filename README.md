@@ -54,7 +54,7 @@ Create a zod-to-component mapping to map zod schemas to your components then cre
 const mapping = [
   [z.string(), TextField],
   [z.boolean(), CheckBoxField],
-  [z.enum(["placeholder"]), DropDownSelect],
+  [z.number(), NumberField],
 ] as const; // 👈 `as const` is necessary
 
 // A typesafe React component
@@ -107,7 +107,7 @@ function TextField() {
   return (
     <>
       <input
-        value={field.value?field.value:''} // conditional to prevent "uncontrolled to controlled" react warning
+        value={field.value ? field.value : ""} // conditional to prevent "uncontrolled to controlled" react warning
         onChange={(e) => {
           field.onChange(e.target.value);
         }}
@@ -232,24 +232,22 @@ const MyFormSchema = z.object({
 ```
 
 ## Handling Optionals
-`@ts-react/form` will match optionals to their non optional zod schemas: 
+
+`@ts-react/form` will match optionals to their non optional zod schemas:
+
 ```tsx
-const mapping = [
-  [z.string(), TextField],
-] as const
+const mapping = [[z.string(), TextField]] as const;
 
 const FormSchema = z.object({
   optionalEmail: z.string().email().optional(), // renders to TextField
-  nullishZipCode: z.string().min(5, "5 chars please").nullish() // renders to TextField
-})
+  nullishZipCode: z.string().min(5, "5 chars please").nullish(), // renders to TextField
+});
 ```
 
 Your zod-component-mapping should not include any optionals. If you want a reusable optional schema, you can do something like this:
 
 ```tsx
-const mapping = [
-  [z.string(), TextField],
-] as const
+const mapping = [[z.string(), TextField]] as const;
 
 export const OptionalTextField = z.string().optional();
 ```
@@ -528,6 +526,7 @@ const FormSchemaTwo = z.object({
 If you prefer, you can just pass label and placeholder as normal props via `props`.
 
 ## TypeScript versions
+
 Older versions of typescript have worse intellisense and may not show an error in your editor. Make sure your editors typescript version is set to v4.9 plus. The easiest approach is to upgrade your typescript globally if you haven't recently:
 
 ```sh
@@ -535,7 +534,7 @@ sudo npm -g upgrade typescript
 ```
 
 Or, in VSCode you can do (Command + Shift + P) and search for "Select Typescript Version" to change your editors Typescript Version:
- 
+
 ![Screenshot 2023-01-01 at 10 55 11 AM](https://user-images.githubusercontent.com/12774588/210178740-edafa8d1-5a69-4e36-8852-c0a01f36c35d.png)
 
 Note that you can still compile with older versions of typescript and the type checking will work.

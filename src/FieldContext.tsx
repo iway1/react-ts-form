@@ -6,6 +6,7 @@ import {
   useController,
   UseControllerReturn,
 } from "react-hook-form";
+import { printUseEnumWarning } from "./logging";
 import { errorFromRhfErrorObject } from "./zodObjectErrors";
 
 export const FieldContext = createContext<null | {
@@ -192,6 +193,7 @@ export function enumValuesNotPassedError() {
  */
 export function useEnumValues() {
   const { enumValues } = useContextProt("useEnumValues");
+  printUseEnumWarning();
   if (!enumValues) throw new Error(enumValuesNotPassedError());
   return enumValues;
 }
