@@ -486,50 +486,6 @@ Props that are included in the props map will no longer be passable via the `pro
 
 These allow you to build forms even faster by connecting zod schemas directly to react state. These features are opt-in, it's possible to do the things in this section via props but these approaches may be faster / easier.
 
-### Enums
-
-If your schema is mapped using a `z.enum()`, the enums values will be passed as a prop to the component. This makes it easier is to create things like dropdowns etc:
-
-```tsx
-function DropDownSelect({ enumValues }: { enumValues: string[] }) {
-  const {field, error} = useTsController<string>();
-  return (
-    <>
-      <select
-        value={field.value?field.value:'none'}
-        onChange={(e)=>{
-          field.onChange(e.target.value);
-        }}
-      >
-        {!field.value && <option value="none">Please select...</option>}
-        {enumValues.map((e) => (
-          <option value={e}>{capitalizeFirstLetter(e)}</option>
-        ))}
-      </select>
-      <span>
-        {error?.errorMessage && error.errorMessage}
-      </span>
-    <>
-  );
-}
-
-const mapping = [
-  // The mapping enum values don't matter, they don't get passed to components.
-  [z.enum(['placeholder']), DropDownSelect]
-] as const;
-
-const MyForm = z.object({
-  eyeColor: z.enum(["blue", "brown", "green", "hazel"]),
-  favoritePants: z.enum(["jeans", "khakis", "none"]),
-});
-
-//...
-```
-
-In the above example, `@ts-react/form` will render two dropdowns, one with values \['blue', 'brown', 'green', 'hazel'\], and on with values \['jeans', 'khakis', 'none'\] based on the values passed to the enums.
-
-You can also access these values via the `useEnumValues()` hook.
-
 ### Quick Labels / Placeholders
 
 `@ts-react/form` provides a way to quickly add labels / placeholders via `zod`'s `.describe()` method:
