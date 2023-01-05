@@ -351,7 +351,7 @@ export function createTsForm<
           const mergedProps = {
             ...(propsMap.name && { [propsMap.name]: key }),
             ...(propsMap.control && { [propsMap.control]: control }),
-            ...(propsMap.enumValues && {
+            ...(propsMap.enumValues && !!meta.enumValues && {
               [propsMap.enumValues]: meta.enumValues,
             }),
             ...(propsMap.descriptionLabel && {
