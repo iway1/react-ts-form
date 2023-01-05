@@ -27,6 +27,50 @@ export function isZodTypeEqual(
     return false;
   }
 
+  if (
+    a._def.typeName === ZodFirstPartyTypeKind.ZodSet &&
+    b._def.typeName === ZodFirstPartyTypeKind.ZodSet
+  ) {
+    if (isZodTypeEqual(a._def.valueType, b._def.valueType)) return true;
+    return false;
+  }
+
+  if (
+    a._def.typeName === ZodFirstPartyTypeKind.ZodMap &&
+    b._def.typeName === ZodFirstPartyTypeKind.ZodMap
+  ) {
+    if (
+      isZodTypeEqual(a._def.keyType, b._def.keyType) &&
+      isZodTypeEqual(a._def.valueType, b._def.valueType)
+    )
+      return true;
+
+    return false;
+  }
+
+  // record
+  if (
+    a._def.typeName === ZodFirstPartyTypeKind.ZodRecord &&
+    b._def.typeName === ZodFirstPartyTypeKind.ZodRecord
+  ) {
+    if (isZodTypeEqual(a._def.valueType, b._def.valueType)) return true;
+    return false;
+  }
+
+  // tuple
+  if (
+    a._def.typeName === ZodFirstPartyTypeKind.ZodTuple &&
+    b._def.typeName === ZodFirstPartyTypeKind.ZodTuple
+  ) {
+    const itemsA = a._def.items;
+    const itemsB = b._def.items;
+    if (itemsA.length !== itemsB.length) return false;
+    for (let i = 0; i < itemsA.length; i++) {
+      if (!isZodTypeEqual(itemsA[i], itemsB[i])) return false;
+    }
+    return true;
+  }
+
   // Recursively check if objects are equal
   if (
     a._def.typeName === ZodFirstPartyTypeKind.ZodObject &&

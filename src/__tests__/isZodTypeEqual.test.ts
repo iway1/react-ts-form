@@ -201,4 +201,69 @@ describe("isZodTypeEqual", () => {
 
     expect(isZodTypeEqual(A, B)).toStrictEqual(false);
   });
+  //set
+  it("should return false if two sets with different types are compared", () => {
+    const A = z.set(z.string());
+    const B = z.set(z.boolean());
+
+    expect(isZodTypeEqual(A, B)).toStrictEqual(false);
+  });
+  it("should return true if two sets with the same base type are compared", () => {
+    const A = z.set(z.number());
+    const B = z.set(z.number());
+
+    expect(isZodTypeEqual(A, B)).toStrictEqual(true);
+  });
+  //maps
+  it("should return false if two maps with different key types are compared", () => {
+    const A = z.map(z.string(), z.string());
+    const B = z.map(z.number(), z.string());
+
+    expect(isZodTypeEqual(A, B)).toStrictEqual(false);
+  });
+  it("should return false if two maps with different value types are compared", () => {
+    const A = z.map(z.string(), z.string());
+    const B = z.map(z.string(), z.number());
+
+    expect(isZodTypeEqual(A, B)).toStrictEqual(false);
+  });
+  it("should return true if two maps with the same key and value types are compared", () => {
+    const A = z.map(z.string(), z.string());
+    const B = z.map(z.string(), z.string());
+
+    expect(isZodTypeEqual(A, B)).toStrictEqual(true);
+  });
+  //records
+  it("should return false if two records with different types are compared", () => {
+    const A = z.record(z.string());
+    const B = z.record(z.number());
+
+    expect(isZodTypeEqual(A, B)).toStrictEqual(false);
+  });
+  it("should return true if two records with the same types are compared", () => {
+    const A = z.record(z.string());
+    const B = z.record(z.string());
+
+    expect(isZodTypeEqual(A, B)).toStrictEqual(true);
+  });
+  //tuple
+  it("should return false if two tuples with different types are compared", () => {
+    const A = z.tuple([z.string()]);
+    const B = z.tuple([z.number()]);
+
+    expect(isZodTypeEqual(A, B)).toStrictEqual(false);
+  });
+  //check length
+  it("should return false if two tuples with different lengths are compared", () => {
+    const A = z.tuple([z.string()]);
+    const B = z.tuple([z.string(), z.string()]);
+
+    expect(isZodTypeEqual(A, B)).toStrictEqual(false);
+  });
+  it("should return true if two tuples with the same types and length are compared", () => {
+    const A = z.tuple([z.string(), z.number()]);
+    const B = z.tuple([z.string(), z.number()]);
+
+    expect(isZodTypeEqual(A, B)).toStrictEqual(true);
+  });
 });
