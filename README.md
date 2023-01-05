@@ -241,7 +241,10 @@ In the above schema, the `email` field is validated as an email because we've ca
 The default behavior for this library is that errors will be shown once the user tries to submit, and fields will be revalidated as the value changes (as soon as the user enters a valid email the error message dissapears). Generally this works well but you may want to use some other validation behavior. Check out the [react hook form docs](https://react-hook-form.com/api/useform) and pass a custom `useForm` to your forms `form` prop:
 
 ```tsx
-const form = useForm<z.infer<typeof MyFormSchema>>();
+const form = useForm<z.infer<typeof MyFormSchema>>({
+  resolver: zodResolver(MyFormSchema),
+  revalidateMode: "onSubmit" // now the form revalidates on submit
+});
 
 return (
   <Form 
