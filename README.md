@@ -239,7 +239,7 @@ z.object({
 
 In the above schema, the `email` field is validated as an email because we've called `.email()` on the string schema, the message "Invalid email" will be put into the form state if the user tries to submit. To learn more about the different types of validations you can perform you should consult the [zod](https://github.com/colinhacks/zod) documentation.
 
-### Resetting Errors
+### Revalidation
 The default behavior for this library is that errors will be shown once the user tries to submit, and fields will be revalidated as the value changes (as soon as the user enters a valid email the error message dissapears). Generally this works well but you may want to use some other validation behavior. Check out the [react hook form docs](https://react-hook-form.com/api/useform) and pass a custom `useForm` to your forms `form` prop:
 
 ```tsx
@@ -255,6 +255,8 @@ return (
   />
 )
 ```
+
+For more information about dealing with errors (IE imperatively resetiting errors), check out the [hook form docs](https://react-hook-form.com)
 
 ## Dealing with collisions
 
