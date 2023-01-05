@@ -138,18 +138,18 @@ If you want the control, name, or other `@ts-react/form` data to be passed to pr
 1. [Quick Start](#installation)
 2. [Creating Input Components](#creating-input-components)
 3. [TypeSafe Props](#typesafe-props)
-4. [Dealing With Collisions](#dealing-with-collisions)
-5. [Handling Optionals](#handling-optionals)
-6. [Error Handling](#error-handling)
+4. [!!!Error Handling!!!](#error-handling)
+5. [Dealing With Collisions](#dealing-with-collisions)
+6. [Handling Optionals](#handling-optionals)
 7. [Accessing useForm State](#accessing-useform-state)
 8. [Complex Field Types](#complex-field-types)
-9. [Rendering Non Input Components](#adding-non-input-components-into-your-form)
-10. [Customizing Form Components](#customizing-form-components)
-11. [Default Values](#default-values)
-12. [Prop Forwarding](#prop-forwarding)
-13. [Manual Form Submission](#manual-form-submission)
-14. [React Native Usage](#react-native-usage)
-15. [❤️ Quality of Life / Productivity ❤️](#qol)
+11. [Rendering Non Input Components](#adding-non-input-components-into-your-form)
+12. [Customizing Form Components](#customizing-form-components)
+13. [Default Values](#default-values)
+14. [Prop Forwarding](#prop-forwarding)
+15. [Manual Form Submission](#manual-form-submission)
+16. [React Native Usage](#react-native-usage)
+17. [❤️ Quality of Life / Productivity ❤️](#qol)
 
 ## TypeSafe Props
 
@@ -206,10 +206,49 @@ Fixed! We get all the same typesafety of writing out the full jsx.
 
 ## Error Handling
 
-You can handle errors with the `fieldState` returned from `useTsController` just like in `react-hook-form`, but `@ts-react/form` also returns an `errors` object that's more accurately typed than `react-hook-forms`'s that should be used any time you are using an [object schema](#complex-field-types) to render one of your fields.
+It's important to always display errors to your users when validation fails. 
+
+### Accessing Error Messages in your component
+
+You can handle errors with the `fieldState` returned from `useTsController` just like in `react-hook-form`, but `@ts-react/form` also returns an `errors` object that's more accurately typed than `react-hook-forms`'s that you can use to show errors:
 
 ```tsx
-const { error } = useTsController<string>();
+function MyComponent() {
+  const { error } = useTsController<string>();
+
+  return (
+    <div>
+      // ...
+      // Normally we conditionally render error messages
+      {error && <span>{error.errorMessage}</span>} 
+    </div>
+  )
+}
+```
+
+Zod schemas make it very easy to create validation steps for your form while also providing an easy way to pass error messages when those steps fail:
+
+```tsx
+z.object({
+  email: z.string().email("Invalid email"),
+  password: z.string().min(1, "Please enter a password.").min(8, "Your password must be at least 8 characters in length")
+)}
+```
+
+In the above schema, the `email` field is validated as an email because we've called `.email()` on the string schema, the message "Invalid email" will be put into the form state if the user tries to submit. To learn more about the different types of validations you can perform you should consult the [zod](https://github.com/colinhacks/zod) documentation.
+
+### Resetting Errors
+The default behavior for this library is that errors will be shown once the user tries to submit, and fields will be revalidated as the value changes (as soon as the user enters a valid email the error message dissapears). Generally this works well but you may want to use some other validation behavior. Check out the [react hook form docs](https://react-hook-form.com/api/useform) and pass a custom `useForm` to your forms `form` prop:
+
+```tsx
+const form = useForm<z.infer<typeof MyFormSchema>>();
+
+return (
+  <Form 
+    //...
+    form={form}
+  />
+)
 ```
 
 ## Dealing with collisions
