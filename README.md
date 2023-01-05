@@ -210,7 +210,7 @@ It's important to always display errors to your users when validation fails.
 
 ### Accessing Error Messages in your component
 
-You can handle errors with the `fieldState` returned from `useTsController` just like in `react-hook-form`, but `@ts-react/form` also returns an `errors` object that's more accurately typed than `react-hook-forms`'s that you can use to show errors:
+@ts-react/form also returns an `error` object that's more accurately typed than `react-hook-forms`'s that you can use to show errors:
 
 ```tsx
 function MyComponent() {
