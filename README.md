@@ -138,18 +138,18 @@ If you want the control, name, or other `@ts-react/form` data to be passed to pr
 1. [Quick Start](#installation)
 2. [Creating Input Components](#creating-input-components)
 3. [TypeSafe Props](#typesafe-props)
-4. [!!!Error Handling!!!](#error-handling)
+4. [⚠️Error Handling⚠️](#error-handling)
 5. [Dealing With Collisions](#dealing-with-collisions)
 6. [Handling Optionals](#handling-optionals)
 7. [Accessing useForm State](#accessing-useform-state)
 8. [Complex Field Types](#complex-field-types)
-11. [Rendering Non Input Components](#adding-non-input-components-into-your-form)
-12. [Customizing Form Components](#customizing-form-components)
-13. [Default Values](#default-values)
-14. [Prop Forwarding](#prop-forwarding)
-15. [Manual Form Submission](#manual-form-submission)
-16. [React Native Usage](#react-native-usage)
-17. [❤️ Quality of Life / Productivity ❤️](#qol)
+9. [Rendering Non Input Components](#adding-non-input-components-into-your-form)
+10. [Customizing Form Components](#customizing-form-components)
+11. [Default Values](#default-values)
+12. [Prop Forwarding](#prop-forwarding)
+13. [Manual Form Submission](#manual-form-submission)
+14. [React Native Usage](#react-native-usage)
+15. [❤️ Quality of Life / Productivity ❤️](#qol)
 
 ## TypeSafe Props
 
@@ -225,6 +225,8 @@ function MyComponent() {
   )
 }
 ```
+
+## Writing error messages
 
 Zod schemas make it very easy to create validation steps for your form while also providing an easy way to pass error messages when those steps fail:
 
