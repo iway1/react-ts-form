@@ -1,6 +1,34 @@
+# dependencies
+.pnp
+.pnp.js
 node_modules
-coverage
-.yarn
-.vscode
+package-lock.json
+yarn.
+
+# build
+build
 lib
-.env
+out/
+
+# testing
+coverage
+
+# next.js
+.next/
+
+# misc
+.DS_Store
+*.pem
+.vscode
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files
+.env*
+
+# turbo
+.turbo
