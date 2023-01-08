@@ -6,15 +6,20 @@ import {
   HIDDEN_ID_PROPERTY,
   isSchemaWithHiddenProperties,
 } from "../createFieldSchema";
+import { createTsForm } from "../createSchemaForm";
+import { TextField } from "./utils/testForm";
 
 describe("createFieldSchema", () => {
   it("should throw an error if an ID is used twice", () => {
     jest.spyOn(console, "error").mockImplementation(() => {});
+    const mapping = [
+      [createUniqueFieldSchema(z.string(), "id"), TextField],
+      [createUniqueFieldSchema(z.string(), "id"), TextField],
+    ] as const;
+
     expect(() => {
-      createUniqueFieldSchema(z.string(), "id");
-      createUniqueFieldSchema(z.string(), "id");
+      createTsForm(mapping);
     }).toThrowError(duplicateIdErrorMessage("id"));
-    jest.spyOn;
   });
 });
 
