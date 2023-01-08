@@ -21,6 +21,15 @@ describe("createFieldSchema", () => {
       createTsForm(mapping);
     }).toThrowError(duplicateIdErrorMessage("id"));
   });
+  it("should not throw an error if two different ids are used", () => {
+    const mapping = [
+      [createUniqueFieldSchema(z.string(), "id"), TextField],
+      [createUniqueFieldSchema(z.string(), "id2"), TextField],
+    ] as const;
+    expect(() => {
+      createTsForm(mapping);
+    }).not.toThrowError();
+  });
 });
 
 describe("addHiddenProperties", () => {
