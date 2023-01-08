@@ -17,6 +17,11 @@ import { RTFBaseZodType, RTFSupportedZodTypes } from "./supportedZodTypes";
 import { FieldContextProvider } from "./FieldContext";
 import { isZodTypeEqual } from "./isZodTypeEqual";
 import { duplicateTypeError, printWarningsForSchema } from "./logging";
+import {
+  duplicateIdErrorMessage,
+  HIDDEN_ID_PROPERTY,
+  isSchemaWithHiddenProperties,
+} from "./createFieldSchema";
 
 /**
  * @internal
@@ -93,6 +98,17 @@ function checkForDuplicateTypes(array: RTFSupportedZodTypes[]) {
     printWarningsForSchema(b);
     if (isZodTypeEqual(a!, b)) {
       duplicateTypeError();
+    }
+  }
+}
+
+function checkForDuplicateUniqueFields(array: RTFSupportedZodTypes[]) {
+  let usedIdsSet = new Set<string>();
+  for (const type of array) {
+    if (isSchemaWithHiddenProperties(type)) {
+      if (usedIdsSet.has(type[HIDDEN_ID_PROPERTY]))
+        throw new Error(duplicateIdErrorMessage(type[HIDDEN_ID_PROPERTY]));
+      usedIdsSet.add(type[HIDDEN_ID_PROPERTY]);
     }
   }
 }
@@ -191,7 +207,9 @@ export function createTsForm<
   const ActualFormComponent = options?.FormComponent
     ? options.FormComponent
     : "form";
-  checkForDuplicateTypes(componentMap.map((e) => e[0]));
+  const schemas = componentMap.map((e) => e[0]);
+  checkForDuplicateTypes(schemas);
+  checkForDuplicateUniqueFields(schemas);
   const propsMap = propsMapToObect(
     options?.propsMap ? options.propsMap : defaultPropsMap
   );

@@ -1,8 +1,5 @@
 import { z } from "zod";
-import {
-  createUniqueFieldSchema,
-  testingResetUsedIdsSet,
-} from "../createFieldSchema";
+import { createUniqueFieldSchema } from "../createFieldSchema";
 import { isZodTypeEqual } from "../isZodTypeEqual";
 import { RTFSupportedZodTypes } from "../supportedZodTypes";
 import { combinations } from "./utils/combinations";
@@ -13,10 +10,6 @@ const parameterlessTypes = [
   z.object as () => RTFSupportedZodTypes,
   z.boolean,
 ];
-
-beforeEach(() => {
-  testingResetUsedIdsSet();
-});
 
 describe("isZodTypeEqual", () => {
   it("should return true when parameterless zod types are equal to themselves", () => {

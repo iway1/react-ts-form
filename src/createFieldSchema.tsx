@@ -31,12 +31,6 @@ export function addHiddenProperties<T extends RTFSupportedZodTypes>(
   return schema;
 }
 
-let usedIdsSet = new Set<string>();
-
-export function testingResetUsedIdsSet() {
-  usedIdsSet = new Set();
-}
-
 export function duplicateIdErrorMessage(id: string) {
   return `Duplicate id passed to createFieldSchema: ${id}. Ensure that each id is only being used once and that createFieldSchema is only called at the top level.`;
 }
@@ -64,8 +58,6 @@ export function createUniqueFieldSchema<
   T extends RTFSupportedZodTypes,
   Identifier extends string
 >(schema: T, id: Identifier) {
-  if (usedIdsSet.has(id)) throw new Error(duplicateIdErrorMessage(id));
-  usedIdsSet.add(id);
   const r = schema.brand<Identifier>();
   return addHiddenProperties(r, { [HIDDEN_ID_PROPERTY]: id });
 }
