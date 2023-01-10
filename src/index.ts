@@ -1,5 +1,6 @@
 export { createUniqueFieldSchema } from "./createFieldSchema";
 export { createTsForm } from "./createSchemaForm";
+export { useSchemaForm } from "./useSchemaForm";
 export {
   useDescription,
   useReqDescription,

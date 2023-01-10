@@ -3,16 +3,25 @@ import React, {
   Fragment,
   ReactNode,
   RefAttributes,
-  useRef,
+  useMemo,
 } from "react";
 import { ComponentProps } from "react";
-import { DeepPartial, useForm, UseFormReturn } from "react-hook-form";
-import { AnyZodObject, z, ZodEffects } from "zod";
+import {
+  Control,
+  DeepPartial,
+  UseFormReturn,
+  useFormState,
+  useWatch,
+} from "react-hook-form";
+import { z, ZodEffects } from "zod";
 import { getComponentForZodType } from "./getComponentForZodType";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { IndexOf, RequireKeysWithRequiredChildren } from "./typeUtilities";
+import {
+  PropsInner,
+  RequireKeysWithRequiredChildren,
+  UnwrapEffects,
+} from "./typeUtilities";
 import { getMetaInformationForZodType } from "./getMetaInformationForZodType";
-import { unwrapEffects, UnwrapZodType } from "./unwrap";
+import { unwrapEffects } from "./unwrap";
 import { RTFBaseZodType, RTFSupportedZodTypes } from "./supportedZodTypes";
 import { FieldContextProvider } from "./FieldContext";
 import { isZodTypeEqual } from "./isZodTypeEqual";
@@ -22,6 +31,10 @@ import {
   HIDDEN_ID_PROPERTY,
   isSchemaWithHiddenProperties,
 } from "./createFieldSchema";
+import { useSchemaForm } from "./useSchemaForm";
+import { useEnsureTruthinessAcrossRenders } from "./useEnsureTruthiness";
+import { errorFromRhfErrorObject, RecursiveErrorType } from "./zodObjectErrors";
+import { errorMessage } from "./errorMessages";
 
 /**
  * @internal
@@ -59,10 +72,6 @@ export function noMatchingSchemaErrorMessage(
   return `No matching zod schema for type \`${propertyType}\` found in mapping for property \`${propertyName}\`. Make sure there's a matching zod schema for every property in your schema.`;
 }
 
-export function useFormResultValueChangedErrorMesssage() {
-  return `useFormResult prop changed - its value shouldn't changed during the lifetime of the component.`;
-}
-
 /**
  * @internal
  */
@@ -78,16 +87,6 @@ export type ExtraProps = {
    */
   afterElement?: ReactNode;
 };
-
-/**
- * @internal
- */
-type UnwrapEffects<T extends AnyZodObject | ZodEffects<any, any>> =
-  T extends AnyZodObject
-    ? T
-    : T extends ZodEffects<any, any>
-    ? T["_def"]["schema"]
-    : never;
 
 function checkForDuplicateTypes(array: RTFSupportedZodTypes[]) {
   var combinations = array.flatMap((v, i) =>
@@ -289,37 +288,12 @@ export function createTsForm<
      * />
      * ```
      */
-    props?: RequireKeysWithRequiredChildren<
-      Partial<{
-        [key in keyof z.infer<SchemaType>]: Mapping[IndexOf<
-          Mapping,
-          readonly [
-            UnwrapZodType<
-              ReturnType<UnwrapEffects<SchemaType>["_def"]["shape"]>[key]
-            >,
-            any
-          ]
-        >] extends readonly [any, any] // I guess this tells typescript it has a second element? errors without this check.
-          ? Omit<
-              ComponentProps<
-                Mapping[IndexOf<
-                  Mapping,
-                  readonly [
-                    UnwrapZodType<
-                      ReturnType<
-                        UnwrapEffects<SchemaType>["_def"]["shape"]
-                      >[key]
-                    >,
-                    any
-                  ]
-                >][1]
-              >,
-              PropsMapType[number][1]
-            > &
-              ExtraProps
-          : never;
-      }>
-    >;
+    props?:
+      | PropsInner<Mapping, SchemaType, PropsMapType>
+      | ((
+          fieldValues: DeepPartial<z.infer<UnwrapEffects<SchemaType>>>,
+          errorValues: RecursiveErrorType<z.infer<UnwrapEffects<SchemaType>>>
+        ) => PropsInner<Mapping, SchemaType, PropsMapType>);
   }> &
     RequireKeysWithRequiredChildren<{
       /**
@@ -327,20 +301,21 @@ export function createTsForm<
        */
       formProps?: Omit<ComponentProps<FormType>, "children" | "onSubmit">;
     }>) {
-    const useFormResultInitialValue = useRef<
-      undefined | ReturnType<typeof useForm>
-    >(form);
-    if (!!useFormResultInitialValue.current !== !!form) {
-      throw new Error(useFormResultValueChangedErrorMesssage());
-    }
-    const { control, handleSubmit } = (() => {
-      if (form) return form;
-      const uf = useForm({
-        resolver: zodResolver(schema),
-        defaultValues,
-      });
-      return uf;
-    })();
+    const isPropsFunction = typeof props === "function";
+    useEnsureTruthinessAcrossRenders({
+      thing: form,
+      message: errorMessage.useFormResultChanged,
+    });
+    useEnsureTruthinessAcrossRenders({
+      thing: isPropsFunction,
+      message: errorMessage.isFunctionChanged,
+    });
+    const { handleSubmit, control } = useSchemaForm({
+      form,
+      schema,
+      defaultValues,
+    });
+
     const _schema = unwrapEffects(schema);
     const shape: Record<string, RTFSupportedZodTypes> = _schema._def.shape();
 
@@ -348,6 +323,10 @@ export function createTsForm<
       onSubmit(data);
     }
     const submitFn = handleSubmit(_submit);
+    const watch = isPropsFunction ? useWatch({ control }) : undefined;
+    const { errors } = isPropsFunction
+      ? useFormState({ control })
+      : { errors: {} };
     return (
       <ActualFormComponent {...formProps} onSubmit={submitFn}>
         {renderBefore && renderBefore({ submit: submitFn })}
@@ -360,45 +339,88 @@ export function createTsForm<
             );
           }
           const meta = getMetaInformationForZodType(type);
-
-          const fieldProps = props && props[key] ? (props[key] as any) : {};
-
+          const _props = (() => {
+            if (isPropsFunction) {
+              return props(
+                watch as any,
+                errorFromRhfErrorObject(errors as any) as any
+              );
+            }
+            return props;
+          })();
+          const fieldProps = _props && _props[key] ? (_props[key] as any) : {};
           const { beforeElement, afterElement } = fieldProps;
-
+          delete fieldProps.beforeElement;
+          delete fieldProps.afterElement;
           const mergedProps = {
-            ...(propsMap.name && { [propsMap.name]: key }),
-            ...(propsMap.control && { [propsMap.control]: control }),
-            ...(propsMap.enumValues && {
-              [propsMap.enumValues]: meta.enumValues,
-            }),
-            ...(propsMap.descriptionLabel && {
-              [propsMap.descriptionLabel]: meta.description?.label,
-            }),
-            ...(propsMap.descriptionPlaceholder && {
-              [propsMap.descriptionPlaceholder]: meta.description?.placeholder,
+            ...propsMapProps({
+              propsMap,
+              vals: {
+                key,
+                control,
+                enumValues: meta.enumValues,
+                descriptionLabel: meta.description?.label,
+                descriptionPlaceholder: meta.description?.placeholder,
+              },
             }),
             ...fieldProps,
           };
           const ctxLabel = meta.description?.label;
           const ctxPlaceholder = meta.description?.placeholder;
+
+          const propVals = Object.values(mergedProps);
           return (
             <Fragment key={key}>
-              {beforeElement}
-              <FieldContextProvider
-                control={control}
-                name={key}
-                label={ctxLabel}
-                placeholder={ctxPlaceholder}
-                enumValues={meta.enumValues as string[] | undefined}
-              >
-                <Component key={key} {...mergedProps} />
-              </FieldContextProvider>
-              {afterElement}
+              {useMemo(() => beforeElement, [beforeElement])}
+              {useMemo(
+                () => (
+                  <FieldContextProvider
+                    control={control}
+                    name={key}
+                    label={ctxLabel}
+                    placeholder={ctxPlaceholder}
+                    enumValues={meta.enumValues as string[] | undefined}
+                  >
+                    <Component key={key} {...mergedProps} />
+                  </FieldContextProvider>
+                ),
+                propVals
+              )}
+
+              {useMemo(() => afterElement, [afterElement])}
             </Fragment>
           );
         })}
         {renderAfter && renderAfter({ submit: submitFn })}
       </ActualFormComponent>
     );
+  };
+}
+
+function propsMapProps({
+  propsMap,
+  vals: { key, control, enumValues, descriptionPlaceholder, descriptionLabel },
+}: {
+  propsMap: ReturnType<typeof propsMapToObect>;
+  vals: {
+    key: string;
+    control: Control<any>;
+    enumValues?: readonly string[];
+    descriptionLabel?: string;
+    descriptionPlaceholder?: string;
+  };
+}) {
+  return {
+    ...(propsMap.name && { [propsMap.name]: key }),
+    ...(propsMap.control && { [propsMap.control]: control }),
+    ...(propsMap.enumValues && {
+      [propsMap.enumValues]: enumValues,
+    }),
+    ...(propsMap.descriptionLabel && {
+      [propsMap.descriptionLabel]: descriptionLabel,
+    }),
+    ...(propsMap.descriptionPlaceholder && {
+      [propsMap.descriptionPlaceholder]: descriptionPlaceholder,
+    }),
   };
 }

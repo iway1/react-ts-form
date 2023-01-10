@@ -1,3 +1,12 @@
+import { ComponentProps } from "react";
+import { AnyZodObject, z, ZodEffects } from "zod";
+import {
+  ExtraProps,
+  FormComponentMapping,
+  PropsMapping,
+} from "./createSchemaForm";
+import { UnwrapZodType } from "./unwrap";
+
 /**
  * @internal
  */
@@ -21,10 +30,31 @@ export type OptionalKeys<T> = {
 export type RequiredKeys<T> = {
   [K in keyof NonNullable<T>]-?: {} extends Pick<NonNullable<T>, K> ? never : K;
 }[keyof NonNullable<T>];
-type IsEmpty<T> = T[keyof T] extends never ? true : false;
-type HasRequiredKey<T> = IsEmpty<RequiredKeys<T>> extends false ? true : false;
-type KeysWithRequiredKeyList<T> = {
-  [key in keyof T]-?: HasRequiredKey<T[key]> extends true ? key : never;
+
+/**
+ * @internal
+ */
+export type IsEmpty<T> = T[keyof T] extends never ? true : false;
+
+/**
+ * @internal
+ */
+export type HasRequiredKey<T> = IsEmpty<RequiredKeys<T>> extends false
+  ? true
+  : false;
+
+/**
+ * @internal
+ */
+export type UnwrapFn<T> = T extends (...args: any) => infer Ret ? Ret : T;
+
+/**
+ * @internal
+ */
+export type KeysWithRequiredKeyList<T> = {
+  [key in keyof T]-?: HasRequiredKey<UnwrapFn<T[key]>> extends true
+    ? key
+    : never;
 }[keyof T];
 
 /**
@@ -32,6 +62,16 @@ type KeysWithRequiredKeyList<T> = {
  */
 export type Require<T, K extends keyof T> = T & { [P in K]-?: T[P] };
 
+/**
+ * @internal
+ */
+export type Fn = (...args: any) => any;
+/**
+ * @internal
+ */
+export type ReturnTypeKeys<T extends Record<string, Fn>> = {
+  [key in keyof T]: ReturnType<T[key]>;
+};
 /**
  * @internal
  */
@@ -71,3 +111,49 @@ export type IndexOf<V extends readonly any[], T> = {
       : never
     : never;
 }[keyof Indexes<V>];
+
+/**
+ * @internal
+ */
+export type UnwrapEffects<T extends AnyZodObject | ZodEffects<any, any>> =
+  T extends AnyZodObject
+    ? T
+    : T extends ZodEffects<any, any>
+    ? T["_def"]["schema"]
+    : never;
+
+type SomeSchema = AnyZodObject | ZodEffects<any, any>;
+
+export type PropsInner<
+  Mapping extends FormComponentMapping,
+  SchemaType extends SomeSchema,
+  PropsMapType extends PropsMapping
+> = RequireKeysWithRequiredChildren<
+  Partial<{
+    [key in keyof z.infer<SchemaType>]: Mapping[IndexOf<
+      Mapping,
+      readonly [
+        UnwrapZodType<
+          ReturnType<UnwrapEffects<SchemaType>["_def"]["shape"]>[key]
+        >,
+        any
+      ]
+    >] extends readonly [any, any] // I guess this tells typescript it has a second element? errors without this check.
+      ? Omit<
+          ComponentProps<
+            Mapping[IndexOf<
+              Mapping,
+              readonly [
+                UnwrapZodType<
+                  ReturnType<UnwrapEffects<SchemaType>["_def"]["shape"]>[key]
+                >,
+                any
+              ]
+            >][1]
+          >,
+          PropsMapType[number][1]
+        > &
+          ExtraProps
+      : never;
+  }>
+>;

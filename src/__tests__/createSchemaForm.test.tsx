@@ -1,4 +1,4 @@
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useMemo, useState } from "react";
 import { z } from "zod";
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
@@ -11,7 +11,6 @@ import {
 import {
   createTsForm,
   noMatchingSchemaErrorMessage,
-  useFormResultValueChangedErrorMesssage,
 } from "../createSchemaForm";
 import { SPLIT_DESCRIPTION_SYMBOL as DESCRIPTION_SEPARATOR_SYMBOL } from "../getMetaInformationForZodType";
 import { Control, useController, useForm } from "react-hook-form";
@@ -22,7 +21,8 @@ import {
   useReqDescription,
   useTsController,
 } from "../FieldContext";
-
+import { useEnsureTruthinessAccrossRenders } from "../useEnsureTruthiness";
+import { errorMessage } from "../errorMessages";
 const testIds = {
   textField: "_text-field",
   textFieldTwo: "_text-field-2",
@@ -431,7 +431,7 @@ describe("createSchemaForm", () => {
     const button = screen.getByTestId(buttonId);
 
     await expect(userEvent.click(button)).rejects.toThrowError(
-      useFormResultValueChangedErrorMesssage()
+      useEnsureTruthinessAccrossRenders(errorMessage.useFormResultChanged)
     );
   });
   it("should be possible to set and read form state with useTsController", async () => {
@@ -766,5 +766,172 @@ describe("createSchemaForm", () => {
       render(<Form schema={Schema} onSubmit={() => {}} />);
     }).toThrow();
   });
-  it("should be possible to show nested error messages with the 'errorMessage' helper returned from `useTsController`", () => {});
+  it("should be possible for afterElement and beforeElement to rerender without a prop change", async () => {
+    const Schema = z.object({
+      field: z.string(),
+    });
+
+    function Page() {
+      const [v, setV] = useState(0);
+      return (
+        <TestForm
+          schema={Schema}
+          props={{
+            field: {
+              beforeElement: (
+                <button
+                  onClick={() => setV((v) => v + 1)}
+                  data-testid="incrementButton"
+                >
+                  {`Up ${v}`}
+                </button>
+              ),
+              afterElement: useMemo(
+                () => <span id={v + ""}>{"span-" + v}</span>,
+                [v]
+              ),
+            },
+          }}
+          onSubmit={(data) => {
+            console.log(data);
+          }}
+        />
+      );
+    }
+    render(<Page />);
+
+    const button = screen.getByTestId("incrementButton");
+
+    await userEvent.click(button);
+    await userEvent.click(button);
+
+    expect(screen.queryByText("span-" + 2)).toBeInTheDocument();
+    expect(screen.queryByText("Up " + 2)).toBeInTheDocument();
+  });
+  it("should rerender the field component if the props for that field change", async () => {
+    function Field({ prop }: { prop: number }) {
+      return <div>{"render-" + prop}</div>;
+    }
+    const mapping = [[z.string(), Field]] as const;
+    const Form = createTsForm(mapping);
+    function Page() {
+      const [prop, setProp] = useState(0);
+      return (
+        <Form
+          schema={z.object({
+            field: z.string(),
+          })}
+          onSubmit={() => {}}
+          props={{
+            field: {
+              prop,
+            },
+          }}
+          renderAfter={() => (
+            <button type={"button"} onClick={() => setProp((v) => v + 1)}>
+              ClickMe
+            </button>
+          )}
+        />
+      );
+    }
+
+    render(<Page />);
+
+    const button = screen.getByText("ClickMe");
+    await userEvent.click(button);
+
+    expect(screen.getByText("render-1")).toBeInTheDocument();
+  });
+  it("shouldn't rerender the field component if the parent rerenders and the props change.", async () => {
+    let renderNumber = 0;
+    function Field(_: { prop: number }) {
+      const n = renderNumber;
+      renderNumber++;
+      return <div>{"render-" + n}</div>;
+    }
+    const mapping = [[z.string(), Field]] as const;
+    const Form = createTsForm(mapping);
+    function Page() {
+      const [__, setForceRerender] = useState(0);
+      return (
+        <Form
+          schema={z.object({
+            field: z.string(),
+          })}
+          onSubmit={() => {}}
+          props={(fieldValues) => ({
+            field: {
+              prop: fieldValues.field ? 5 : 0,
+            },
+          })}
+          renderAfter={() => (
+            <button
+              type={"button"}
+              onClick={() => setForceRerender((v) => v + 1)}
+            >
+              ClickMe
+            </button>
+          )}
+        />
+      );
+    }
+
+    render(<Page />);
+
+    const button = screen.getByText("ClickMe");
+    await userEvent.click(button);
+
+    expect(screen.getByText("render-0")).toBeInTheDocument();
+  });
+  it("should allow updating props dependent on field values", async () => {
+    function DependentField({ prop, title }: { prop: string; title: string }) {
+      const {
+        field: { value, onChange },
+      } = useTsController<string>();
+
+      return (
+        <>
+          <input
+            value={value ? value : ""}
+            placeholder={title}
+            onChange={(e) => onChange(e.target.value)}
+          />
+          <div>{`${title}:${prop}`}</div>
+        </>
+      );
+    }
+    const mapping = [[z.string(), DependentField]] as const;
+    const Form = createTsForm(mapping);
+
+    render(
+      <Form
+        schema={z.object({
+          one: z.string(),
+          two: z.string(),
+        })}
+        onSubmit={() => {}}
+        props={(fieldValues) => {
+          return {
+            one: {
+              title: "fieldone",
+              prop: "propone",
+            },
+            two: {
+              title: "fieldtwo",
+              prop: fieldValues.one ? fieldValues.one : "",
+            },
+          };
+        }}
+      />
+    );
+
+    const oneInput = screen.getByPlaceholderText("fieldone");
+    await userEvent.type(oneInput, "sometext");
+
+    expect(screen.getByText("fieldtwo:sometext")).toBeInTheDocument();
+  });
+  it("should allow passing error messages via props", () => {});
+  it("should allow passing nested error objects via props", () => {});
+  it("should throw an error if 'props' changes from function to not a function", () => {});
 });
