@@ -247,7 +247,7 @@ The default behavior for this library is that errors will be shown once the user
 ```tsx
 const form = useForm<z.infer<typeof MyFormSchema>>({
   resolver: zodResolver(MyFormSchema),
-  revalidateMode: "onSubmit" // now the form revalidates on submit
+  reValidateMode: "onSubmit" // now the form revalidates on submit
 });
 
 return (
