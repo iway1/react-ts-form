@@ -1,3 +1,4 @@
+import { ZodBranded } from "zod";
 import { RTFSupportedZodTypes } from "./supportedZodTypes";
 
 export const HIDDEN_ID_PROPERTY = "_rtf_id";
@@ -21,7 +22,7 @@ export function isSchemaWithHiddenProperties<T extends RTFSupportedZodTypes>(
   return HIDDEN_ID_PROPERTY in schemaType;
 }
 
-export function addHiddenProperties<T extends RTFSupportedZodTypes>(
+function addHiddenProperties<T extends RTFSupportedZodTypes>(
   schema: T,
   properties: HiddenProperties
 ) {
@@ -57,7 +58,7 @@ export function duplicateIdErrorMessage(id: string) {
 export function createUniqueFieldSchema<
   T extends RTFSupportedZodTypes,
   Identifier extends string
->(schema: T, id: Identifier) {
-  const r = schema.brand<Identifier>();
+>(schema: T, id: Identifier): ZodBranded<T, Identifier> {
+  const r = schema.brand<Identifier>() as ZodBranded<T, Identifier>;
   return addHiddenProperties(r, { [HIDDEN_ID_PROPERTY]: id });
 }
