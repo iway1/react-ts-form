@@ -1,4 +1,5 @@
 import React, {
+  ComponentType,
   ForwardRefExoticComponent,
   Fragment,
   ReactNode,
@@ -7,7 +8,7 @@ import React, {
 } from "react";
 import { ComponentProps } from "react";
 import { DeepPartial, useForm, UseFormReturn } from "react-hook-form";
-import { AnyZodObject, z, ZodEffects } from "zod";
+import { AnyZodObject, z, ZodBranded, ZodEffects } from "zod";
 import { getComponentForZodType } from "./getComponentForZodType";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IndexOf, RequireKeysWithRequiredChildren } from "./typeUtilities";
@@ -88,6 +89,31 @@ type UnwrapEffects<T extends AnyZodObject | ZodEffects<any, any>> =
     : T extends ZodEffects<any, any>
     ? T["_def"]["schema"]
     : never;
+
+/**
+ * @internal
+ *
+ *
+ */
+type GetComponentFromMapping<
+  Mapping extends readonly any[],
+  Target extends RTFSupportedZodTypes
+> = Mapping extends readonly [
+  readonly [infer Type, infer Return extends ComponentType<any>],
+  ...infer Rest
+]
+  ? Target extends ZodBranded<infer X, infer Y>
+    ? Type extends ZodBranded<infer X2, infer Y2>
+      ? X extends X2
+        ? Y extends Y2
+          ? Return
+          : GetComponentFromMapping<Rest, Target>
+        : GetComponentFromMapping<Rest, Target>
+      : GetComponentFromMapping<Rest, Target>
+    : Target extends Type
+    ? Return
+    : GetComponentFromMapping<Rest, Target>
+  : never;
 
 function checkForDuplicateTypes(array: RTFSupportedZodTypes[]) {
   var combinations = array.flatMap((v, i) =>
@@ -291,33 +317,16 @@ export function createTsForm<
      */
     props?: RequireKeysWithRequiredChildren<
       Partial<{
-        [key in keyof z.infer<SchemaType>]: Mapping[IndexOf<
-          Mapping,
-          readonly [
-            UnwrapZodType<
-              ReturnType<UnwrapEffects<SchemaType>["_def"]["shape"]>[key]
-            >,
-            any
-          ]
-        >] extends readonly [any, any] // I guess this tells typescript it has a second element? errors without this check.
-          ? Omit<
-              ComponentProps<
-                Mapping[IndexOf<
-                  Mapping,
-                  readonly [
-                    UnwrapZodType<
-                      ReturnType<
-                        UnwrapEffects<SchemaType>["_def"]["shape"]
-                      >[key]
-                    >,
-                    any
-                  ]
-                >][1]
-              >,
-              PropsMapType[number][1]
-            > &
-              ExtraProps
-          : never;
+        [Prop in keyof UnwrapEffects<SchemaType>["shape"]]: Omit<
+          ComponentProps<
+            GetComponentFromMapping<
+              Mapping,
+              UnwrapEffects<SchemaType>["shape"][Prop]
+            >
+          >,
+          PropsMapType[number][1]
+        > &
+          ExtraProps;
       }>
     >;
   }> &
