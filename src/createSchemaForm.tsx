@@ -10,9 +10,14 @@ import { DeepPartial, useForm, UseFormReturn } from "react-hook-form";
 import { AnyZodObject, z, ZodEffects } from "zod";
 import { getComponentForZodType } from "./getComponentForZodType";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IndexOf, RequireKeysWithRequiredChildren } from "./typeUtilities";
+import {
+  IndexOf,
+  IndexOfUnwrapZodType,
+  RequireKeysWithRequiredChildren,
+  UnwrapMapping,
+} from "./typeUtilities";
 import { getMetaInformationForZodType } from "./getMetaInformationForZodType";
-import { unwrapEffects, UnwrapZodType } from "./unwrap";
+import { unwrapEffects } from "./unwrap";
 import { RTFBaseZodType, RTFSupportedZodTypes } from "./supportedZodTypes";
 import { FieldContextProvider } from "./FieldContext";
 import { isZodTypeEqual } from "./isZodTypeEqual";
@@ -292,9 +297,9 @@ export function createTsForm<
     props?: RequireKeysWithRequiredChildren<
       Partial<{
         [key in keyof z.infer<SchemaType>]: Mapping[IndexOf<
-          Mapping,
+          UnwrapMapping<Mapping>,
           readonly [
-            UnwrapZodType<
+            IndexOfUnwrapZodType<
               ReturnType<UnwrapEffects<SchemaType>["_def"]["shape"]>[key]
             >,
             any
@@ -303,9 +308,9 @@ export function createTsForm<
           ? Omit<
               ComponentProps<
                 Mapping[IndexOf<
-                  Mapping,
+                  UnwrapMapping<Mapping>,
                   readonly [
-                    UnwrapZodType<
+                    IndexOfUnwrapZodType<
                       ReturnType<
                         UnwrapEffects<SchemaType>["_def"]["shape"]
                       >[key]

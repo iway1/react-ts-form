@@ -1,3 +1,8 @@
+import { z } from "zod";
+import type { FormComponentMapping } from "./createSchemaForm";
+import { RTFBaseZodType, RTFSupportedZodTypes } from "./supportedZodTypes";
+import { UnwrapZodType } from "./unwrap";
+
 /**
  * @internal
  */
@@ -60,6 +65,31 @@ export type DistributiveOmit<T, K extends keyof T> = T extends any
 export type Indexes<V extends readonly any[]> = {
   [K in Exclude<keyof V, keyof Array<any>>]: K;
 };
+
+/**
+ * @internal
+ */
+export type UnwrapZodBrand<T extends RTFBaseZodType> = T extends z.ZodBranded<
+  z.ZodTypeAny,
+  infer ID
+>
+  ? ID
+  : T;
+
+/**
+ * @internal
+ */
+export type UnwrapMapping<T extends FormComponentMapping> = {
+  [Index in keyof T]: T[Index] extends readonly [any, any]
+    ? readonly [UnwrapZodBrand<T[Index][0]>, any]
+    : never;
+};
+
+/**
+ * @internal
+ */
+export type IndexOfUnwrapZodType<T extends RTFSupportedZodTypes> =
+  T extends z.ZodBranded<z.ZodTypeAny, infer ID> ? ID : UnwrapZodType<T>;
 
 /**
  * @internal
