@@ -22,6 +22,7 @@ import {
   useReqDescription,
   useTsController,
 } from "../FieldContext";
+import { expectTypeOf } from "expect-type";
 import { createUniqueFieldSchema } from "../createFieldSchema";
 
 const testIds = {
@@ -793,7 +794,7 @@ describe("createSchemaForm", () => {
         .refine((_) => true)
         .transform((a) => a.a)}
       onSubmit={(data) => {
-        data.startsWith("cool"); // just type checks as a string
+        expectTypeOf(data).toBeString();
       }}
       props={{
         a: {
