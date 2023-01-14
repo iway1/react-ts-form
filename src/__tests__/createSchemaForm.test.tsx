@@ -767,7 +767,8 @@ describe("createSchemaForm", () => {
       render(<Form schema={Schema} onSubmit={() => {}} />);
     }).toThrow();
   });
-  it("should correctly type the form with multiple unique field schemas.", () => {
+
+  it("should have correct typings with multiple unique field schemas when transform and refine are used.", () => {
     const A = createUniqueFieldSchema(z.string(), "one");
     const B = createUniqueFieldSchema(z.string(), "two");
     function In1(_: { req: string }) {
@@ -784,11 +785,16 @@ describe("createSchemaForm", () => {
     const Form = createTsForm(mapping);
 
     <Form
-      schema={z.object({
-        a: A,
-        b: B,
-      })}
-      onSubmit={() => {}}
+      schema={z
+        .object({
+          a: A,
+          b: B,
+        })
+        .refine((_) => true)
+        .transform((a) => a.a)}
+      onSubmit={(data) => {
+        data.startsWith("cool"); // just type checks as a string
+      }}
       props={{
         a: {
           req: "One",

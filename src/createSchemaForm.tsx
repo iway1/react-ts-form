@@ -90,8 +90,10 @@ export type ExtraProps = {
 type UnwrapEffects<T extends AnyZodObject | ZodEffects<any, any>> =
   T extends AnyZodObject
     ? T
-    : T extends ZodEffects<any, any>
-    ? T["_def"]["schema"]
+    : T extends ZodEffects<infer EffectsSchema, any>
+    ? EffectsSchema extends ZodEffects<infer EffectsSchemaInner, any>
+      ? EffectsSchemaInner
+      : EffectsSchema
     : never;
 
 function checkForDuplicateTypes(array: RTFSupportedZodTypes[]) {
@@ -237,7 +239,7 @@ export function createTsForm<
     /**
      * A callback function that will be called with the data once the form has been submitted and validated successfully.
      */
-    onSubmit: (values: z.infer<UnwrapEffects<SchemaType>>) => void;
+    onSubmit: (values: z.infer<SchemaType>) => void;
     /**
      * Initializes your form with default values. Is a deep partial, so all properties and nested properties are optional.
      */
@@ -296,7 +298,7 @@ export function createTsForm<
      */
     props?: RequireKeysWithRequiredChildren<
       Partial<{
-        [key in keyof z.infer<SchemaType>]: Mapping[IndexOf<
+        [key in keyof z.infer<UnwrapEffects<SchemaType>>]: Mapping[IndexOf<
           UnwrapMapping<Mapping>,
           readonly [
             IndexOfUnwrapZodType<
