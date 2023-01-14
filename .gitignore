@@ -4,3 +4,5 @@ coverage
 .vscode
 lib
 .env
+
+src/playground.tsx

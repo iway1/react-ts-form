@@ -22,6 +22,7 @@ import {
   useReqDescription,
   useTsController,
 } from "../FieldContext";
+import { createUniqueFieldSchema } from "../createFieldSchema";
 
 const testIds = {
   textField: "_text-field",
@@ -766,5 +767,36 @@ describe("createSchemaForm", () => {
       render(<Form schema={Schema} onSubmit={() => {}} />);
     }).toThrow();
   });
-  it("should be possible to show nested error messages with the 'errorMessage' helper returned from `useTsController`", () => {});
+  it("should correctly type the form with multiple unique field schemas.", () => {
+    const A = createUniqueFieldSchema(z.string(), "one");
+    const B = createUniqueFieldSchema(z.string(), "two");
+    function In1(_: { req: string }) {
+      return <div />;
+    }
+    function In2(_: { req2: string }) {
+      return <div />;
+    }
+    const mapping = [
+      [A, In1],
+      [B, In2],
+    ] as const;
+
+    const Form = createTsForm(mapping);
+
+    <Form
+      schema={z.object({
+        a: A,
+        b: B,
+      })}
+      onSubmit={() => {}}
+      props={{
+        a: {
+          req: "One",
+        },
+        b: {
+          req2: "Two",
+        },
+      }}
+    />;
+  });
 });
