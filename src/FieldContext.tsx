@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { createContext, ReactNode } from "react";
 import {
   Control,
@@ -15,6 +15,8 @@ export const FieldContext = createContext<null | {
   label?: string;
   placeholder?: string;
   enumValues?: string[];
+  addToCoerceUndefined: (v: string) => void;
+  removeFromCoerceUndefined: (v: string) => void;
 }>(null);
 
 export function FieldContextProvider({
@@ -24,6 +26,8 @@ export function FieldContextProvider({
   label,
   placeholder,
   enumValues,
+  addToCoerceUndefined,
+  removeFromCoerceUndefined,
 }: {
   name: string;
   control: Control<any>;
@@ -31,10 +35,20 @@ export function FieldContextProvider({
   placeholder?: string;
   enumValues?: string[];
   children: ReactNode;
+  addToCoerceUndefined: (v: string) => void;
+  removeFromCoerceUndefined: (v: string) => void;
 }) {
   return (
     <FieldContext.Provider
-      value={{ control, name, label, placeholder, enumValues }}
+      value={{
+        control,
+        name,
+        label,
+        placeholder,
+        enumValues,
+        addToCoerceUndefined,
+        removeFromCoerceUndefined,
+      }}
     >
       {children}
     </FieldContext.Provider>
@@ -70,6 +84,9 @@ function useContextProt(name: string) {
 export function useTsController<FieldType extends any>() {
   const context = useContextProt("useTsController");
   type IsObj = FieldType extends Object ? true : false;
+  type OnChangeValue = IsObj extends true
+    ? DeepPartial<FieldType> | undefined
+    : FieldType | undefined;
   // Just gives better types to useController
   const controller = useController(context) as any as Omit<
     UseControllerReturn,
@@ -77,19 +94,33 @@ export function useTsController<FieldType extends any>() {
   > & {
     field: Omit<UseControllerReturn["field"], "value" | "onChange"> & {
       value: FieldType | undefined;
-      onChange: (
-        value: IsObj extends true
-          ? DeepPartial<FieldType> | undefined
-          : FieldType | undefined
-      ) => void;
+      onChange: (value: OnChangeValue) => void;
     };
   };
-  const { fieldState } = controller;
-  // Typings for error objects get f'd up w/ nested objects in `react-hook-form` so we build a friendlier object / type
+  const {
+    fieldState,
+    field: { onChange },
+  } = controller;
+  const [isUndefined, setIsUndefined] = useState(false);
 
+  function _onChange(value: OnChangeValue) {
+    if (value === undefined) {
+      setIsUndefined(true);
+      context.addToCoerceUndefined(context.name);
+    } else {
+      setIsUndefined(false);
+      context.removeFromCoerceUndefined(context.name);
+      onChange(value);
+    }
+  }
   return {
     ...controller,
     error: errorFromRhfErrorObject<FieldType>(fieldState.error),
+    field: {
+      ...controller.field,
+      value: isUndefined ? undefined : controller.field.value,
+      onChange: _onChange,
+    },
   };
 }
 

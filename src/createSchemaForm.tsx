@@ -6,7 +6,12 @@ import React, {
   useRef,
 } from "react";
 import { ComponentProps } from "react";
-import { DeepPartial, useForm, UseFormReturn } from "react-hook-form";
+import {
+  DeepPartial,
+  ErrorOption,
+  useForm,
+  UseFormReturn,
+} from "react-hook-form";
 import { AnyZodObject, z, ZodEffects } from "zod";
 import { getComponentForZodType } from "./getComponentForZodType";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -340,21 +345,51 @@ export function createTsForm<
     if (!!useFormResultInitialValue.current !== !!form) {
       throw new Error(useFormResultValueChangedErrorMesssage());
     }
-    const { control, handleSubmit } = (() => {
+    const resolver = zodResolver(schema);
+    const { control, handleSubmit, setError } = (() => {
       if (form) return form;
       const uf = useForm({
-        resolver: zodResolver(schema),
+        resolver,
         defaultValues,
       });
       return uf;
     })();
     const _schema = unwrapEffects(schema);
     const shape: Record<string, RTFSupportedZodTypes> = _schema._def.shape();
+    const coerceUndefinedFieldsRef = useRef<Set<string>>(new Set());
+
+    function addToCoerceUndefined(fieldName: string) {
+      coerceUndefinedFieldsRef.current.add(fieldName);
+    }
+
+    function removeFromCoerceUndefined(fieldName: string) {
+      coerceUndefinedFieldsRef.current.delete(fieldName);
+    }
+
+    function removeUndefined(data: any) {
+      const r = { ...data };
+      for (const undefinedField of coerceUndefinedFieldsRef.current) {
+        delete r[undefinedField];
+      }
+      return r;
+    }
 
     function _submit(data: z.infer<SchemaType>) {
-      onSubmit(data);
+      resolver(removeUndefined(data), {} as any, {} as any).then((e) => {
+        const errorKeys = Object.keys(e.errors);
+        if (!errorKeys.length) {
+          onSubmit(data);
+          return;
+        }
+        for (const key of errorKeys) {
+          setError(
+            key as any,
+            (e.errors as any)[key] as unknown as ErrorOption
+          );
+        }
+      });
     }
-    const submitFn = handleSubmit(_submit);
+    const submitFn = handleSubmit(_submit, (errors) => console.log(errors));
     return (
       <ActualFormComponent {...formProps} onSubmit={submitFn}>
         {renderBefore && renderBefore({ submit: submitFn })}
@@ -397,6 +432,8 @@ export function createTsForm<
                 label={ctxLabel}
                 placeholder={ctxPlaceholder}
                 enumValues={meta.enumValues as string[] | undefined}
+                addToCoerceUndefined={addToCoerceUndefined}
+                removeFromCoerceUndefined={removeFromCoerceUndefined}
               >
                 <Component key={key} {...mergedProps} />
               </FieldContextProvider>
