@@ -806,4 +806,162 @@ describe("createSchemaForm", () => {
       }}
     />;
   });
+  it("should show a required error and not submit after deleting a default value and submitting", async () => {
+    const mockOnSubmit = jest.fn();
+    function Input() {
+      const {
+        field: { onChange, value },
+        error,
+      } = useTsController<number>();
+      const [_, setRerender] = useState(0);
+      return (
+        <>
+          <input
+            value={value !== undefined ? value + "" : ""}
+            onChange={(e) => {
+              const value = parseInt(e.target.value);
+              if (isNaN(value)) onChange(undefined);
+              else onChange(value);
+            }}
+            placeholder={"input"}
+          />
+          <button type={"button"} onClick={() => setRerender((old) => old + 1)}>
+            rerender button
+          </button>
+          {error?.errorMessage && <span>{error.errorMessage}</span>}
+        </>
+      );
+    }
+    const mapping = [[z.number(), Input]] as const;
+    const Form = createTsForm(mapping);
+    const defaultValues = {
+      number: 5,
+    };
+
+    render(
+      <Form
+        onSubmit={mockOnSubmit}
+        schema={z.object({
+          number: z.number({ required_error: "req" }),
+        })}
+        defaultValues={defaultValues}
+        renderAfter={() => <button>submit</button>}
+      />
+    );
+
+    const button = screen.getByText("submit");
+    const input = screen.getByPlaceholderText("input");
+    const rerenderButton = screen.getByText("rerender button");
+
+    await userEvent.clear(input);
+    await userEvent.click(button);
+    await userEvent.click(rerenderButton);
+
+    expect(screen.getByText("req")).toBeInTheDocument();
+    expect(mockOnSubmit).not.toHaveBeenCalled();
+  });
+  it("should be to clear an input, type into the input, and then submit.", async () => {
+    const mockOnSubmit = jest.fn();
+    function Input() {
+      const {
+        field: { onChange, value },
+        error,
+      } = useTsController<number>();
+      const [_, setRerender] = useState(0);
+      return (
+        <>
+          <input
+            value={value !== undefined ? value + "" : ""}
+            onChange={(e) => {
+              const value = parseInt(e.target.value);
+              if (isNaN(value)) onChange(undefined);
+              else onChange(value);
+            }}
+            placeholder={"input"}
+          />
+          <button type={"button"} onClick={() => setRerender((old) => old + 1)}>
+            rerender button
+          </button>
+          {error?.errorMessage && <span>{error.errorMessage}</span>}
+        </>
+      );
+    }
+    const mapping = [[z.number(), Input]] as const;
+    const Form = createTsForm(mapping);
+    const defaultValues = {
+      number: 5,
+    };
+
+    render(
+      <Form
+        onSubmit={mockOnSubmit}
+        schema={z.object({
+          number: z.number({ required_error: "req" }),
+        })}
+        defaultValues={defaultValues}
+        renderAfter={() => <button>submit</button>}
+      />
+    );
+
+    const button = screen.getByText("submit");
+    const input = screen.getByPlaceholderText("input");
+    const rerenderButton = screen.getByText("rerender button");
+
+    await userEvent.clear(input);
+    await userEvent.type(input, "5");
+    await userEvent.click(button);
+    await userEvent.click(rerenderButton);
+
+    expect(screen.queryByText("req")).not.toBeInTheDocument();
+    expect(mockOnSubmit).toHaveBeenCalledWith({ number: 5 });
+  });
+  it("should be possible to submit with default values with no edits.", async () => {
+    const mockOnSubmit = jest.fn();
+    function Input() {
+      const {
+        field: { onChange, value },
+        error,
+      } = useTsController<number>();
+      const [_, setRerender] = useState(0);
+      return (
+        <>
+          <input
+            value={value !== undefined ? value + "" : ""}
+            onChange={(e) => {
+              const value = parseInt(e.target.value);
+              if (isNaN(value)) onChange(undefined);
+              else onChange(value);
+            }}
+            placeholder={"input"}
+          />
+          <button type={"button"} onClick={() => setRerender((old) => old + 1)}>
+            rerender button
+          </button>
+          {error?.errorMessage && <span>{error.errorMessage}</span>}
+        </>
+      );
+    }
+    const mapping = [[z.number(), Input]] as const;
+    const Form = createTsForm(mapping);
+    const defaultValues = {
+      number: 5,
+    };
+
+    render(
+      <Form
+        onSubmit={mockOnSubmit}
+        schema={z.object({
+          number: z.number({ required_error: "req" }),
+        })}
+        defaultValues={defaultValues}
+        renderAfter={() => <button>submit</button>}
+      />
+    );
+
+    const button = screen.getByText("submit");
+    await userEvent.click(button);
+
+    expect(screen.queryByText("req")).not.toBeInTheDocument();
+    expect(mockOnSubmit).toHaveBeenCalledWith({ number: 5 });
+  });
 });
