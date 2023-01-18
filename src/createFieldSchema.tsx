@@ -13,13 +13,14 @@ export type HiddenProperties = {
 /**
  * @internal
  */
-export type SchemaWithHiddenProperties<T extends RTFSupportedZodTypes> = T &
-  HiddenProperties;
+export type SchemaWithHiddenProperties<T extends RTFSupportedZodTypes> = T & {
+  _def: T["_def"] & HiddenProperties;
+};
 
 export function isSchemaWithHiddenProperties<T extends RTFSupportedZodTypes>(
   schemaType: T
 ): schemaType is SchemaWithHiddenProperties<T> {
-  return HIDDEN_ID_PROPERTY in schemaType;
+  return HIDDEN_ID_PROPERTY in schemaType._def;
 }
 
 export function addHiddenProperties<
@@ -27,7 +28,7 @@ export function addHiddenProperties<
   T extends RTFSupportedZodTypes
 >(schema: T, properties: HiddenProperties) {
   for (const key in properties) {
-    (schema as any)[key] = properties[key as keyof typeof properties];
+    (schema._def as any)[key] = properties[key as keyof typeof properties];
   }
   return schema as ZodBranded<T, ID>;
 }

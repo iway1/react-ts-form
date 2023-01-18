@@ -26,7 +26,7 @@ export function unwrap(type: RTFSupportedZodTypes): {
   let r = type;
   let hiddenId: null | string = null;
   if (isSchemaWithHiddenProperties(type)) {
-    hiddenId = type[HIDDEN_ID_PROPERTY];
+    hiddenId = type._def[HIDDEN_ID_PROPERTY];
   }
 
   while (unwrappable.has(r._def.typeName)) {

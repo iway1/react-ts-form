@@ -118,9 +118,9 @@ function checkForDuplicateUniqueFields(array: RTFSupportedZodTypes[]) {
   let usedIdsSet = new Set<string>();
   for (const type of array) {
     if (isSchemaWithHiddenProperties(type)) {
-      if (usedIdsSet.has(type[HIDDEN_ID_PROPERTY]))
-        throw new Error(duplicateIdErrorMessage(type[HIDDEN_ID_PROPERTY]));
-      usedIdsSet.add(type[HIDDEN_ID_PROPERTY]);
+      if (usedIdsSet.has(type._def[HIDDEN_ID_PROPERTY]))
+        throw new Error(duplicateIdErrorMessage(type._def[HIDDEN_ID_PROPERTY]));
+      usedIdsSet.add(type._def[HIDDEN_ID_PROPERTY]);
     }
   }
 }
