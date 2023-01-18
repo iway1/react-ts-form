@@ -13,7 +13,10 @@ import {
   noMatchingSchemaErrorMessage,
   useFormResultValueChangedErrorMesssage,
 } from "../createSchemaForm";
-import { SPLIT_DESCRIPTION_SYMBOL as DESCRIPTION_SEPARATOR_SYMBOL } from "../getMetaInformationForZodType";
+import {
+  SPLIT_DESCRIPTION_SYMBOL as DESCRIPTION_SEPARATOR_SYMBOL,
+  SPLIT_DESCRIPTION_SYMBOL,
+} from "../getMetaInformationForZodType";
 import { Control, useController, useForm } from "react-hook-form";
 import userEvent from "@testing-library/user-event";
 import {
@@ -581,7 +584,7 @@ describe("createSchemaForm", () => {
       propsMap: propsMapping,
     });
     const MySchema = z.object({
-      n: z.enum(["e"]).describe("l//p"),
+      n: z.enum(["e"]).describe(`l${SPLIT_DESCRIPTION_SYMBOL}p`),
     });
     render(<Form schema={MySchema} onSubmit={(_) => {}} />);
     expect(screen.getByText("*")).toBeInTheDocument();
@@ -710,13 +713,13 @@ describe("createSchemaForm", () => {
       );
     }
     const componentMap = [
-      [z.string().describe("a//b"), Comp] as const,
+      [z.string().describe(`a ${SPLIT_DESCRIPTION_SYMBOL} b`), Comp] as const,
     ] as const;
 
     const Form = createTsForm(componentMap);
 
     const FormSchema = z.object({
-      field: z.string().describe("a//b"),
+      field: z.string().describe(`a ${SPLIT_DESCRIPTION_SYMBOL} b`),
     });
     render(<Form schema={FormSchema} onSubmit={() => {}} />);
 
