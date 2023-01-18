@@ -23,7 +23,9 @@ function Select({ options }: { options: string[] }) {
       >
         {!field.value && <option value="none">Please select...</option>}
         {options.map((e) => (
-          <option key={e} value={e}>{e}</option>
+          <option key={e} value={e}>
+            {e}
+          </option>
         ))}
       </select>
       <span>{error?.errorMessage && error.errorMessage}</span>
@@ -96,7 +98,6 @@ function NumberField({ req }: { req: number }) {
         <input
           value={value !== undefined ? value + "" : ""}
           onChange={(e) => {
-            console.log("");
             const value = parseInt(e.target.value);
             if (isNaN(value)) onChange(undefined);
             else onChange(value);

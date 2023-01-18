@@ -389,7 +389,7 @@ export function createTsForm<
         }
       });
     }
-    const submitFn = handleSubmit(_submit, (errors) => console.log(errors));
+    const submitFn = handleSubmit(_submit);
     return (
       <ActualFormComponent {...formProps} onSubmit={submitFn}>
         {renderBefore && renderBefore({ submit: submitFn })}
