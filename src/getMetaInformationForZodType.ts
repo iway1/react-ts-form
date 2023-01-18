@@ -2,16 +2,17 @@ import { z } from "zod";
 import { RTFSupportedZodTypes } from "./supportedZodTypes";
 import { unwrap } from "./unwrap";
 
-export const SPLIT_DESCRIPTION_SYMBOL = "//";
+export const SPLIT_DESCRIPTION_SYMBOL = " // ";
 
 export function parseDescription(description?: string) {
   if (!description) return;
-  const split = description
+  const [label, ...rest] = description
     .split(SPLIT_DESCRIPTION_SYMBOL)
     .map((e) => e.trim());
+  const placeholder = rest.join(SPLIT_DESCRIPTION_SYMBOL);
   return {
-    label: split[0]!,
-    placeholder: split[1],
+    label: label!,
+    placeholder: placeholder ? placeholder : undefined,
   };
 }
 
