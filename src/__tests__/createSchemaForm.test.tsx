@@ -967,4 +967,33 @@ describe("createSchemaForm", () => {
     expect(screen.queryByText("req")).not.toBeInTheDocument();
     expect(mockOnSubmit).toHaveBeenCalledWith({ number: 5 });
   });
+  it("should render the correct component when a schema created with createSchemaForm is optional", () => {
+    const StringSchema = createUniqueFieldSchema(z.string(), "string");
+    const NumberSchema = createUniqueFieldSchema(z.number(), "number");
+
+    function TextField() {
+      return <div>text</div>;
+    }
+
+    function NumberField() {
+      return <div>number</div>;
+    }
+
+    const mapping = [
+      [StringSchema, TextField],
+      [z.string(), TextField],
+      [NumberSchema, NumberField],
+    ] as const;
+
+    const Form = createTsForm(mapping);
+
+    const schema = z.object({
+      name: StringSchema.optional(), // if .optional is added to a schema it stops working
+      age: NumberSchema,
+    });
+    render(<Form schema={schema} onSubmit={() => {}} />);
+
+    expect(screen.queryByText("text")).toBeInTheDocument();
+    expect(screen.queryByText("number")).toBeInTheDocument();
+  });
 });
