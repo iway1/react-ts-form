@@ -15,6 +15,7 @@ const unwrappable = new Set<z.ZodFirstPartyTypeKind>([
   z.ZodFirstPartyTypeKind.ZodOptional,
   z.ZodFirstPartyTypeKind.ZodNullable,
   z.ZodFirstPartyTypeKind.ZodBranded,
+  z.ZodFirstPartyTypeKind.ZodDefault,
 ]);
 
 export function unwrap(type: RTFSupportedZodTypes): {
@@ -38,6 +39,11 @@ export function unwrap(type: RTFSupportedZodTypes): {
         r = r._def.type;
         break;
       case z.ZodFirstPartyTypeKind.ZodNullable:
+        r = r._def.innerType;
+        break;
+      // @ts-ignore
+      case z.ZodFirstPartyTypeKind.ZodDefault:
+        // @ts-ignore
         r = r._def.innerType;
         break;
     }
