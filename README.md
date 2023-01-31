@@ -149,7 +149,8 @@ If you want the control, name, or other `@ts-react/form` data to be passed to pr
 12. [Prop Forwarding](#prop-forwarding)
 13. [Manual Form Submission](#manual-form-submission)
 14. [React Native Usage](#react-native-usage)
-15. [❤️ Quality of Life / Productivity ❤️](#qol)
+15. [.refine(), (Password/Confirm Password etc)](#zod-refine)
+16. [❤️ Quality of Life / Productivity ❤️](#qol)
 
 ## TypeSafe Props
 
@@ -206,7 +207,7 @@ Fixed! We get all the same typesafety of writing out the full jsx.
 
 ## Error Handling
 
-It's important to always display errors to your users when validation fails. 
+It's important to always display errors to your users when validation fails.
 
 ### Accessing Error Messages in your component
 
@@ -218,11 +219,10 @@ function MyComponent() {
 
   return (
     <div>
-      // ...
-      // Normally we conditionally render error messages
-      {error && <span>{error.errorMessage}</span>} 
+      // ... // Normally we conditionally render error messages
+      {error && <span>{error.errorMessage}</span>}
     </div>
-  )
+  );
 }
 ```
 
@@ -242,22 +242,23 @@ z.object({
 In the above schema, the `email` field is validated as an email because we've called `.email()` on the string schema, the message "Invalid email" will be put into the form state if the user tries to submit. To learn more about the different types of validations you can perform you should consult the [zod](https://github.com/colinhacks/zod) documentation (since zod schemas are what generates the errors for this library).
 
 ### Revalidation
+
 The default behavior for this library is that errors will be shown once the user tries to submit, and fields will be revalidated as the value changes (as soon as the user enters a valid email the error message dissapears). Generally this works well but you may want to use some other validation behavior. Check out the [react hook form docs](https://react-hook-form.com/api/useform) and pass a custom `useForm` to your forms `form` prop:
 
 ```tsx
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const form = useForm<z.infer<typeof MyFormSchema>>({
   resolver: zodResolver(MyFormSchema),
-  reValidateMode: "onSubmit" // now the form revalidates on submit
+  reValidateMode: "onSubmit", // now the form revalidates on submit
 });
 
 return (
-  <Form 
+  <Form
     //...
     form={form}
   />
-)
+);
 ```
 
 For more information about dealing with errors (IE imperatively resetiting errors), check out the [hook form docs](https://react-hook-form.com)
@@ -529,6 +530,27 @@ const MyForm = createTsForm(componentMap, {
 ```
 
 Props that are included in the props map will no longer be passable via the `props` prop of the form. So if you don't want to forward any props to your components (and prefer just using hooks), you can pass an empty array. _Any data that's not included in the props map will no longer be passed to your components_
+
+# Zod Refine
+
+Zods `.refine` method can be used to implement more advanced forms of validation, such as making sure a field takes on a certain value (like making sure a box is checked) or doing checks involving multiple fields (password / confirm password). **You must call .refine on the form schema itself, not on fields (unless you want the refined field to be mapped to a unique component)**:
+
+```tsx
+z.object({
+  password: z.string(),
+  confirmPassword: z.string(),
+}).refine(
+  (values) => {
+    return values.password === values.confirmPassword;
+  },
+  {
+    message: "Passwords must match!",
+    path: ["confirmPassword"],
+  }
+);
+```
+
+This would map the message "Passwords must match!" to the `confirmPassword` field in case the passwords don't match. Note that `.refine` only validates after the base schema object passes validation.
 
 <a name="qol"/>
 
