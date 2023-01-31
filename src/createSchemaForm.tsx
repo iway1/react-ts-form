@@ -9,6 +9,7 @@ import { ComponentProps } from "react";
 import {
   DeepPartial,
   ErrorOption,
+  FormProvider,
   useForm,
   UseFormReturn,
 } from "react-hook-form";
@@ -346,7 +347,7 @@ export function createTsForm<
       throw new Error(useFormResultValueChangedErrorMesssage());
     }
     const resolver = zodResolver(schema);
-    const { control, handleSubmit, setError } = (() => {
+    const _form = (() => {
       if (form) return form;
       const uf = useForm({
         resolver,
@@ -354,6 +355,7 @@ export function createTsForm<
       });
       return uf;
     })();
+    const { control, handleSubmit, setError } = _form;
     const _schema = unwrapEffects(schema);
     const shape: Record<string, RTFSupportedZodTypes> = _schema._def.shape();
     const coerceUndefinedFieldsRef = useRef<Set<string>>(new Set());
@@ -391,58 +393,60 @@ export function createTsForm<
     }
     const submitFn = handleSubmit(_submit);
     return (
-      <ActualFormComponent {...formProps} onSubmit={submitFn}>
-        {renderBefore && renderBefore({ submit: submitFn })}
-        {Object.keys(shape).map((key) => {
-          const type = shape[key] as RTFSupportedZodTypes;
-          const Component = getComponentForZodType(type, componentMap);
-          if (!Component) {
-            throw new Error(
-              noMatchingSchemaErrorMessage(key, type._def.typeName)
+      <FormProvider {..._form}>
+        <ActualFormComponent {...formProps} onSubmit={submitFn}>
+          {renderBefore && renderBefore({ submit: submitFn })}
+          {Object.keys(shape).map((key) => {
+            const type = shape[key] as RTFSupportedZodTypes;
+            const Component = getComponentForZodType(type, componentMap);
+            if (!Component) {
+              throw new Error(
+                noMatchingSchemaErrorMessage(key, type._def.typeName)
+              );
+            }
+            const meta = getMetaInformationForZodType(type);
+
+            const fieldProps = props && props[key] ? (props[key] as any) : {};
+
+            const { beforeElement, afterElement } = fieldProps;
+
+            const mergedProps = {
+              ...(propsMap.name && { [propsMap.name]: key }),
+              ...(propsMap.control && { [propsMap.control]: control }),
+              ...(propsMap.enumValues && {
+                [propsMap.enumValues]: meta.enumValues,
+              }),
+              ...(propsMap.descriptionLabel && {
+                [propsMap.descriptionLabel]: meta.description?.label,
+              }),
+              ...(propsMap.descriptionPlaceholder && {
+                [propsMap.descriptionPlaceholder]: meta.description?.placeholder,
+              }),
+              ...fieldProps,
+            };
+            const ctxLabel = meta.description?.label;
+            const ctxPlaceholder = meta.description?.placeholder;
+            return (
+              <Fragment key={key}>
+                {beforeElement}
+                <FieldContextProvider
+                  control={control}
+                  name={key}
+                  label={ctxLabel}
+                  placeholder={ctxPlaceholder}
+                  enumValues={meta.enumValues as string[] | undefined}
+                  addToCoerceUndefined={addToCoerceUndefined}
+                  removeFromCoerceUndefined={removeFromCoerceUndefined}
+                >
+                  <Component key={key} {...mergedProps} />
+                </FieldContextProvider>
+                {afterElement}
+              </Fragment>
             );
-          }
-          const meta = getMetaInformationForZodType(type);
-
-          const fieldProps = props && props[key] ? (props[key] as any) : {};
-
-          const { beforeElement, afterElement } = fieldProps;
-
-          const mergedProps = {
-            ...(propsMap.name && { [propsMap.name]: key }),
-            ...(propsMap.control && { [propsMap.control]: control }),
-            ...(propsMap.enumValues && {
-              [propsMap.enumValues]: meta.enumValues,
-            }),
-            ...(propsMap.descriptionLabel && {
-              [propsMap.descriptionLabel]: meta.description?.label,
-            }),
-            ...(propsMap.descriptionPlaceholder && {
-              [propsMap.descriptionPlaceholder]: meta.description?.placeholder,
-            }),
-            ...fieldProps,
-          };
-          const ctxLabel = meta.description?.label;
-          const ctxPlaceholder = meta.description?.placeholder;
-          return (
-            <Fragment key={key}>
-              {beforeElement}
-              <FieldContextProvider
-                control={control}
-                name={key}
-                label={ctxLabel}
-                placeholder={ctxPlaceholder}
-                enumValues={meta.enumValues as string[] | undefined}
-                addToCoerceUndefined={addToCoerceUndefined}
-                removeFromCoerceUndefined={removeFromCoerceUndefined}
-              >
-                <Component key={key} {...mergedProps} />
-              </FieldContextProvider>
-              {afterElement}
-            </Fragment>
-          );
-        })}
-        {renderAfter && renderAfter({ submit: submitFn })}
-      </ActualFormComponent>
+          })}
+          {renderAfter && renderAfter({ submit: submitFn })}
+        </ActualFormComponent>
+      </FormProvider>
     );
   };
 }
