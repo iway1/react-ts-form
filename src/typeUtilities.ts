@@ -1,7 +1,7 @@
-import { z } from "zod";
+import type { z } from "zod";
 import type { FormComponentMapping } from "./createSchemaForm";
-import { RTFBaseZodType, RTFSupportedZodTypes } from "./supportedZodTypes";
-import { UnwrapZodType } from "./unwrap";
+import type { RTFBaseZodType, RTFSupportedZodTypes } from "./supportedZodTypes";
+import type { UnwrapZodType } from "./unwrap";
 
 /**
  * @internal
