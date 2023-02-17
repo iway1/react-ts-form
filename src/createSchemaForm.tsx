@@ -1,6 +1,7 @@
 import React, {
   ForwardRefExoticComponent,
   Fragment,
+  FunctionComponent,
   ReactNode,
   RefAttributes,
   useRef,
@@ -237,6 +238,7 @@ export function createTsForm<
     renderAfter,
     renderBefore,
     form,
+    children : CustomChildrenComponent,
   }: {
     /**
      * A Zod Schema - An input field will be rendered for each property in the schema, based on the mapping passed to `createTsForm`
@@ -286,6 +288,9 @@ export function createTsForm<
      * ```
      */
     form?: UseFormReturn<z.infer<SchemaType>>;
+    children? : FunctionComponent<{renderedFields : {
+      [key in keyof z.infer<UnwrapEffects<SchemaType>>] : ReactNode
+    }}>
   } & RequireKeysWithRequiredChildren<{
     /**
      * Props to pass to the individual form components. The keys of `props` will be the names of your form properties in the form schema, and they will
@@ -392,58 +397,64 @@ export function createTsForm<
       });
     }
     const submitFn = handleSubmit(_submit);
+    type SchemaKey = keyof z.infer<UnwrapEffects<SchemaType>>;
+    const renderedFields = Object.keys(shape).reduce((accum, key : SchemaKey) => {
+      // we know this is a string but TS thinks it can be number and symbol so just in case stringify
+      const stringKey = key.toString();
+      const type = shape[key] as RTFSupportedZodTypes;
+      const Component = getComponentForZodType(type, componentMap);
+      if (!Component) {
+        throw new Error(
+          noMatchingSchemaErrorMessage(stringKey, type._def.typeName)
+        );
+      }
+      const meta = getMetaInformationForZodType(type);
+
+      const fieldProps = props && props[key] ? (props[key] as any) : {};
+
+      const { beforeElement, afterElement } = fieldProps;
+
+      const mergedProps = {
+        ...(propsMap.name && { [propsMap.name]: key }),
+        ...(propsMap.control && { [propsMap.control]: control }),
+        ...(propsMap.enumValues && {
+          [propsMap.enumValues]: meta.enumValues,
+        }),
+        ...(propsMap.descriptionLabel && {
+          [propsMap.descriptionLabel]: meta.description?.label,
+        }),
+        ...(propsMap.descriptionPlaceholder && {
+          [propsMap.descriptionPlaceholder]: meta.description?.placeholder,
+        }),
+        ...fieldProps,
+      };
+      const ctxLabel = meta.description?.label;
+      const ctxPlaceholder = meta.description?.placeholder;
+      accum[key] = (
+        <Fragment key={stringKey}>
+          {beforeElement}
+          <FieldContextProvider
+            control={control}
+            name={stringKey}
+            label={ctxLabel}
+            placeholder={ctxPlaceholder}
+            enumValues={meta.enumValues as string[] | undefined}
+            addToCoerceUndefined={addToCoerceUndefined}
+            removeFromCoerceUndefined={removeFromCoerceUndefined}
+          >
+            <Component key={key} {...mergedProps} />
+          </FieldContextProvider>
+          {afterElement}
+        </Fragment>
+      );
+      return accum;
+    }, {} as Record<SchemaKey, React.ReactNode>);
+    const renderedFieldNodes = Object.values(renderedFields);
     return (
       <FormProvider {..._form}>
-        <ActualFormComponent {...formProps} onSubmit={submitFn}>
+        <ActualFormComponent {...formProps} onSubmit={submitFn} >
           {renderBefore && renderBefore({ submit: submitFn })}
-          {Object.keys(shape).map((key) => {
-            const type = shape[key] as RTFSupportedZodTypes;
-            const Component = getComponentForZodType(type, componentMap);
-            if (!Component) {
-              throw new Error(
-                noMatchingSchemaErrorMessage(key, type._def.typeName)
-              );
-            }
-            const meta = getMetaInformationForZodType(type);
-
-            const fieldProps = props && props[key] ? (props[key] as any) : {};
-
-            const { beforeElement, afterElement } = fieldProps;
-
-            const mergedProps = {
-              ...(propsMap.name && { [propsMap.name]: key }),
-              ...(propsMap.control && { [propsMap.control]: control }),
-              ...(propsMap.enumValues && {
-                [propsMap.enumValues]: meta.enumValues,
-              }),
-              ...(propsMap.descriptionLabel && {
-                [propsMap.descriptionLabel]: meta.description?.label,
-              }),
-              ...(propsMap.descriptionPlaceholder && {
-                [propsMap.descriptionPlaceholder]: meta.description?.placeholder,
-              }),
-              ...fieldProps,
-            };
-            const ctxLabel = meta.description?.label;
-            const ctxPlaceholder = meta.description?.placeholder;
-            return (
-              <Fragment key={key}>
-                {beforeElement}
-                <FieldContextProvider
-                  control={control}
-                  name={key}
-                  label={ctxLabel}
-                  placeholder={ctxPlaceholder}
-                  enumValues={meta.enumValues as string[] | undefined}
-                  addToCoerceUndefined={addToCoerceUndefined}
-                  removeFromCoerceUndefined={removeFromCoerceUndefined}
-                >
-                  <Component key={key} {...mergedProps} />
-                </FieldContextProvider>
-                {afterElement}
-              </Fragment>
-            );
-          })}
+          {CustomChildrenComponent ? <CustomChildrenComponent renderedFields={renderedFields}></CustomChildrenComponent> : renderedFieldNodes}
           {renderAfter && renderAfter({ submit: submitFn })}
         </ActualFormComponent>
       </FormProvider>
