@@ -245,7 +245,7 @@ export function createTsForm<
     /**
      * A callback function that will be called with the data once the form has been submitted and validated successfully.
      */
-    onSubmit: (values: z.infer<SchemaType>) => void;
+    onSubmit: (values: z.infer<SchemaType>) => void | Promise<void>;
     /**
      * Initializes your form with default values. Is a deep partial, so all properties and nested properties are optional.
      */
@@ -377,10 +377,10 @@ export function createTsForm<
     }
 
     function _submit(data: z.infer<SchemaType>) {
-      resolver(removeUndefined(data), {} as any, {} as any).then((e) => {
+      return resolver(removeUndefined(data), {} as any, {} as any).then(async (e) => {
         const errorKeys = Object.keys(e.errors);
         if (!errorKeys.length) {
-          onSubmit(data);
+          await onSubmit(data);
           return;
         }
         for (const key of errorKeys) {

@@ -96,3 +96,9 @@ const propsMap = [
 export const TestForm = createTsForm(mapping, {
   propsMap: propsMap,
 });
+
+const FormWithSubmit = ({children,...props} : {children : JSX.Element[],   onSubmit: () => void;}) => <form {...props}>{children} <button type="submit">submit</button></form>;
+export const TestFormWithSubmit = createTsForm(mapping, {
+  propsMap: propsMap,
+  FormComponent: FormWithSubmit
+});
