@@ -178,7 +178,7 @@ describe("createSchemaForm", () => {
       enum: z.enum(enumValues),
     });
 
-    render(<TestForm onSubmit={(data) => {}} schema={Schema} />);
+    render(<TestForm onSubmit={() => {}} schema={Schema} />);
 
     for (const value of enumValues) {
       expect(screen.queryByText(value)).toBeTruthy();
