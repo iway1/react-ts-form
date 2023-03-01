@@ -69,6 +69,58 @@ describe("createSchemaForm", () => {
     expect(screen.queryByTestId(testIds.textFieldTwo)).toBeTruthy();
     expect(screen.queryByTestId(testIds.booleanField)).toBeTruthy();
   });
+  it("should render a text field and a boolean field based on the mapping and schema into slots in a custom form", () => {
+    const testSchema = z.object({
+      textField: z.string(),
+      textFieldTwo: z.string(),
+      booleanField: z.string(),
+      t: z.string(),
+      t2: z.string(),
+      t3: z.string(),
+      t4: z.string(),
+      t5: z.string(),
+    });
+
+    const extraTestIds = {
+      extra1 : 'extra-form-fun',
+      extra2 : 'extra-form-fun2'
+    }
+    render(
+      <TestForm
+        onSubmit={() => {}}
+        schema={testSchema}
+        props={{
+          textField: {
+            testId: testIds.textField,
+          },
+          textFieldTwo: {
+            testId: testIds.textFieldTwo,
+          },
+          booleanField: {
+            testId: testIds.booleanField,
+          },
+        }}
+      >
+        {({renderedFields : {textField, booleanField, ...restFields}}) => {
+          return <>
+            <div data-testid={extraTestIds.extra1}>
+              {textField}
+            </div>
+            <div data-testid={extraTestIds.extra2}>
+              {booleanField}
+            </div>
+            {Object.values(restFields)}
+          </>
+        }}
+      </TestForm>
+    );
+      
+    expect(screen.queryByTestId(testIds.textField)).toBeTruthy();
+    expect(screen.queryByTestId(testIds.textFieldTwo)).toBeTruthy();
+    expect(screen.queryByTestId(testIds.booleanField)).toBeTruthy();
+    expect(screen.queryByTestId(extraTestIds.extra1)).toBeTruthy();
+    expect(screen.queryByTestId(extraTestIds.extra2 )).toBeTruthy();
+  });
   it("should render a text field and a boolean field based on the mapping and schema, unwrapping refine calls", () => {
     const testSchema = z.object({
       textField: z.string(),
