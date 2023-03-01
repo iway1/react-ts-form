@@ -178,7 +178,7 @@ describe("createSchemaForm", () => {
       enum: z.enum(enumValues),
     });
 
-    render(<TestForm onSubmit={() => {}} schema={Schema} />);
+    render(<TestForm onSubmit={(data) => {}} schema={Schema} />);
 
     for (const value of enumValues) {
       expect(screen.queryByText(value)).toBeTruthy();
@@ -995,5 +995,41 @@ describe("createSchemaForm", () => {
 
     expect(screen.queryByText("text")).toBeInTheDocument();
     expect(screen.queryByText("number")).toBeInTheDocument();
+  });
+  it("should render two different enum components when createUniqueFieldSchema is used", () => {
+    function FieldOne() {
+      return <div>one</div>;
+    }
+
+    function FieldTwo(_props: { prop: string }) {
+      return <div>two</div>;
+    }
+
+    const uniqueField = createUniqueFieldSchema(
+      z.enum(["three", "four"]),
+      "id"
+    );
+
+    const mapping = [
+      [z.enum(["one", "two"]), FieldOne],
+      [uniqueField, FieldTwo],
+    ] as const;
+
+    const Form = createTsForm(mapping);
+    const Schema = z.object({
+      one: z.enum(["one", "two"]),
+      two: uniqueField,
+    });
+
+    render(
+      <Form
+        schema={Schema}
+        onSubmit={() => {}}
+        props={{ two: { prop: "str" } }}
+      />
+    );
+
+    expect(screen.queryByText("one")).toBeInTheDocument();
+    expect(screen.queryByText("two")).toBeInTheDocument();
   });
 });
