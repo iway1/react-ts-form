@@ -1,11 +1,12 @@
 import React, { ReactNode, useState } from "react";
 import { z } from "zod";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import {
   customFieldTestId,
   TestCustomFieldSchema,
   TestForm,
+  TestFormWithSubmit,
   textFieldTestId,
 } from "./utils/testForm";
 import {
@@ -591,6 +592,45 @@ describe("createSchemaForm", () => {
 
     expect(screen.getByDisplayValue(val)).toBeInTheDocument();
   });
+  it("should track submitting properly", async () => {
+    const testId = "id";
+    const val = "true";
+    let submitPromiseResolve : () => void = () => {};
+    const submitPromise = new Promise<void>((resolve) => {
+      submitPromiseResolve = resolve;
+    })
+    let submitting =false;
+    function Component() {
+      const form = useForm({
+        defaultValues: {
+          v: val,
+        },
+      });
+      submitting = form.formState.isSubmitting;
+      return (
+        <TestFormWithSubmit
+          form={form}
+          schema={z.object({
+            v: z.string(),
+          })}
+          onSubmit={() => {return submitPromise}}
+          props={{
+            v: {
+              testId: testId,
+            },
+          }}
+        />
+      );
+    }
+
+    render(<Component />);
+    const button = screen.getByText("submit");
+    await userEvent.click(button);
+    expect(submitting).toBe(true);
+    submitPromiseResolve();
+    waitFor(() => expect(submitting).toBe(false));
+  });
+
   it("should throw an error if useTsController is called outside of a @ts-react/form rendered component", () => {
     // hello 100% test coverage =D
     jest.spyOn(console, "error").mockImplementation(() => {});
