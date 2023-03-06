@@ -90,11 +90,11 @@ const config = {
             items: [
               {
                 label: "Installation",
-                to: "/docs/installation",
+                to: "docs/docs/installation",
               },
               {
                 label: "Usage",
-                to: "/docs/usage",
+                to: "docs/category/usage",
               },
             ],
           },
