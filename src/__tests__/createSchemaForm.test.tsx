@@ -1166,7 +1166,7 @@ describe("createSchemaForm", () => {
     expect(screen.queryByTestId('error')).toHaveTextContent('');
     expect(mockOnSubmit).toHaveBeenCalledWith(defaultValues);
   });
-  xit("should render two copies of an object schema if in an unmapped array schema", () => {
+  it("should render two copies of an object schema if in an unmapped array schema", async () => {
     const NumberSchema = createUniqueFieldSchema(z.number(), "number");
     const mockOnSubmit = jest.fn();
 
@@ -1194,14 +1194,25 @@ describe("createSchemaForm", () => {
     // TODO: test submit rolls up the values correctly
     // TODO: test validation
     const defaultValues = { arrayField: [{ name: 'name', age: 9 }, { name: 'name2', age: 10 }] };
-    render(<Form schema={schema} onSubmit={mockOnSubmit} defaultValues={defaultValues} renderAfter={() => <button type="submit">submit</button>}/>);
+    render(<Form schema={schema} onSubmit={mockOnSubmit} defaultValues={defaultValues} renderAfter={() => {
+      const form = useForm();
+      return <>
+      <div data-testid="errors">{JSON.stringify(form.formState.errors)}</div>
+      <button type="submit">submit</button>
+      </>
+    }}/>);
 
     const textNodes = screen.queryAllByText("text");
-    expect(textNodes).toBeInTheDocument();
+    textNodes.forEach((node) => expect(node).toBeInTheDocument());
     expect(textNodes).toHaveLength(2);
+
     const numberNodes = screen.queryAllByText("number");
-    expect(numberNodes).toBeInTheDocument();
+    numberNodes.forEach((node) => expect(node).toBeInTheDocument());
     expect(numberNodes).toHaveLength(2);
+
+    const button = screen.getByText("submit");
+    await userEvent.click(button);
+    console.log('errors', screen.queryByTestId('errors')?.textContent);
     expect(mockOnSubmit).toHaveBeenCalledWith(defaultValues);
   });
 });

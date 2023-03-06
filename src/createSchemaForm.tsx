@@ -326,15 +326,9 @@ export function createTsForm<
     form?: UseFormReturn<z.infer<SchemaType>>;
     children?: FunctionComponent<{
       renderedFields: {
-<<<<<<< HEAD
         [key in keyof z.infer<UnwrapEffects<SchemaType>>]: ReactNode;
       };
     }>;
-=======
-        [key in keyof z.infer<UnwrapEffects<SchemaType>>]: ReactNode
-      }
-    }>
->>>>>>> 4db54a1 (feat(field): recursive generation for fields)
   } & RequireKeysWithRequiredChildren<{
     /**
      * Props to pass to the individual form components. The keys of `props` will be the names of your form properties in the form schema, and they will
@@ -374,7 +368,7 @@ export function createTsForm<
       });
       return uf;
     })();
-    const { control, handleSubmit, setError, } = _form;
+    const { control, handleSubmit, setError, getValues} = _form;
 
 
     const coerceUndefinedFieldsRef = useRef<Set<string>>(new Set());
@@ -417,26 +411,27 @@ export function createTsForm<
     const isAnyZodObject = (schema: RTFSupportedZodTypes): schema is AnyZodObject => schema._def.typeName === ZodFirstPartyTypeKind.ZodObject;
     const isZodArray = (schema: RTFSupportedZodTypes): schema is ZodArray<any> => schema._def.typeName === ZodFirstPartyTypeKind.ZodArray;
 
-    type RenderedElement = JSX.Element | JSX.Element[] | RenderedObjectElements;
+    type RenderedElement = JSX.Element | JSX.Element[] | RenderedObjectElements | RenderedElement[];
     type RenderedObjectElements = { [key: string]: RenderedElement };
 
 
     function renderComponentForSchema<NestedSchemaType extends RTFSupportedZodTypes | ZodEffects<any, any>>(
-      _type: NestedSchemaType, props: PropType<Mapping, NestedSchemaType, PropsMapType> | undefined, key: string, prefix: string
+      _type: NestedSchemaType, props: PropType<Mapping, NestedSchemaType, PropsMapType> | undefined, key: string, prefixedKey: string, currentValue : any
     ): RenderedElement {
-      const prefixedKey = prefix ? `${prefix}.${key}` : key;
       const type = unwrapEffects(_type);
       const Component = getComponentForZodType(type, componentMap);
       if (!Component) {
         if (isAnyZodObject(type)) {
           const shape: Record<string, RTFSupportedZodTypes> = type._def.shape();
           return Object.entries(shape).reduce((accum, [subKey, subType]) => {
-            accum[subKey] = renderComponentForSchema(subType, props && props[subKey] ? (props[subKey] as any) : undefined, subKey, prefixedKey)
+            accum[subKey] = renderComponentForSchema(subType, props && props[subKey] ? (props[subKey] as any) : undefined, subKey, `${prefixedKey}.${subKey}`, currentValue && currentValue[subKey]);
             return accum;
           }, {} as RenderedObjectElements)
         }
         if (isZodArray(type)) {
-          // TDOO: implement array rendering based on current field value
+          return (currentValue as Array<any>).map((item, index) => {
+            return renderComponentForSchema(type.element, props, key,`${prefixedKey}[${index}]`, item);
+          })
         }
         throw new Error(
           noMatchingSchemaErrorMessage(key, type._def.typeName)
@@ -491,21 +486,19 @@ export function createTsForm<
       return Object.entries(shape).reduce((accum, [key, type]: [SchemaKey, RTFSupportedZodTypes]) => {
         // we know this is a string but TS thinks it can be number and symbol so just in case stringify
         const stringKey = key.toString();
-        accum[stringKey] = renderComponentForSchema(type, props, stringKey, '');
+        accum[stringKey] = renderComponentForSchema(type, props, stringKey, stringKey, getValues()[key]);
         return accum;
       }, {} as RenderedObjectElements);
     }
 
     const renderedFields = renderFields(schema, props);
-    function getObjectValues(obj: RenderedObjectElements): JSX.Element[] {
-      return Object.values(obj).reduce((accum: JSX.Element[], val) => {
+    function getObjectValues(val: RenderedElement): JSX.Element[] {
         return Array.isArray(val) ?
-          accum.concat(val)
+          val.flatMap(obj => getObjectValues(obj))
           : (typeof val === 'object' && val !== null && !React.isValidElement(val)) ?
-            accum.concat(getObjectValues(val as any))
-            : accum.concat([val])
-      }, [] as JSX.Element[]);
-    }
+            Object.values(val).reduce((accum: JSX.Element[], val) => {return accum.concat(getObjectValues(val as any))}, [] as JSX.Element[])
+            : [val]
+      };
     const renderedFieldNodes = getObjectValues(renderedFields);
     return (
       <FormProvider {..._form}>
