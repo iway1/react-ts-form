@@ -18,9 +18,9 @@ function HomepageHeader() {
 
   return (
     <header className="bg-background text-white w-full py-16">
-      <div className="flex flex-col w-full items-center space-y-4">
-        <h1 className="hero__title">{siteConfig.title}</h1>
-        <p className="hero__subtitle">{siteConfig.tagline}</p>
+      <div className="flex flex-col w-full items-center space-y-4 px-4">
+        <h1 className="text-4xl text-center md:text-6xl">{siteConfig.title}</h1>
+        <p className="text-xl text-center md:text-2xl">{siteConfig.tagline}</p>
         <div className="flex space-x-2 items-center">
           <Link
             className="rounded-md px-5 py-3 bg-white text-black font-bold hover:no-underline hover:text-black hover:bg-opacity-90"
@@ -28,12 +28,14 @@ function HomepageHeader() {
             target="_blank"
           >
             <div className="flex items-center space-x-2">
-              <AiFillStar className="h-5 w-5" />
-              <span className="text-lg">Star {githubStars}</span>
+              <AiFillStar className="h-4 w-4 md:h-5 md:w-5" />
+              <span className="text-xs whitespace-nowrap md:text-lg">
+                Star {githubStars}
+              </span>
             </div>
           </Link>
           <Link
-            className="rounded-md px-5 py-3 bg-white text-black font-bold hover:no-underline hover:text-black hover:bg-opacity-90"
+            className="rounded-md text-xs whitespace-nowrap md:text-lg px-5 py-3 bg-white text-black font-bold hover:no-underline hover:text-black hover:bg-opacity-90"
             to="/docs/docs/installation"
           >
             Get Started →
