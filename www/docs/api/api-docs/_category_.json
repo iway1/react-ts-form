@@ -1,0 +1,8 @@
+{
+  "label": "API Docs",
+  "position": 1,
+  "link": {
+    "type": "generated-index",
+    "description": "API Docs"
+  }
+}
