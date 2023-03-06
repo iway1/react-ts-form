@@ -34,7 +34,7 @@ function HomepageHeader() {
           </Link>
           <Link
             className="rounded-md px-5 py-3 bg-white text-black font-bold hover:no-underline hover:text-black hover:bg-opacity-90"
-            to="/docs/intro"
+            to="/docs/docs/installation"
           >
             Get Started →
           </Link>
