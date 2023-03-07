@@ -83,9 +83,9 @@ describe("createSchemaForm", () => {
     });
 
     const extraTestIds = {
-      extra1 : 'extra-form-fun',
-      extra2 : 'extra-form-fun2'
-    }
+      extra1: "extra-form-fun",
+      extra2: "extra-form-fun2",
+    };
     render(
       <TestForm
         onSubmit={() => {}}
@@ -102,25 +102,23 @@ describe("createSchemaForm", () => {
           },
         }}
       >
-        {({renderedFields : {textField, booleanField, ...restFields}}) => {
-          return <>
-            <div data-testid={extraTestIds.extra1}>
-              {textField}
-            </div>
-            <div data-testid={extraTestIds.extra2}>
-              {booleanField}
-            </div>
-            {Object.values(restFields)}
-          </>
+        {({ renderedFields: { textField, booleanField, ...restFields } }) => {
+          return (
+            <>
+              <div data-testid={extraTestIds.extra1}>{textField}</div>
+              <div data-testid={extraTestIds.extra2}>{booleanField}</div>
+              {Object.values(restFields)}
+            </>
+          );
         }}
       </TestForm>
     );
-      
+
     expect(screen.queryByTestId(testIds.textField)).toBeTruthy();
     expect(screen.queryByTestId(testIds.textFieldTwo)).toBeTruthy();
     expect(screen.queryByTestId(testIds.booleanField)).toBeTruthy();
     expect(screen.queryByTestId(extraTestIds.extra1)).toBeTruthy();
-    expect(screen.queryByTestId(extraTestIds.extra2 )).toBeTruthy();
+    expect(screen.queryByTestId(extraTestIds.extra2)).toBeTruthy();
   });
   it("should render a text field and a boolean field based on the mapping and schema, unwrapping refine calls", () => {
     const testSchema = z.object({
@@ -595,11 +593,11 @@ describe("createSchemaForm", () => {
   it("should track submitting properly", async () => {
     const testId = "id";
     const val = "true";
-    let submitPromiseResolve : () => void = () => {};
+    let submitPromiseResolve: () => void = () => {};
     const submitPromise = new Promise<void>((resolve) => {
       submitPromiseResolve = resolve;
-    })
-    let submitting =false;
+    });
+    let submitting = false;
     function Component() {
       const form = useForm({
         defaultValues: {
@@ -613,7 +611,9 @@ describe("createSchemaForm", () => {
           schema={z.object({
             v: z.string(),
           })}
-          onSubmit={() => {return submitPromise}}
+          onSubmit={() => {
+            return submitPromise;
+          }}
           props={{
             v: {
               testId: testId,

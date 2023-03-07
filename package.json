@@ -10,7 +10,8 @@
     "test:cov": "jest --coverage",
     "test": "jest",
     "build": "npx rollup -c rollup.config.js",
-    "build-test:dryrun": "act -j build-test -P ubuntu-latest=ghcr.io/catthehacker/ubuntu:js-latest"
+    "build-test:dryrun": "act -j build-test -P ubuntu-latest=ghcr.io/catthehacker/ubuntu:js-latest",
+    "pretty": "prettier --write \"./**/*.{js,jsx,ts,tsx,json}\""
   },
   "repository": {
     "type": "git",
@@ -35,6 +36,7 @@
     "expect-type": "^0.15.0",
     "jest": "^29.3.1",
     "jest-environment-jsdom": "^29.3.1",
+    "prettier": "^2.8.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.41.3",
