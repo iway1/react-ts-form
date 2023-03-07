@@ -25,12 +25,12 @@ export function unwrap(type: RTFSupportedZodTypes): {
   // Realized zod has a built in "unwrap()" function after writing this.
   // Not sure if it's super necessary.
   let r = type;
-  let hiddenId: null | string = null;
-  if (isSchemaWithHiddenProperties(type)) {
-    hiddenId = type._def[HIDDEN_ID_PROPERTY];
-  }
+  let unwrappedHiddenId: null | string = null;
 
   while (unwrappable.has(r._def.typeName)) {
+    if (isSchemaWithHiddenProperties(r)) {
+      unwrappedHiddenId = r._def[HIDDEN_ID_PROPERTY];
+    }
     switch (r._def.typeName) {
       case z.ZodFirstPartyTypeKind.ZodOptional:
         r = r._def.innerType;
@@ -49,9 +49,15 @@ export function unwrap(type: RTFSupportedZodTypes): {
     }
   }
 
+  let innerHiddenId: null | string = null;
+
+  if (isSchemaWithHiddenProperties(r)) {
+    innerHiddenId = r._def[HIDDEN_ID_PROPERTY];
+  }
+
   return {
     type: r,
-    [HIDDEN_ID_PROPERTY]: hiddenId,
+    [HIDDEN_ID_PROPERTY]: innerHiddenId || unwrappedHiddenId,
   };
 }
 

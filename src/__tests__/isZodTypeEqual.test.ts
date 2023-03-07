@@ -259,4 +259,11 @@ describe("isZodTypeEqual", () => {
 
     expect(isZodTypeEqual(A, B)).toStrictEqual(true);
   });
+  it("should return true if a unique field schema is compared with its optional", () => {
+    const A = createUniqueFieldSchema(z.string(), "text");
+    console.log("A def: ");
+    console.log(A._def);
+
+    expect(isZodTypeEqual(A, A.optional())).toStrictEqual(true);
+  });
 });
