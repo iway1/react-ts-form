@@ -5,6 +5,7 @@
   "module": "lib/index.mjs",
   "main": "lib/index.cjs",
   "types": "lib/src/index.d.ts",
+  "packageManager": "pnpm@7.27.0",
   "scripts": {
     "dev": "jest --watchAll",
     "test:cov": "jest --coverage",
