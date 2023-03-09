@@ -3,7 +3,7 @@ module.exports = {
     preflight: false, // disable Tailwind's reset
   },
   content: ["./src/**/*.{js,jsx,ts,tsx,mdx}"],
-  darkMode: "media",
+  darkMode: "class",
   theme: {
     extend: {
       colors: {

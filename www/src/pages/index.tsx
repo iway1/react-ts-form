@@ -5,10 +5,14 @@ import Layout from "@theme/Layout";
 import HomepageFeatures from "@site/src/components/HomepageFeatures";
 import { AiFillStar } from "react-icons/ai";
 import "../css/custom.css";
+import { useColorMode } from "@docusaurus/theme-common";
 
 function HomepageHeader() {
   const { siteConfig } = useDocusaurusContext();
   const [githubStars, setGithubStars] = useState(0);
+
+  const { isDarkTheme } = useColorMode();
+  const background = isDarkTheme ? "bg-background" : "bg-white";
 
   useEffect(() => {
     // fetch github stars from api
@@ -19,14 +23,18 @@ function HomepageHeader() {
 
   return (
     <header className="dark:text-white w-full py-6 px-4">
-      <section className="flex flex-col w-full items-center space-y-4 md:space-y-8 p-4 bg-white dark:bg-background rounded-sm">
+      <section
+        className={`flex flex-col w-full items-center space-y-4 md:space-y-8 p-4 rounded-sm ${background}`}
+      >
         <h1 className="text-4xl text-center md:text-6xl mb-0">
           {siteConfig.title}
         </h1>
         <p className="text-xl text-center md:text-2xl">{siteConfig.tagline}</p>
         <div className="flex space-x-2 items-center">
           <Link
-            className="rounded-sm px-5 py-3 bg-background text-white dark:bg-white dark:text-black font-bold hover:text-white hover:no-underline dark:hover:text-black hover:bg-opacity-90 w-32 md:w-36"
+            className={`rounded-sm px-5 py-3 font-bold hover:text-white hover:no-underline hover:bg-opacity-90 w-32 md:w-36 text-center ${
+              isDarkTheme ? "bg-white text-black" : "bg-background text-white"
+            }`}
             to="https://github.com/iway1/react-ts-form"
             target="_blank"
           >
@@ -40,10 +48,16 @@ function HomepageHeader() {
             </div>
           </Link>
           <Link
-            className="rounded-sm text-xs whitespace-nowrap md:text-sm px-5 py-3 bg-background text-white hover:text-white dark:bg-white dark:hover:text-black dark:text-black font-bold hover:no-underline  hover:bg-opacity-90"
+            className={`rounded-sm text-xs whitespace-nowrap md:text-sm px-5 py-3 font-bold hover:no-underline hover:bg-opacity-90 ${
+              isDarkTheme ? "bg-white" : "bg-background "
+            }}`}
             to="/docs/docs/installation"
           >
-            Get Started →
+            <div>
+              <span className={isDarkTheme ? `text-black` : `text-white`}>
+                Get Started →
+              </span>
+            </div>
           </Link>
         </div>
         <img
