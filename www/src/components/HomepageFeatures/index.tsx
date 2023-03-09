@@ -8,7 +8,7 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: "Typesafety First 👷‍♂️", // hardhat emoji is
+    title: "Typesafety First 👷‍♂️",
     description: (
       <>
         Automatically generate typesafe forms with <code>zod</code> schemas.
