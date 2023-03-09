@@ -83,9 +83,9 @@ describe("createSchemaForm", () => {
     });
 
     const extraTestIds = {
-      extra1 : 'extra-form-fun',
-      extra2 : 'extra-form-fun2'
-    }
+      extra1: "extra-form-fun",
+      extra2: "extra-form-fun2",
+    };
     render(
       <TestForm
         onSubmit={() => {}}
@@ -102,25 +102,23 @@ describe("createSchemaForm", () => {
           },
         }}
       >
-        {({renderedFields : {textField, booleanField, ...restFields}}) => {
-          return <>
-            <div data-testid={extraTestIds.extra1}>
-              {textField}
-            </div>
-            <div data-testid={extraTestIds.extra2}>
-              {booleanField}
-            </div>
-            {Object.values(restFields)}
-          </>
+        {({ renderedFields: { textField, booleanField, ...restFields } }) => {
+          return (
+            <>
+              <div data-testid={extraTestIds.extra1}>{textField}</div>
+              <div data-testid={extraTestIds.extra2}>{booleanField}</div>
+              {Object.values(restFields)}
+            </>
+          );
         }}
       </TestForm>
     );
-      
+
     expect(screen.queryByTestId(testIds.textField)).toBeTruthy();
     expect(screen.queryByTestId(testIds.textFieldTwo)).toBeTruthy();
     expect(screen.queryByTestId(testIds.booleanField)).toBeTruthy();
     expect(screen.queryByTestId(extraTestIds.extra1)).toBeTruthy();
-    expect(screen.queryByTestId(extraTestIds.extra2 )).toBeTruthy();
+    expect(screen.queryByTestId(extraTestIds.extra2)).toBeTruthy();
   });
   it("should render a text field and a boolean field based on the mapping and schema, unwrapping refine calls", () => {
     const testSchema = z.object({
@@ -595,11 +593,11 @@ describe("createSchemaForm", () => {
   it("should track submitting properly", async () => {
     const testId = "id";
     const val = "true";
-    let submitPromiseResolve : () => void = () => {};
+    let submitPromiseResolve: () => void = () => {};
     const submitPromise = new Promise<void>((resolve) => {
       submitPromiseResolve = resolve;
-    })
-    let submitting =false;
+    });
+    let submitting = false;
     function Component() {
       const form = useForm({
         defaultValues: {
@@ -613,7 +611,9 @@ describe("createSchemaForm", () => {
           schema={z.object({
             v: z.string(),
           })}
-          onSubmit={() => {return submitPromise}}
+          onSubmit={() => {
+            return submitPromise;
+          }}
           props={{
             v: {
               testId: testId,
@@ -1123,5 +1123,147 @@ describe("createSchemaForm", () => {
 
     expect(screen.queryByText("one")).toBeInTheDocument();
     expect(screen.queryByText("two")).toBeInTheDocument();
+  });
+  it("should render the correct components for a nested object schema if unmaped", async () => {
+    const NumberSchema = createUniqueFieldSchema(z.number(), "number");
+    const mockOnSubmit = jest.fn();
+
+    function TextField({}: { b: "1" }) {
+      const { error } = useTsController<string>();
+      return (
+        <>
+          <div>text</div>
+          <div data-testid="error">{error?.errorMessage}</div>
+        </>
+      );
+    }
+
+    function NumberField({}: { a: 1 }) {
+      return <div>number</div>;
+    }
+
+    function BooleanField({}: { c: boolean }) {
+      return <div>boolean</div>;
+    }
+
+    const objectSchema = z.object({
+      text: z.string(),
+      age: NumberSchema,
+    });
+    const objectSchema2 = z.object({
+      bool: z.boolean(),
+    });
+
+    const mapping = [
+      [z.string(), TextField],
+      [NumberSchema, NumberField],
+      [z.boolean(), BooleanField],
+      [objectSchema2, BooleanField],
+    ] as const;
+
+    const Form = createTsForm(mapping);
+
+    const schema = z.object({
+      nestedField: objectSchema,
+      nestedField2: objectSchema2,
+    });
+    const defaultValues = {
+      nestedField: { text: "name", age: 9 },
+      nestedField2: { bool: true },
+    };
+    // TODO: test validation
+    render(
+      <Form
+        schema={schema}
+        onSubmit={mockOnSubmit}
+        defaultValues={defaultValues}
+        props={{
+          nestedField2: { c: true },
+          nestedField: { text: { b: "1" }, age: { a: 1 } },
+        }}
+        renderAfter={() => <button type="submit">submit</button>}
+      />
+    );
+    const button = screen.getByText("submit");
+    await userEvent.click(button);
+
+    const textNodes = screen.queryByText("text");
+    expect(textNodes).toBeInTheDocument();
+    const numberNodes = screen.queryByText("number");
+    expect(numberNodes).toBeInTheDocument();
+    expect(screen.queryByTestId("error")).toHaveTextContent("");
+    expect(mockOnSubmit).toHaveBeenCalledWith(defaultValues);
+  });
+  it("should render two copies of an object schema if in an unmapped array schema", async () => {
+    const NumberSchema = createUniqueFieldSchema(z.number(), "number");
+    const mockOnSubmit = jest.fn();
+
+    function TextField({}: { a?: 1 }) {
+      return <div>text</div>;
+    }
+
+    function NumberField() {
+      return <div>number</div>;
+    }
+
+    const mapping = [
+      [z.string(), TextField],
+      [NumberSchema, NumberField],
+    ] as const;
+
+    const Form = createTsForm(mapping);
+
+    const schema = z.object({
+      arrayField: z
+        .object({
+          text: z.string(),
+          age: NumberSchema,
+        })
+        .array(),
+    });
+    // TODO: test submit rolls up the values correctly
+    // TODO: test validation
+    const defaultValues = {
+      arrayField: [
+        { text: "name", age: 9 },
+        { text: "name2", age: 10 },
+      ],
+    };
+    render(
+      <Form
+        schema={schema}
+        onSubmit={mockOnSubmit}
+        defaultValues={defaultValues}
+        props={{ arrayField: { text: { a: 1 } } }}
+        renderAfter={() => {
+          return <button type="submit">submit</button>;
+        }}
+      >
+        {({ renderedFields }) => {
+          return (
+            <>
+              {renderedFields.arrayField.map(({ text, age }) => (
+                <>
+                  {text}
+                  {age}
+                </>
+              ))}
+            </>
+          );
+        }}
+      </Form>
+    );
+
+    const textNodes = screen.queryAllByText("text");
+    textNodes.forEach((node) => expect(node).toBeInTheDocument());
+    expect(textNodes).toHaveLength(2);
+
+    const numberNodes = screen.queryAllByText("number");
+    numberNodes.forEach((node) => expect(node).toBeInTheDocument());
+    expect(numberNodes).toHaveLength(2);
+
+    const button = screen.getByText("submit");
+    await userEvent.click(button);
+    expect(mockOnSubmit).toHaveBeenCalledWith(defaultValues);
   });
 });
