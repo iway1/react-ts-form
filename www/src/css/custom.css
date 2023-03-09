@@ -1,3 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html[data-theme="dark"] > section {
+  background-color: #3a3a3a !important;
+}

@@ -6,12 +6,12 @@ const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: "TypeScript Form",
+  title: "react-ts-form",
   tagline: "Build maintainable, typesafe forms faster 🏃💨",
   favicon: "img/favicon.ico",
 
   // Set the production url of your site here
-  url: "https://your-docusaurus-test-site.com",
+  url: "https://react-ts-form.vercel.app",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: "/",
@@ -44,6 +44,7 @@ const config = {
           editUrl:
             "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/",
         },
+
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
         },
@@ -54,12 +55,62 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      metadata: [
+        {
+          name: "twitter:card",
+          content: "summary_large_image",
+        },
+        {
+          name: "twitter:site",
+          content: "@isaac_ts_way",
+        },
+        {
+          name: "twitter:creator",
+          content: "@isaac_ts_way",
+        },
+        {
+          name: "twitter:title",
+          content: "react-ts-form",
+        },
+        {
+          name: "twitter:description",
+          content: "Build maintainable, typesafe forms faster 🏃💨",
+        },
+        {
+          name: "twitter:image",
+          content: "https://react-ts-form.vercel.app/img/social-card.png",
+        },
+        {
+          name: "og:title",
+          content: "react-ts-form",
+        },
+        {
+          name: "og:description",
+          content: "Build maintainable, typesafe forms faster 🏃💨",
+        },
+        {
+          name: "og:image",
+          content: "https://react-ts-form.vercel.app/img/social-card.png",
+        },
+        {
+          name: "og:url",
+          content: "https://react-ts-form.vercel.app",
+        },
+        {
+          name: "og:site_name",
+          content: "react-ts-form",
+        },
+        {
+          name: "og:type",
+          content: "website",
+        },
+      ],
       // Replace with your project's social card
       image: "img/logo.png",
       navbar: {
-        title: "TypeScript Form",
+        title: "react-ts-form",
         logo: {
-          alt: "TypeScript Form Logo",
+          alt: "react-ts-form Logo",
           src: "img/logo.png",
         },
         items: [
@@ -83,7 +134,7 @@ const config = {
         ],
       },
       footer: {
-        style: "dark",
+        style: "light",
         links: [
           {
             title: "Docs",
@@ -95,6 +146,10 @@ const config = {
               {
                 label: "Usage",
                 to: "docs/category/usage",
+              },
+              {
+                label: "API",
+                to: "docs/api/api-docs/createtsform",
               },
             ],
           },
@@ -108,7 +163,7 @@ const config = {
             ],
           },
         ],
-        copyright: `Built with ❤️ - TypeScript Form`,
+        copyright: `Built with ❤️ - react-ts-form ${new Date().getFullYear()}`,
       },
       prism: {
         theme: lightCodeTheme,

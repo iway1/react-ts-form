@@ -4,6 +4,7 @@ import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import Layout from "@theme/Layout";
 import HomepageFeatures from "@site/src/components/HomepageFeatures";
 import { AiFillStar } from "react-icons/ai";
+import "../css/custom.css";
 
 function HomepageHeader() {
   const { siteConfig } = useDocusaurusContext();
@@ -17,25 +18,29 @@ function HomepageHeader() {
   }, []);
 
   return (
-    <header className="bg-background text-white w-full py-16">
-      <div className="flex flex-col w-full items-center space-y-4 px-4">
-        <h1 className="text-4xl text-center md:text-6xl">{siteConfig.title}</h1>
+    <header className="dark:text-white w-full py-6 px-4">
+      <section className="flex flex-col w-full items-center space-y-4 md:space-y-8 p-4 bg-white dark:bg-background rounded-sm">
+        <h1 className="text-4xl text-center md:text-6xl mb-0">
+          {siteConfig.title}
+        </h1>
         <p className="text-xl text-center md:text-2xl">{siteConfig.tagline}</p>
         <div className="flex space-x-2 items-center">
           <Link
-            className="rounded-md px-5 py-3 bg-white text-black font-bold hover:no-underline hover:text-black hover:bg-opacity-90"
+            className="rounded-sm px-5 py-3 bg-background text-white dark:bg-white dark:text-black font-bold hover:text-white hover:no-underline dark:hover:text-black hover:bg-opacity-90 w-32 md:w-36"
             to="https://github.com/iway1/react-ts-form"
             target="_blank"
           >
-            <div className="flex items-center space-x-2">
+            <div className="grid grid-cols-3 items-center w-full">
               <AiFillStar className="h-4 w-4 md:h-5 md:w-5" />
-              <span className="text-xs whitespace-nowrap md:text-lg">
-                Star {githubStars}
+              <span className="text-xs whitespace-nowrap md:text-sm">Star</span>
+
+              <span className="text-xs whitespace-nowrap md:text-sm w-full">
+                {githubStars > 0 && githubStars}
               </span>
             </div>
           </Link>
           <Link
-            className="rounded-md text-xs whitespace-nowrap md:text-lg px-5 py-3 bg-white text-black font-bold hover:no-underline hover:text-black hover:bg-opacity-90"
+            className="rounded-sm text-xs whitespace-nowrap md:text-sm px-5 py-3 bg-background text-white hover:text-white dark:bg-white dark:hover:text-black dark:text-black font-bold hover:no-underline  hover:bg-opacity-90"
             to="/docs/docs/installation"
           >
             Get Started →
@@ -45,7 +50,7 @@ function HomepageHeader() {
           src="https://user-images.githubusercontent.com/12774588/210157220-e287cfdf-c26f-4169-a944-ac147cb4b058.gif"
           alt="demo"
         />
-      </div>
+      </section>
     </header>
   );
 }
@@ -58,7 +63,7 @@ export default function Home(): JSX.Element {
       description="Description will go into a meta tag in <head />"
     >
       <HomepageHeader />
-      <main>
+      <main className="p-4">
         <HomepageFeatures />
       </main>
     </Layout>

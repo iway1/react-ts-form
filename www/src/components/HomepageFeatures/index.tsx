@@ -1,61 +1,59 @@
 import React from "react";
-import clsx from "clsx";
-import styles from "./styles.module.css";
 
 type FeatureItem = {
   title: string;
-  Svg: React.ComponentType<React.ComponentProps<"svg">>;
   description: JSX.Element;
 };
 
 const FeatureList: FeatureItem[] = [
   {
-    title: "Typesafety First",
-    Svg: require("@site/static/img/undraw_docusaurus_mountain.svg").default,
+    title: "Typesafety First 👷‍♂️", // hardhat emoji is
     description: (
       <>
-        Automatically generate typesafe forms with <code>zod</code> schemas.
+        Automatically generate typesafe forms with{" "}
+        <code className="text-black dark:text-white">zod</code> schemas.
       </>
     ),
   },
   {
-    title: "No more boilerplate",
-    Svg: require("@site/static/img/undraw_docusaurus_tree.svg").default,
-    description: <>Eliminate repetitive JSX & zod/rhf boilerplate</>,
+    title: "No more boilerplate 🧰",
+    description: (
+      <>
+        Eliminate repetitive JSX &{" "}
+        <code className="text-black dark:text-white">zod</code>/
+        <code className="text-black dark:text-white whitespace-nowrap">
+          react-hook-form
+        </code>{" "}
+        boilerplate
+      </>
+    ),
   },
   {
-    title: "Headless puts you in control",
-    Svg: require("@site/static/img/undraw_docusaurus_react.svg").default,
+    title: "Headless puts you in control 🤯",
     description: (
-      <>Headless UI with full control of components via typesafe props</>
+      <>
+        Headless implementation with full control of components via typesafe
+        props
+      </>
     ),
   },
 ];
 
-function Feature({ title, Svg, description }: FeatureItem) {
+function Feature({ title, description }: FeatureItem) {
   return (
-    <div className={clsx("col col--4")}>
-      <div className="text--center">
-        <Svg className={styles.featureSvg} role="img" />
-      </div>
-      <div className="text--center padding-horiz--md">
-        <h3>{title}</h3>
-        <p>{description}</p>
-      </div>
+    <div className="flex flex-col items-center justify-center max-w-sm text-center [&>p]:text-blue-500 dark:text-white">
+      <h3 className="text-2xl md:text-4xl">{title}</h3>
+      <p className="text-lg">{description}</p>
     </div>
   );
 }
 
 export default function HomepageFeatures(): JSX.Element {
   return (
-    <section className={styles.features}>
-      <div className="container">
-        <div className="row">
-          {FeatureList.map((props, idx) => (
-            <Feature key={idx} {...props} />
-          ))}
-        </div>
-      </div>
+    <section className="flex flex-col md:flex-row w-full items-start justify-evenly py-4 space-y-8 md:space-y-0 md:py-20 rounded-sm bg-white dark:bg-background">
+      {FeatureList.map((props, idx) => (
+        <Feature key={idx} {...props} />
+      ))}
     </section>
   );
 }
