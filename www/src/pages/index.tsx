@@ -33,7 +33,9 @@ function HomepageHeader() {
         <div className="flex space-x-2 items-center">
           <Link
             className={`rounded-sm px-5 py-3 font-bold hover:text-white hover:no-underline hover:bg-opacity-90 w-32 md:w-36 text-center ${
-              isDarkTheme ? "bg-white text-black" : "bg-background text-white"
+              isDarkTheme
+                ? "bg-white text-black hover:text-black"
+                : "bg-background text-white hover:text-white"
             }`}
             to="https://github.com/iway1/react-ts-form"
             target="_blank"
@@ -47,13 +49,17 @@ function HomepageHeader() {
               </span>
             </div>
           </Link>
+
           <Link
-            className={`rounded-sm text-xs whitespace-nowrap md:text-sm px-5 py-3 font-bold hover:no-underline hover:bg-opacity-90 ${
-              isDarkTheme ? "bg-white" : "bg-background "
-            }}`}
+            className={`rounded-sm px-3 py-3 font-bold hover:text-white hover:no-underline hover:bg-opacity-90 w-32 md:w-36 text-center ${
+              isDarkTheme
+                ? "bg-white text-black hover:text-black"
+                : "bg-background text-white hover:text-white"
+            }`}
             to="/docs/docs/installation"
+            target="_blank"
           >
-            <div>
+            <div className="grid grid-cols-1 whitespace-nowrap items-center w-full text-xs md:text-sm">
               <span className={isDarkTheme ? `text-black` : `text-white`}>
                 Get Started →
               </span>
