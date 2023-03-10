@@ -6,7 +6,7 @@ sidebar_position: 1
 
 ## Usage
 
-Create a zod-to-component mapping to map zod schemas to your components then create your form with createTsForm (typically once per project):
+Create a zod-to-component mapping to map zod schemas to your components then create your form with `createTsForm()` (typically once per project):
 
 ```tsx
 import { createTsForm } from "@ts-react/form";
@@ -23,7 +23,7 @@ const mapping = [
 const MyForm = createTsForm(mapping);
 ```
 
-Now just create form schemas with zod and pass them to your form:
+Now just create form schemas with `zod` and pass them to your form:
 
 ```tsx
 const SignUpSchema = z.object({

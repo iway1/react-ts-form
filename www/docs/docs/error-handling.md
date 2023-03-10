@@ -6,7 +6,7 @@ sidebar_position: 3
 
 ## Accessing Error Messages in your component
 
-@ts-react/form also returns an <code>error</code> object that's more accurately typed than react-hook-forms's that you can use to show errors:
+`@ts-react/form` also returns an <code>error</code> object that's more accurately typed than `react-hook-forms`'s that you can use to show errors:
 
 ```tsx
 function MyComponent() {

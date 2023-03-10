@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Installation
 
-Make sure you have <code>"strict": true</code> in your tsconfig.json compilerOptions and make sure you set your editors [typescript version to v4.9](https://github.com/iway1/react-ts-form#typescript-versions) (or intellisense won't be as reliable).
+Make sure you have <code>"strict": true</code> in your `tsconfig.json` `compilerOptions` and make sure you set your editors [typescript version to v4.9](https://github.com/iway1/react-ts-form#typescript-versions) (or intellisense won't be as reliable).
 
 Install package and dependencies with your preferred package manager:
 
