@@ -40,4 +40,4 @@ function TextField({ control, name }: { control: Control<any>; name: string }) {
 
 This approach is less typesafe than <code>useTsController</code>.
 
-If you want the `control`, `name`, or other `@ts-react/form` data to be passed to props with a different name check out [prop forwarding](https://react-ts-form.com/docs/docs/prop-forwarding).
+If you want the `control`, `name`, or other `@ts-react/form` data to be passed to props with a different name check out [Prop Forwarding](https://react-ts-form.com/docs/docs/prop-forwarding).
