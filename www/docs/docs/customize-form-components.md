@@ -6,7 +6,7 @@ sidebar_position: 7
 
 ## Customizing form components
 
-By default your form is just rendered with a `"form"` tag. You can pass props to it via `formProps`:
+By default your form is just rendered with a `<form>` tag. You can pass props to it via `formProps`:
 
 ```tsx
 <MyForm
@@ -16,7 +16,7 @@ By default your form is just rendered with a `"form"` tag. You can pass props to
 />
 ```
 
-You can also provide a custom form component as the second parameter to createTsForm options if you want, it will get passed an `onSubmit` function, and it should also render its children some where:
+You can also provide a custom form component as the second parameter to `createTsForm` options if you want, it will get passed an `onSubmit` function, and it should also render its children some where:
 
 ```tsx
 const mapping = [
@@ -41,7 +41,7 @@ function MyCustomFormComponent({
     </form>
   )
 }
-// MyCustomFormComponent is now being used as the container instead of the default "form" tag.
+// MyCustomFormComponent is now being used as the container instead of the default <form> tag.
 const MyForm = createTsForm(mapping, {FormComponent: MyCustomFormComponent});
 
 <MyForm

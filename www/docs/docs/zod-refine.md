@@ -6,7 +6,7 @@ sidebar_position: 11
 
 ## Using Zod Refine
 
-Zods `.refine` method can be used to implement more advanced forms of validation, such as making sure a field takes on a certain value (like making sure a box is checked) or doing checks involving multiple fields (password / confirm password). **You must call .refine on the form schema itself, not on fields (unless you want the refined field to be mapped to a unique component)**:
+Zod's `.refine` method can be used to implement more advanced forms of validation, such as making sure a field takes on a certain value (like making sure a box is checked) or doing checks involving multiple fields (password / confirm password). **You must call `.refine` on the form schema itself, not on fields (unless you want the refined field to be mapped to a unique component)**:
 
 ```tsx
 z.object({
