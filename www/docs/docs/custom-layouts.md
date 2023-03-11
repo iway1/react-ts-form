@@ -5,7 +5,7 @@
 
 ## Defining Custom Layouts
 
-`react-ts-form` supports custom layouts for times when we need more than props just props to achieve the desired style (for example when we want two inputs in the same row).
+`react-ts-form` supports custom layouts for times when we need more than props to achieve the desired style (for example when we want two inputs in the same row).
 
 To build a form with a custom layout, pass a function that returns JSX as the child to your form component, and that function will be passed the form elements as a prop:
 
