@@ -80,7 +80,7 @@ export default function Home(): JSX.Element {
   return (
     <Layout
       title={`Hello from ${siteConfig.title}`}
-      description="Description will go into a meta tag in <head />"
+      description="react-ts-form documentation site, build maintainable forms faster!"
     >
       <HomepageHeader />
       <main className="p-4">

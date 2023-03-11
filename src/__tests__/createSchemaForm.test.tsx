@@ -102,7 +102,7 @@ describe("createSchemaForm", () => {
           },
         }}
       >
-        {({ renderedFields: { textField, booleanField, ...restFields } }) => {
+        {({ textField, booleanField, ...restFields }) => {
           return (
             <>
               <div data-testid={extraTestIds.extra1}>{textField}</div>
