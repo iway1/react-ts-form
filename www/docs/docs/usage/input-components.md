@@ -25,7 +25,7 @@ function TextField() {
 }
 ```
 
-<code>@ts-react/form</code> will magically connecting your component to the appropriate field with this hook.
+<code>@ts-react/form</code> will magically connect your component to the appropriate field with this hook.
 
 ## Passing control and name to props
 
@@ -40,4 +40,4 @@ function TextField({ control, name }: { control: Control<any>; name: string }) {
 
 This approach is less typesafe than <code>useTsController</code>.
 
-If you want the control, name, or other @ts-react/form data to be passed to props with a different name check out prop forwarding.
+If you want the `control`, `name`, or other `@ts-react/form` data to be passed to props with a different name check out [Prop Forwarding](https://react-ts-form.com/docs/docs/prop-forwarding).

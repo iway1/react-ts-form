@@ -35,7 +35,7 @@ const Schema = z.object({
 
 ## Required props
 
-@ts-react/form is also aware of which props are required, so it will make sure you always pass required props to your components:
+`@ts-react/form` is also aware of which props are required, so it will make sure you always pass required props to your components:
 
 ![Required Props](https://user-images.githubusercontent.com/12774588/210124307-c456ec95-ed9e-47fe-b6f5-a4e7327aab85.png)
 

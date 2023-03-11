@@ -289,9 +289,7 @@ export function createTsForm<
      */
     form?: UseFormReturn<z.infer<SchemaType>>;
     children?: FunctionComponent<{
-      renderedFields: {
-        [key in keyof z.infer<UnwrapEffects<SchemaType>>]: ReactNode;
-      };
+      [key in keyof z.infer<UnwrapEffects<SchemaType>>]: ReactNode;
     }>;
   } & RequireKeysWithRequiredChildren<{
     /**
@@ -462,9 +460,7 @@ export function createTsForm<
         <ActualFormComponent {...formProps} onSubmit={submitFn}>
           {renderBefore && renderBefore({ submit: submitFn })}
           {CustomChildrenComponent ? (
-            <CustomChildrenComponent
-              renderedFields={renderedFields}
-            ></CustomChildrenComponent>
+            <CustomChildrenComponent {...renderedFields} />
           ) : (
             renderedFieldNodes
           )}
