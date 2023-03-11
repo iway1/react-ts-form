@@ -6,11 +6,22 @@ sidebar_position: 9
 
 ## React Native Usage
 
-For now React Native will require you to provide your own custom form component. The simplest way to do it would be like:
+React Native requires creating a custom form component:
 
 ```tsx
-const FormContainer = ({ children }: { children: ReactNode }) => (
-  <View>{children}</View>
+const FormContainer = ({
+  children,
+  onSubmit,
+}: {
+  children: ReactNode;
+  onSubmit: () => void;
+}) => (
+  <View>
+    {children}
+    <TouchableOpacity onPress={onSubmit}>
+      <Text>Submit</Text>
+    </TouchableOpacity>
+  </View>
 );
 
 const mapping = [
