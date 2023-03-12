@@ -141,6 +141,11 @@ function propsMapToObect(propsMap: PropsMapping) {
   return r;
 }
 
+type RTFFormSchemaType = z.AnyZodObject | ZodEffects<any, any>;
+type RTFFormSubmitFn<SchemaType extends RTFFormSchemaType> = (
+  values: z.infer<SchemaType>
+) => void | Promise<void>;
+
 /**
  * Creates a reusable, typesafe form component based on a zod-component mapping.
  * @example
@@ -227,9 +232,7 @@ export function createTsForm<
   const propsMap = propsMapToObect(
     options?.propsMap ? options.propsMap : defaultPropsMap
   );
-  return function Component<
-    SchemaType extends z.AnyZodObject | ZodEffects<any, any>
-  >({
+  return function Component<SchemaType extends RTFFormSchemaType>({
     schema,
     onSubmit,
     props,
@@ -247,7 +250,7 @@ export function createTsForm<
     /**
      * A callback function that will be called with the data once the form has been submitted and validated successfully.
      */
-    onSubmit: (values: z.infer<SchemaType>) => void | Promise<void>;
+    onSubmit: RTFFormSubmitFn<RTFFormSchemaType>;
     /**
      * Initializes your form with default values. Is a deep partial, so all properties and nested properties are optional.
      */
@@ -363,42 +366,12 @@ export function createTsForm<
     const { control, handleSubmit, setError } = _form;
     const _schema = unwrapEffects(schema);
     const shape: Record<string, RTFSupportedZodTypes> = _schema._def.shape();
-    const coerceUndefinedFieldsRef = useRef<Set<string>>(new Set());
-
-    function addToCoerceUndefined(fieldName: string) {
-      coerceUndefinedFieldsRef.current.add(fieldName);
-    }
-
-    function removeFromCoerceUndefined(fieldName: string) {
-      coerceUndefinedFieldsRef.current.delete(fieldName);
-    }
-
-    function removeUndefined(data: any) {
-      const r = { ...data };
-      for (const undefinedField of coerceUndefinedFieldsRef.current) {
-        delete r[undefinedField];
-      }
-      return r;
-    }
-
-    function _submit(data: z.infer<SchemaType>) {
-      return resolver(removeUndefined(data), {} as any, {} as any).then(
-        async (e) => {
-          const errorKeys = Object.keys(e.errors);
-          if (!errorKeys.length) {
-            await onSubmit(data);
-            return;
-          }
-          for (const key of errorKeys) {
-            setError(
-              key as any,
-              (e.errors as any)[key] as unknown as ErrorOption
-            );
-          }
-        }
-      );
-    }
-    const submitFn = handleSubmit(_submit);
+    const submitter = useSubmitter({
+      resolver,
+      onSubmit,
+      setError,
+    });
+    const submitFn = handleSubmit(submitter.submit);
     type SchemaKey = keyof z.infer<UnwrapEffects<SchemaType>>;
     const renderedFields = Object.keys(shape).reduce(
       (accum, key: SchemaKey) => {
@@ -442,8 +415,8 @@ export function createTsForm<
               label={ctxLabel}
               placeholder={ctxPlaceholder}
               enumValues={meta.enumValues as string[] | undefined}
-              addToCoerceUndefined={addToCoerceUndefined}
-              removeFromCoerceUndefined={removeFromCoerceUndefined}
+              addToCoerceUndefined={submitter.addToCoerceUndefined}
+              removeFromCoerceUndefined={submitter.removeFromCoerceUndefined}
             >
               <Component key={key} {...mergedProps} />
             </FieldContextProvider>
@@ -468,5 +441,60 @@ export function createTsForm<
         </ActualFormComponent>
       </FormProvider>
     );
+  };
+}
+// handles internal custom submit logic
+// Implements a workaround to allow devs to set form values to undefined (as it breaks react hook form)
+// For example https://github.com/react-hook-form/react-hook-form/discussions/2797
+function useSubmitter<SchemaType extends RTFFormSchemaType>({
+  resolver,
+  onSubmit,
+  setError,
+}: {
+  resolver: ReturnType<typeof zodResolver>;
+  onSubmit: RTFFormSubmitFn<RTFFormSchemaType>;
+  setError: ReturnType<typeof useForm>["setError"];
+}) {
+  const coerceUndefinedFieldsRef = useRef<Set<string>>(new Set());
+
+  function addToCoerceUndefined(fieldName: string) {
+    coerceUndefinedFieldsRef.current.add(fieldName);
+  }
+
+  function removeFromCoerceUndefined(fieldName: string) {
+    coerceUndefinedFieldsRef.current.delete(fieldName);
+  }
+
+  function removeUndefined(data: any) {
+    const r = { ...data };
+    for (const undefinedField of coerceUndefinedFieldsRef.current) {
+      delete r[undefinedField];
+    }
+    return r;
+  }
+
+  function submit(data: z.infer<SchemaType>) {
+    return resolver(removeUndefined(data), {} as any, {} as any).then(
+      async (e) => {
+        const errorKeys = Object.keys(e.errors);
+        if (!errorKeys.length) {
+          await onSubmit(data);
+          return;
+        }
+        for (const key of errorKeys) {
+          setError(
+            key as any,
+            (e.errors as any)[key] as unknown as ErrorOption
+          );
+        }
+      }
+    );
+  }
+
+  return {
+    submit,
+    removeUndefined,
+    removeFromCoerceUndefined,
+    addToCoerceUndefined,
   };
 }
