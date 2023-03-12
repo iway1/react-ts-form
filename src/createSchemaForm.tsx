@@ -444,7 +444,8 @@ export function createTsForm<
   };
 }
 // handles internal custom submit logic
-// - Implements a workaround to allow devs to set form values to undefined
+// Implements a workaround to allow devs to set form values to undefined (as it breaks react hook form)
+// For example https://github.com/react-hook-form/react-hook-form/discussions/2797
 function useSubmitter<SchemaType extends RTFFormSchemaType>({
   resolver,
   onSubmit,
