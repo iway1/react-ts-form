@@ -7,4 +7,4 @@ sidebar_position: 2
 ## Limitations
 
 - Doesn't support class components
-- `@ts-react/form` allows you to pass props to your components and render elements in between your components, which is good for almost all form designs out there. Some designs may not be easily achievable. For example, if you need a container around multiple sections of your form, this library doesn't allow splitting child components into containers at the moment. (Though if it's a common-enough use case and you'd like to see it added, open an issue!)
+- `@ts-react/form` doesn't currently support dependent field props (but will in the future), so you won't be able to modify the behavior of input components based on form values (for example if you needed to hide a form field based on the value of another form field)

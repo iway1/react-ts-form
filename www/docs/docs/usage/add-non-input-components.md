@@ -2,7 +2,7 @@
 sidebar_position: 6
 ---
 
-# Include Non-Input Components
+# Non-Input Components
 
 ## Adding non input components into your form
 
@@ -21,3 +21,5 @@ Some times you need to render components in between your fields (maybe a form se
   }}
 />
 ```
+
+Or you can use the [custom layouts feature](./custom-layouts.md)

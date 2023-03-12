@@ -2,7 +2,7 @@
 sidebar_position: 7
 ---
 
-# Customize Form Components
+# Form Components
 
 ## Customizing form components
 

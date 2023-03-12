@@ -41,8 +41,7 @@ const config = {
           sidebarPath: require.resolve("./sidebars.js"),
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
-          editUrl:
-            "https://github.com/iway1/react-ts-form/tree/main/packages/create-docusaurus/templates/shared/",
+          editUrl: "https://github.com/iway1/react-ts-form/",
         },
 
         theme: {
@@ -55,6 +54,9 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      colorMode: {
+        defaultMode: "dark",
+      },
       metadata: [
         {
           name: "twitter:card",
@@ -116,9 +118,9 @@ const config = {
         items: [
           {
             type: "doc",
-            docId: "docs/installation",
+            docId: "docs/usage/quick-start",
             position: "left",
-            label: "Get Started",
+            label: "Docs",
           },
           {
             type: "doc",
@@ -165,6 +167,7 @@ const config = {
         ],
         copyright: `Built with ❤️ - react-ts-form ${new Date().getFullYear()}`,
       },
+
       prism: {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,

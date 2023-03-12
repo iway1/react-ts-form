@@ -2,9 +2,9 @@
 sidebar_position: 4
 ---
 
-# useForm State
+# Accessing Form State
 
-## Accessing useForm state
+## Form State
 
 Sometimes you need to work with the form directly (such as to reset the form from the parent). In these cases, just pass the `react-hook-form` `useForm()` result to your form:
 

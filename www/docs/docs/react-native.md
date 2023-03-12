@@ -2,7 +2,9 @@
 sidebar_position: 9
 ---
 
-# React Native Usage
+# React Native
+
+This library works the same in React Native as it does in React.
 
 ## React Native Usage
 
@@ -29,23 +31,4 @@ const mapping = [
 ] as const;
 
 const MyForm = createTsForm(mapping, { FormComponent: FormContainer });
-```
-
-## Default values
-
-You can provide typesafe default values like this:
-
-```tsx
-const Schema = z.object({
-  string: z.string(),
-  num: z.number()
-})
-//...
-<MyForm
-  schema={Schema}
-  defaultValues={{
-    string: 'default',
-    num: 5
-  }}
-/>
 ```
