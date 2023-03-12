@@ -1,10 +1,6 @@
----
-sidebar_position: 7
----
-
 # Form Components
 
-## Customizing form components
+## Props
 
 By default your form is just rendered with a `<form>` tag. You can pass props to it via `formProps`:
 
@@ -16,7 +12,9 @@ By default your form is just rendered with a `<form>` tag. You can pass props to
 />
 ```
 
-You can also provide a custom form component as the second parameter to `createTsForm` options if you want, it will get passed an `onSubmit` function, and it should also render its children some where:
+## Custom Form Component
+
+The recommended approach is to provide a custom form component as the second parameter to `createTsForm` options, it will get passed an `onSubmit` function, and it should also render its children (these are your input components):
 
 ```tsx
 const mapping = [
