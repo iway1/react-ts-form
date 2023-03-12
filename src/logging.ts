@@ -19,16 +19,8 @@ export function duplicateTypeError() {
   );
 }
 
-export function printWarningsForSchema(type: RTFSupportedZodTypes) {
-  if (
-    !shownWarnings.enum &&
-    type._def.typeName === ZodFirstPartyTypeKind.ZodEnum
-  ) {
-    err(
-      "support for z.enum() is deprecated and will be removed in future versions. Prefer z.string() / z.number() etc for dropdowns, selects, and radio buttons. \nSee https://github.com/iway1/react-ts-form/blob/main/field-examples.md for examples"
-    );
-    shownWarnings.enum = true;
-  }
+export function printWarningsForSchema(_type: RTFSupportedZodTypes) {
+  // placeholder in case we need future schema warnings
 }
 
 export function printUseEnumWarning() {
