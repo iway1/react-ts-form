@@ -1,4 +1,3 @@
-import { ZodFirstPartyTypeKind } from "zod";
 import { RTFSupportedZodTypes } from "./supportedZodTypes";
 
 const shownWarnings = {
