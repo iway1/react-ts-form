@@ -55,12 +55,6 @@ const FormSchema = z.object({
 });
 ```
 
-<p align="center">This allows you to build stuff like this when your designer decides to go crazy:</p>
-
-<p align="center">
-  <img width="60%" src="https://user-images.githubusercontent.com/12774588/210149773-e680c127-9865-4ea1-9b82-1b7e2244c0ef.png"/>
-</p>
-
 ## ⚠️ When to use ⚠️
 
 Complex input types are useful when you have reusable input components that have a non-primitive object as its form state. If you only need to build a custom layout, use the [Custom Layouts](./custom-layouts.md) feature of this package.
