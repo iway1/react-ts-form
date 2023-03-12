@@ -147,7 +147,7 @@ const config = {
               },
               {
                 label: "Usage",
-                to: "docs/category/usage",
+                to: "docs/docs/usage/quick-start",
               },
               {
                 label: "API",

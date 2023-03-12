@@ -56,7 +56,7 @@ function HomepageHeader() {
                 ? "bg-white text-black hover:text-black"
                 : "bg-background text-white hover:text-white"
             }`}
-            to="/docs/docs/usage/quckstart"
+            to="/docs/docs/usage/quick-start"
             target="_blank"
           >
             <div className="grid grid-cols-1 whitespace-nowrap items-center w-full text-xs md:text-sm">
