@@ -2,7 +2,7 @@
 sidebar_position: 2
 ---
 
-# Input Components
+# Creating Components
 
 ## Creating a custom input component
 
@@ -26,18 +26,3 @@ function TextField() {
 ```
 
 <code>@ts-react/form</code> will magically connect your component to the appropriate field with this hook.
-
-## Passing control and name to props
-
-You can also receive the control and name as props, if you prefer:
-
-```tsx
-function TextField({ control, name }: { control: Control<any>; name: string }) {
-  const { field, fieldState } = useController({ name, control });
-  //...
-}
-```
-
-This approach is less typesafe than <code>useTsController</code>.
-
-If you want the `control`, `name`, or other `@ts-react/form` data to be passed to props with a different name check out [Prop Forwarding](https://react-ts-form.com/docs/docs/prop-forwarding).

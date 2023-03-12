@@ -4,6 +4,8 @@ sidebar_position: 3
 
 # Error Handling
 
+Handling error messages is extremely important for UX. `react-ts-form` makes it very easy to create the best error handling UX by allowing passing validation step specific error messages in your zod schemas, and passing the error messages to your components.
+
 ## Accessing Error Messages in your component
 
 `@ts-react/form` also returns an <code>error</code> object that's more accurately typed than `react-hook-forms`'s that you can use to show errors:
@@ -56,4 +58,4 @@ return (
 );
 ```
 
-For more information about dealing with errors (IE imperatively resetiting errors), check out the [hook form docs](https://react-hook-form.com)
+For more information about dealing with errors (IE imperatively resetting errors), check out the [hook form docs](https://react-hook-form.com)

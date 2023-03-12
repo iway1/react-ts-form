@@ -51,7 +51,7 @@ function Feature({ title, description }: FeatureItem) {
 
 export default function HomepageFeatures(): JSX.Element {
   const { isDarkTheme } = useColorMode();
-  const background = isDarkTheme ? "bg-background" : "bg-white";
+  const background = isDarkTheme ? "" : "bg-white";
   const text = isDarkTheme ? "text-white" : "text-black";
   return (
     <section

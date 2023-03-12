@@ -2,7 +2,7 @@
 sidebar_position: 11
 ---
 
-# Zod Refine
+# Zod Tips
 
 ## Using Zod Refine
 
@@ -24,3 +24,7 @@ z.object({
 ```
 
 This would map the message "Passwords must match!" to the `confirmPassword` field in case the passwords don't match. Note that `.refine` only validates after the base schema object passes validation.
+
+## Zod Transform
+
+Zod transform is not currently supported, this library assumes that the input and output type of your zod schema parsing should match.

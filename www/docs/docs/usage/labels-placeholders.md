@@ -2,13 +2,9 @@
 sidebar_position: 12
 ---
 
-# Quality of Life
+# Labels And Placeholders
 
-## ❤️ Quality of Life / Productivity ❤️
-
-These allow you to build forms even faster by connecting zod schemas directly to react state. These features are opt-in, it's possible to do the things in this section via props but these approaches may be faster / easier.
-
-### Quick Labels / Placeholders
+## Quick Labels / Placeholders
 
 `@ts-react/form` provides a way to quickly add labels / placeholders via `zod`'s `.describe()` method:
 

@@ -12,7 +12,7 @@ function HomepageHeader() {
   const [githubStars, setGithubStars] = useState(0);
 
   const { isDarkTheme } = useColorMode();
-  const background = isDarkTheme ? "bg-background" : "bg-white";
+  const background = isDarkTheme ? "" : "bg-white";
 
   useEffect(() => {
     // fetch github stars from api
@@ -56,7 +56,7 @@ function HomepageHeader() {
                 ? "bg-white text-black hover:text-black"
                 : "bg-background text-white hover:text-white"
             }`}
-            to="/docs/docs/installation"
+            to="/docs/docs/usage/quick-start"
             target="_blank"
           >
             <div className="grid grid-cols-1 whitespace-nowrap items-center w-full text-xs md:text-sm">
@@ -66,10 +66,18 @@ function HomepageHeader() {
             </div>
           </Link>
         </div>
-        <img
-          src="https://user-images.githubusercontent.com/12774588/210157220-e287cfdf-c26f-4169-a944-ac147cb4b058.gif"
-          alt="demo"
-        />
+        <div
+          style={{
+            borderColor: "#444444",
+            borderWidth: 1,
+          }}
+          className="rounded-md border-[1px] border-solid  overflow-hidden"
+        >
+          <img
+            src="https://user-images.githubusercontent.com/12774588/210157220-e287cfdf-c26f-4169-a944-ac147cb4b058.gif"
+            alt="demo"
+          />
+        </div>
       </section>
     </header>
   );
