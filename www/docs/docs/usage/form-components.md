@@ -50,3 +50,21 @@ const MyForm = createTsForm(mapping, {FormComponent: MyCustomFormComponent});
   }}
 />
 ```
+
+## Accessing the react-hook-form prop
+
+If you need to access the `react-hook-form` form prop (what's returned from `useForm`), you can use `useFormContext` exported from `react-hook-form`:
+
+```tsx
+import {useFormContext} from 'react-hook-form';
+function MyCustomFormComponent({
+  children,
+  onSubmit,
+}:{
+  children: ReactNode,
+  onSubmit: ()=>void,
+}) {
+  const form = useFormContext();
+  //...
+}
+```
