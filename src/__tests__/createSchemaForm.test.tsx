@@ -1059,6 +1059,63 @@ describe("createSchemaForm", () => {
     expect(screen.queryByText("req")).not.toBeInTheDocument();
     expect(mockOnSubmit).toHaveBeenCalledWith({ number: 5 });
   });
+  it("should be possible to pass 'defaultValues' prop and 'form' prop and apply the default values.", async () => {
+    const mockOnSubmit = jest.fn();
+    function Input() {
+      const {
+        field: { onChange, value },
+        error,
+      } = useTsController<number>();
+      const [_, setRerender] = useState(0);
+      return (
+        <>
+          <input
+            value={value !== undefined ? value + "" : ""}
+            onChange={(e) => {
+              const value = parseInt(e.target.value);
+              if (isNaN(value)) onChange(undefined);
+              else onChange(value);
+            }}
+            placeholder={"input"}
+          />
+          <button type={"button"} onClick={() => setRerender((old) => old + 1)}>
+            rerender button
+          </button>
+          {error?.errorMessage && <span>{error.errorMessage}</span>}
+        </>
+      );
+    }
+
+    function Outer() {
+      const form = useForm<any>();
+
+      return (
+        <Form
+          onSubmit={mockOnSubmit}
+          schema={z.object({
+            number: z.number({ required_error: "req" }),
+          })}
+          form={form}
+          defaultValues={defaultValues}
+          renderAfter={() => <button>submit</button>}
+        />
+      );
+    }
+
+    const mapping = [[z.number(), Input]] as const;
+    const Form = createTsForm(mapping);
+    const defaultValues = {
+      number: 5,
+    };
+
+    render(<Outer />);
+
+    const button = screen.getByText("submit");
+    await userEvent.click(button);
+
+    expect(screen.queryByText("req")).not.toBeInTheDocument();
+    expect(mockOnSubmit).toHaveBeenCalledWith({ number: 5 });
+  });
   it("should render the correct component when a schema created with createSchemaForm is optional", () => {
     const StringSchema = createUniqueFieldSchema(z.string(), "string");
     const NumberSchema = createUniqueFieldSchema(z.number(), "number");

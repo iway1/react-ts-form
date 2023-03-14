@@ -4,6 +4,7 @@ import React, {
   FunctionComponent,
   ReactNode,
   RefAttributes,
+  useEffect,
   useRef,
 } from "react";
 import { ComponentProps } from "react";
@@ -363,6 +364,12 @@ export function createTsForm<
       });
       return uf;
     })();
+
+    useEffect(() => {
+      if (form && defaultValues) {
+        form.reset(defaultValues);
+      }
+    }, []);
     const { control, handleSubmit, setError } = _form;
     const _schema = unwrapEffects(schema);
     const shape: Record<string, RTFSupportedZodTypes> = _schema._def.shape();
