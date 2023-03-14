@@ -355,8 +355,17 @@ export function createTsForm<
       throw new Error(useFormResultValueChangedErrorMesssage());
     }
     const resolver = zodResolver(schema);
+    const hasSetDefaultValues = useRef(false);
+    // need to manually reset the form state in case 'defaultValues' and 'form' are passed
+    if (form && defaultValues && !hasSetDefaultValues.current) {
+      form.reset(defaultValues);
+      hasSetDefaultValues.current = true;
+    }
     const _form = (() => {
-      if (form) return form;
+      if (form) {
+        return form;
+      }
+
       const uf = useForm({
         resolver,
         defaultValues,
