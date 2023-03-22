@@ -63,6 +63,11 @@ function CustomTextField(props: {
   );
 }
 export const enumFieldValues = ["a", "b", "c"] as const;
+export enum NativeEnumValues {
+  a = "a",
+  b = "b",
+  c3p0 = "c3p0",
+}
 
 function EnumField({
   enumValues = [],
@@ -92,6 +97,7 @@ const mapping = [
   [z.number(), NumberField] as const,
   [TestCustomFieldSchema, CustomTextField] as const,
   [z.enum(enumFieldValues), EnumField] as const,
+  [z.nativeEnum(NativeEnumValues), EnumField] as const,
 ] as const;
 
 const propsMap = [

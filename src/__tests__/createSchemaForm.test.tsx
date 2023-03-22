@@ -298,6 +298,46 @@ describe("createSchemaForm", () => {
     expect(screen.queryByText(label)).toBeInTheDocument();
     expect(screen.queryByText(placeholder)).toBeInTheDocument();
   });
+  it("should pass native enum values to the enum field", () => {
+    enum NativeEnumValues {
+      a = "a",
+      b = "b",
+      c3p0 = "c3p0",
+    }
+    const Schema = z.object({
+      enum: z.nativeEnum(NativeEnumValues),
+    });
+
+    render(<TestForm onSubmit={() => {}} schema={Schema} />);
+
+    for (const value of Object.keys(NativeEnumValues)) {
+      expect(screen.queryByText(value)).toBeTruthy();
+    }
+  });
+  it("should pass a label, placeholder and native enum values to a optional enum field with description", () => {
+    enum NativeEnumValues {
+      a = "a",
+      b = "b",
+      c3p0 = "c3p0",
+    }
+    const label = "label";
+    const placeholder = "placeholder";
+    const Schema = z.object({
+      enum: z
+        .nativeEnum(NativeEnumValues)
+        .optional()
+        .describe(`${label}${DESCRIPTION_SEPARATOR_SYMBOL}${placeholder}`),
+    });
+
+    render(<TestForm schema={Schema} onSubmit={() => {}} />);
+
+    for (const value of Object.keys(NativeEnumValues)) {
+      expect(screen.queryByText(value)).toBeTruthy();
+    }
+
+    expect(screen.queryByText(label)).toBeInTheDocument();
+    expect(screen.queryByText(placeholder)).toBeInTheDocument();
+  });
   it("should render with default values if they're passed", () => {
     const defaultValue = "default";
     const Schema = z.object({

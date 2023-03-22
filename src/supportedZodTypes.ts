@@ -5,6 +5,7 @@ import {
   ZodDate,
   ZodDiscriminatedUnion,
   ZodEnum,
+  ZodNativeEnum,
   ZodMap,
   ZodNullable,
   ZodNumber,
@@ -33,6 +34,7 @@ export type RTFBaseZodType =
   | ZodMap<any>
   | ZodSet<any>
   | ZodEnum<any>
+  | ZodNativeEnum<any>
   | ZodBranded<any, any>
   | ZodEffects<any, any>;
 
