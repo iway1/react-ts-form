@@ -303,6 +303,7 @@ describe("createSchemaForm", () => {
       a = "a",
       b = "b",
       c3p0 = "c3p0",
+      num = 42,
     }
     const Schema = z.object({
       enum: z.nativeEnum(NativeEnumValues),
@@ -310,7 +311,7 @@ describe("createSchemaForm", () => {
 
     render(<TestForm onSubmit={() => {}} schema={Schema} />);
 
-    for (const value of Object.keys(NativeEnumValues)) {
+    for (const value of Object.values(NativeEnumValues)) {
       expect(screen.queryByText(value)).toBeTruthy();
     }
   });
@@ -319,6 +320,7 @@ describe("createSchemaForm", () => {
       a = "a",
       b = "b",
       c3p0 = "c3p0",
+      num = 42,
     }
     const label = "label";
     const placeholder = "placeholder";
@@ -331,7 +333,7 @@ describe("createSchemaForm", () => {
 
     render(<TestForm schema={Schema} onSubmit={() => {}} />);
 
-    for (const value of Object.keys(NativeEnumValues)) {
+    for (const value of Object.values(NativeEnumValues)) {
       expect(screen.queryByText(value)).toBeTruthy();
     }
 

@@ -67,6 +67,7 @@ export enum NativeEnumValues {
   a = "a",
   b = "b",
   c3p0 = "c3p0",
+  num = 42,
 }
 
 function EnumField({

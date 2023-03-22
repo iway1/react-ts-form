@@ -21,7 +21,7 @@ export function getEnumValues(type: RTFSupportedZodTypes) {
     return type._def.values as readonly string[];
   }
   if (type._def.typeName === z.ZodFirstPartyTypeKind.ZodNativeEnum) {
-    return Object.keys(type._def.values) as readonly string[];
+    return Object.values(type._def.values) as readonly (string | number)[];
   }
   return;
 }
