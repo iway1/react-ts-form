@@ -1,6 +1,6 @@
 {
   "name": "@ts-react/form",
-  "version": "1.4.5",
+  "version": "1.0.6",
   "description": "Build forms faster!",
   "module": "lib/index.mjs",
   "main": "lib/index.cjs",
