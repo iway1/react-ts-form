@@ -25,9 +25,13 @@ import {
   useEnumValues,
   useReqDescription,
   useTsController,
+  useFieldZodType,
+  useStringFieldInfo,
+  useFieldInfo,
 } from "../FieldContext";
 import { expectTypeOf } from "expect-type";
 import { createUniqueFieldSchema } from "../createFieldSchema";
+import { unwrap } from "../unwrap";
 
 const testIds = {
   textField: "_text-field",
@@ -1181,4 +1185,157 @@ describe("createSchemaForm", () => {
     expect(screen.queryByText("one")).toBeInTheDocument();
     expect(screen.queryByText("two")).toBeInTheDocument();
   });
+  it("should be possible to get the Zod type for a field using `useFieldZodType`", () => {
+    const stringComponentId = "custom-string";
+    const numberComponentId = "custom-number";
+
+    const StringSchema = createUniqueFieldSchema(z.string(), stringComponentId);
+    const NumberSchema = createUniqueFieldSchema(z.number(), numberComponentId);
+
+    const schema = z.object({
+      name: StringSchema.optional(),
+      age: NumberSchema,
+    });
+
+    const mapping = [
+      [StringSchema, TextField],
+      [z.string(), TextField],
+      [NumberSchema, NumberField],
+    ] as const;
+
+    const Form = createTsForm(mapping);
+
+    function TextField() {
+      const zodType = useFieldZodType();
+
+      expect(unwrap(zodType)._rtf_id).toBe(stringComponentId);
+
+      return <input />;
+    }
+
+    function NumberField() {
+      const zodType = useFieldZodType();
+
+      expect(unwrap(zodType)._rtf_id).toBe(numberComponentId);
+
+      return <input />;
+    }
+
+    render(<Form schema={schema} onSubmit={() => {}} />);
+  });
+  it.only("should be possible to get ZodAny information using `useFieldInfo`", () => {
+    const testData = {
+      requiredTextField: {
+        label: "required-label",
+        placeholder: "required-placeholder",
+        uniqueId: "required-text-field",
+      },
+      optionalTextField: {
+        label: "optional-label",
+        placeholder: "optional-placeholder",
+        uniqueId: "optional-text-field",
+      },
+    };
+
+    const description = (k: keyof typeof testData) =>
+      `${testData[k].label}${DESCRIPTION_SEPARATOR_SYMBOL}${testData[k].placeholder}`;
+
+    const RequiredTextFieldSchema = createUniqueFieldSchema(
+      z.string(),
+      testData.requiredTextField.uniqueId
+    );
+
+    const OptionalTextFieldSchema = createUniqueFieldSchema(
+      z.string().optional(),
+      testData.optionalTextField.uniqueId
+    );
+
+    function RequiredTextField() {
+      const fieldInfo = useFieldInfo();
+
+      expect(fieldInfo.isOptional).toBeFalsy();
+      expect(fieldInfo.label).toBe(testData.requiredTextField.label);
+      expect(fieldInfo.placeholder).toBe(
+        testData.requiredTextField.placeholder
+      );
+      expect(fieldInfo.uniqueId).toBe(testData.requiredTextField.uniqueId);
+
+      return <input />;
+    }
+
+    function OptionalTextField() {
+      const fieldInfo = useFieldInfo();
+
+      expect(fieldInfo.isOptional).toBe(true);
+      expect(fieldInfo.label).toBe(testData.optionalTextField.label);
+      expect(fieldInfo.placeholder).toBe(
+        testData.optionalTextField.placeholder
+      );
+      expect(fieldInfo.uniqueId).toBe(testData.optionalTextField.uniqueId);
+
+      return <input />;
+    }
+
+    const schema = z.object({
+      name: RequiredTextFieldSchema.describe(description("requiredTextField")),
+      nickName: OptionalTextFieldSchema.describe(
+        description("optionalTextField")
+      ),
+    });
+
+    const mapping = [
+      [RequiredTextFieldSchema, RequiredTextField],
+      [OptionalTextFieldSchema, OptionalTextField],
+    ] as const;
+
+    const Form = createTsForm(mapping);
+
+    render(<Form schema={schema} onSubmit={() => {}} />);
+  });
+  it("should be possible to get ZodString information using `useStringFieldInfo`", () => {
+    const label = "field-label";
+    const placeholder = "placeholder";
+    const MIN_LENGTH = 5;
+    const MAX_LENGTH = 16;
+    const UNIQUE_STRING_SCHEMA_ID = "custom-string";
+
+    const StringSchema = createUniqueFieldSchema(
+      z.string().min(MIN_LENGTH).max(MAX_LENGTH),
+      UNIQUE_STRING_SCHEMA_ID
+    );
+
+    const decsription = `${label}${DESCRIPTION_SEPARATOR_SYMBOL}${placeholder}`;
+
+    const schema = z.object({
+      name: StringSchema.describe(decsription),
+    });
+
+    const mapping = [[StringSchema, CustomTextField]] as const;
+
+    const Form = createTsForm(mapping);
+
+    function CustomTextField() {
+      const fieldInfo = useStringFieldInfo();
+
+      return (
+        <div>
+          <div>{fieldInfo.minLength}</div>
+          <div>{fieldInfo.maxLength}</div>
+          <div>{fieldInfo.label}</div>
+          <div>{fieldInfo.placeholder}</div>
+          <div>{fieldInfo.uniqueId}</div>
+        </div>
+      );
+    }
+
+    render(<Form schema={schema} onSubmit={() => {}} />);
+
+    expect(screen.getByText(label)).toBeInTheDocument();
+    expect(screen.getByText(placeholder)).toBeInTheDocument();
+    expect(screen.getByText(MIN_LENGTH)).toBeInTheDocument();
+    expect(screen.getByText(MAX_LENGTH)).toBeInTheDocument();
+    expect(screen.getByText(UNIQUE_STRING_SCHEMA_ID)).toBeInTheDocument();
+  });
 });
+
+console.log(useStringFieldInfo);

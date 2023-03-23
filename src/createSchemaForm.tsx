@@ -397,6 +397,8 @@ export function createTsForm<
 
         const { beforeElement, afterElement } = fieldProps;
 
+        console.log("PROPS MAP", propsMap);
+
         const mergedProps = {
           ...(propsMap.name && { [propsMap.name]: key }),
           ...(propsMap.control && { [propsMap.control]: control }),
@@ -420,6 +422,7 @@ export function createTsForm<
               control={control}
               name={stringKey}
               label={ctxLabel}
+              zodType={type}
               placeholder={ctxPlaceholder}
               enumValues={meta.enumValues as string[] | undefined}
               addToCoerceUndefined={submitter.addToCoerceUndefined}

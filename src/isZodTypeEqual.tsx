@@ -1,4 +1,13 @@
-import { ZodFirstPartyTypeKind } from "zod";
+import {
+  AnyZodObject,
+  ZodArray,
+  ZodBoolean,
+  ZodDate,
+  ZodFirstPartyTypeKind,
+  ZodNumber,
+  ZodString,
+  z,
+} from "zod";
 import { RTFSupportedZodTypes } from "./supportedZodTypes";
 import { unwrap } from "./unwrap";
 
@@ -19,6 +28,8 @@ export function isZodTypeEqual(
 
   if (a._def.typeName !== b._def.typeName) return false;
 
+  // array
+
   if (
     a._def.typeName === ZodFirstPartyTypeKind.ZodArray &&
     b._def.typeName === ZodFirstPartyTypeKind.ZodArray
@@ -27,6 +38,8 @@ export function isZodTypeEqual(
     return false;
   }
 
+  // set
+
   if (
     a._def.typeName === ZodFirstPartyTypeKind.ZodSet &&
     b._def.typeName === ZodFirstPartyTypeKind.ZodSet
@@ -34,6 +47,8 @@ export function isZodTypeEqual(
     if (isZodTypeEqual(a._def.valueType, b._def.valueType)) return true;
     return false;
   }
+
+  // map
 
   if (
     a._def.typeName === ZodFirstPartyTypeKind.ZodMap &&
@@ -103,3 +118,57 @@ export function isZodTypeEqual(
   }
   return true;
 }
+
+// Guards
+
+export function isZodString(
+  zodType: RTFSupportedZodTypes
+): zodType is ZodString {
+  return isTypeOf(zodType, "ZodString");
+}
+
+export function isZodNumber(
+  zodType: RTFSupportedZodTypes
+): zodType is ZodNumber {
+  return isTypeOf(zodType, "ZodNumber");
+}
+
+export function isZodBoolean(
+  zodType: RTFSupportedZodTypes
+): zodType is ZodBoolean {
+  return isTypeOf(zodType, "ZodBoolean");
+}
+
+export function isZodArray(
+  zodType: RTFSupportedZodTypes
+): zodType is ZodArray<any> {
+  return isTypeOf(zodType, "ZodArray");
+}
+
+export function isZodObject(
+  zodType: RTFSupportedZodTypes
+): zodType is AnyZodObject {
+  return isTypeOf(zodType, "ZodObject");
+}
+
+export function isZodDate(zodType: RTFSupportedZodTypes): zodType is ZodDate {
+  return isTypeOf(zodType, "ZodDate");
+}
+
+export function isTypeOf(zodType: RTFSupportedZodTypes, type: ZodKindName) {
+  return zodType._def.typeName === ZodFirstPartyTypeKind[type];
+}
+
+type ZodKindName = keyof typeof z.ZodFirstPartyTypeKind;
+
+export type ZodKindNameToType<K extends keyof typeof z.ZodFirstPartyTypeKind> =
+  InstanceType<(typeof z)[K]>;
+
+export type RTFSupportedZodFirstPartyTypeKindMap = {
+  [K in ZodKindName as ZodKindNameToType<K> extends RTFSupportedZodTypes
+    ? K
+    : never]: ZodKindNameToType<K>;
+};
+
+export type RTFSupportedZodFirstPartyTypeKind =
+  keyof RTFSupportedZodFirstPartyTypeKindMap;

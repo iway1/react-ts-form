@@ -18,10 +18,14 @@ const unwrappable = new Set<z.ZodFirstPartyTypeKind>([
   z.ZodFirstPartyTypeKind.ZodDefault,
 ]);
 
-export function unwrap(type: RTFSupportedZodTypes): {
+export type UnwrappedRTFSupportedZodTypes = {
   type: RTFSupportedZodTypes;
   [HIDDEN_ID_PROPERTY]: string | null;
-} {
+};
+
+export function unwrap(
+  type: RTFSupportedZodTypes
+): UnwrappedRTFSupportedZodTypes {
   // Realized zod has a built in "unwrap()" function after writing this.
   // Not sure if it's super necessary.
   let r = type;

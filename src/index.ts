@@ -5,5 +5,8 @@ export {
   useReqDescription,
   useEnumValues,
   useTsController,
+  useFieldInfo,
+  useStringFieldInfo,
+  useNumberFieldInfo
 } from "./FieldContext";
 export type { RTFSupportedZodTypes } from "./supportedZodTypes";

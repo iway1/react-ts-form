@@ -30,6 +30,7 @@ const sidebars = {
         { type: "doc", id: "docs/usage/default-values" },
         { type: "doc", id: "docs/usage/form-state" },
         { type: "doc", id: "docs/usage/labels-placeholders" },
+        { type: "doc", id: "docs/usage/field-schema-info" },
       ],
     },
     {
