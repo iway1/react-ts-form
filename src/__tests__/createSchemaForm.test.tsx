@@ -1304,10 +1304,10 @@ describe("createSchemaForm", () => {
       UNIQUE_STRING_SCHEMA_ID
     );
 
-    const decsription = `${label}${DESCRIPTION_SEPARATOR_SYMBOL}${placeholder}`;
+    const description = `${label}${DESCRIPTION_SEPARATOR_SYMBOL}${placeholder}`;
 
     const schema = z.object({
-      name: StringSchema.describe(decsription),
+      name: StringSchema.describe(description),
     });
 
     const mapping = [[StringSchema, CustomTextField]] as const;
@@ -1337,5 +1337,3 @@ describe("createSchemaForm", () => {
     expect(screen.getByText(UNIQUE_STRING_SCHEMA_ID)).toBeInTheDocument();
   });
 });
-
-console.log(useStringFieldInfo);

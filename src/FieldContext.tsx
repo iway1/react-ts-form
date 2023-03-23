@@ -221,7 +221,7 @@ export function fieldSchemaMismatchHookError(
   hookName: string,
   expectedType: string
 ) {
-  return `Make sure that ${hookName} hook it is being called inside of a custom component which matches the type '${expectedType}'`;
+  return `Make sure that the '${hookName}' hook is being called inside of a custom form component which matches the type '${expectedType}'`;
 }
 
 /**
@@ -299,6 +299,10 @@ export function useFieldInfo() {
   return internal_useFieldInfo("useFieldInfo");
 }
 
+/**
+ * The zod type objects contain virtual properties which requires us to
+ * manually pick the properties we'd like inorder to get their values.
+ */
 export function usePickZodFields<
   TZodKindName extends RTFSupportedZodFirstPartyTypeKind,
   TZodType extends RTFSupportedZodFirstPartyTypeKindMap[TZodKindName] = RTFSupportedZodFirstPartyTypeKindMap[TZodKindName],
@@ -372,5 +376,3 @@ export function useNumberFieldInfo() {
     "useNumberFieldInfo"
   );
 }
-
-const {} = useNumberFieldInfo;

@@ -397,8 +397,6 @@ export function createTsForm<
 
         const { beforeElement, afterElement } = fieldProps;
 
-        console.log("PROPS MAP", propsMap);
-
         const mergedProps = {
           ...(propsMap.name && { [propsMap.name]: key }),
           ...(propsMap.control && { [propsMap.control]: control }),
