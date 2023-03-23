@@ -25,13 +25,11 @@ import {
   useEnumValues,
   useReqDescription,
   useTsController,
-  useFieldZodType,
   useStringFieldInfo,
   useFieldInfo,
 } from "../FieldContext";
 import { expectTypeOf } from "expect-type";
 import { createUniqueFieldSchema } from "../createFieldSchema";
-import { unwrap } from "../unwrap";
 
 const testIds = {
   textField: "_text-field",
@@ -1185,45 +1183,7 @@ describe("createSchemaForm", () => {
     expect(screen.queryByText("one")).toBeInTheDocument();
     expect(screen.queryByText("two")).toBeInTheDocument();
   });
-  it("should be possible to get the Zod type for a field using `useFieldZodType`", () => {
-    const stringComponentId = "custom-string";
-    const numberComponentId = "custom-number";
-
-    const StringSchema = createUniqueFieldSchema(z.string(), stringComponentId);
-    const NumberSchema = createUniqueFieldSchema(z.number(), numberComponentId);
-
-    const schema = z.object({
-      name: StringSchema.optional(),
-      age: NumberSchema,
-    });
-
-    const mapping = [
-      [StringSchema, TextField],
-      [z.string(), TextField],
-      [NumberSchema, NumberField],
-    ] as const;
-
-    const Form = createTsForm(mapping);
-
-    function TextField() {
-      const zodType = useFieldZodType();
-
-      expect(unwrap(zodType)._rtf_id).toBe(stringComponentId);
-
-      return <input />;
-    }
-
-    function NumberField() {
-      const zodType = useFieldZodType();
-
-      expect(unwrap(zodType)._rtf_id).toBe(numberComponentId);
-
-      return <input />;
-    }
-
-    render(<Form schema={schema} onSubmit={() => {}} />);
-  });
-  it.only("should be possible to get ZodAny information using `useFieldInfo`", () => {
+  it("should be possible to get ZodAny information using `useFieldInfo`", () => {
     const testData = {
       requiredTextField: {
         label: "required-label",

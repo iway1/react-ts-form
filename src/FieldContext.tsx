@@ -252,16 +252,6 @@ export function useEnumValues() {
   return enumValues;
 }
 
-/**
- * Returns the Zod type for a field.
- *
- * @returns  The Zod type for the field.
- */
-export function useFieldZodType() {
-  const { zodType } = useContextProt("useFieldZodType");
-  return zodType;
-}
-
 function getFieldInfo<
   TZodType extends RTFSupportedZodTypes,
   TUnwrapZodType extends UnwrapZodType<TZodType> = UnwrapZodType<TZodType>
