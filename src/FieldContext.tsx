@@ -15,12 +15,14 @@ import {
   RTFSupportedZodFirstPartyTypeKindMap,
   isTypeOf,
   isZodArray,
+  isZodDefaultDef,
 } from "./isZodTypeEqual";
 
 import {
   PickPrimitiveObjectProperties,
   pickPrimitiveObjectProperties,
 } from "./utilities";
+import { ZodDefaultDef } from "zod";
 
 export const FieldContext = createContext<null | {
   control: Control<any>;
@@ -260,15 +262,28 @@ function getFieldInfo<
 >(zodType: TZodType) {
   const { type, _rtf_id } = unwrap(zodType);
 
+  function getDefaultValue() {
+    const def = zodType._def;
+    if (isZodDefaultDef(def)) {
+      const defaultValue = (def as ZodDefaultDef<TZodType>).defaultValue();
+      return defaultValue;
+    }
+    return undefined;
+  }
+
   return {
     type: type as TUnwrapZodType,
     zodType,
     uniqueId: _rtf_id ?? undefined,
     isOptional: zodType.isOptional(),
     isNullable: zodType.isNullable(),
+    defaultValue: getDefaultValue(),
   };
 }
 
+/**
+ * @internal
+ */
 export function internal_useFieldInfo<
   TZodType extends RTFSupportedZodTypes = RTFSupportedZodTypes,
   TUnwrappedZodType extends UnwrapZodType<TZodType> = UnwrapZodType<TZodType>

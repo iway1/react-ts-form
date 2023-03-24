@@ -3,6 +3,7 @@ import {
   ZodArray,
   ZodBoolean,
   ZodDate,
+  ZodDefaultDef,
   ZodFirstPartyTypeKind,
   ZodNumber,
   ZodString,
@@ -149,6 +150,15 @@ export function isZodObject(
   zodType: RTFSupportedZodTypes
 ): zodType is AnyZodObject {
   return isTypeOf(zodType, "ZodObject");
+}
+
+export function isZodDefaultDef(zodDef: unknown): zodDef is ZodDefaultDef {
+  return Boolean(
+    zodDef &&
+      typeof zodDef === "object" &&
+      "defaultValue" in zodDef &&
+      typeof zodDef.defaultValue === "function"
+  );
 }
 
 export function isZodDate(zodType: RTFSupportedZodTypes): zodType is ZodDate {

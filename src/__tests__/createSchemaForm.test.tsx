@@ -1236,7 +1236,19 @@ describe("createSchemaForm", () => {
       return <input />;
     }
 
+    const defaultEmail = "john@example.com";
+
+    const DefaultTextField = () => {
+      // @ts-expect-error
+      const { defaultValue, type, zodType } = useFieldInfo();
+
+      expect(defaultValue).toBe(defaultEmail);
+
+      return <input />;
+    };
+
     const schema = z.object({
+      email: z.string().default(defaultEmail),
       name: RequiredTextFieldSchema.describe(description("requiredTextField")),
       nickName: OptionalTextFieldSchema.describe(
         description("optionalTextField")
@@ -1244,6 +1256,7 @@ describe("createSchemaForm", () => {
     });
 
     const mapping = [
+      [z.string(), DefaultTextField],
       [RequiredTextFieldSchema, RequiredTextField],
       [OptionalTextFieldSchema, OptionalTextField],
     ] as const;
