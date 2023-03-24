@@ -1253,47 +1253,92 @@ describe("createSchemaForm", () => {
     render(<Form schema={schema} onSubmit={() => {}} />);
   });
   it("should be possible to get ZodString information using `useStringFieldInfo`", () => {
-    const label = "field-label";
-    const placeholder = "placeholder";
-    const MIN_LENGTH = 5;
-    const MAX_LENGTH = 16;
-    const UNIQUE_STRING_SCHEMA_ID = "custom-string";
+    const testData = {
+      textField: {
+        uniqueId: "text-field-id",
+        label: "text-field-label",
+        placeholder: "text-field-placeholder",
+        min: 5,
+        max: 16,
+        get schema() {
+          const { min, max, uniqueId } = this;
+          return createUniqueFieldSchema(
+            z.string().min(min).max(max),
+            uniqueId
+          );
+        },
 
-    const StringSchema = createUniqueFieldSchema(
-      z.string().min(MIN_LENGTH).max(MAX_LENGTH),
-      UNIQUE_STRING_SCHEMA_ID
-    );
+        get component() {
+          const { min, max, label, uniqueId } = this;
 
-    const description = `${label}${DESCRIPTION_SEPARATOR_SYMBOL}${placeholder}`;
+          const TextFieldComponent = () => {
+            const fieldInfo = useStringFieldInfo();
+
+            expect(fieldInfo.minLength).toBe(min);
+            expect(fieldInfo.maxLength).toBe(max);
+            expect(fieldInfo.label).toBe(label);
+            expect(fieldInfo.uniqueId).toBe(uniqueId);
+
+            return <div>{fieldInfo.label}</div>;
+          };
+
+          return TextFieldComponent;
+        },
+      },
+      arrayTextField: {
+        uniqueId: "array-text-field-id",
+        label: "array-text-field-label",
+        placeholder: "array-text-field-placeholder",
+        min: 5,
+        max: 16,
+        get schema() {
+          const { min, max, uniqueId } = this;
+          return createUniqueFieldSchema(
+            z.string().min(min).max(max).array(),
+            uniqueId
+          );
+        },
+        get component() {
+          const { min, max, label, uniqueId } = this;
+
+          const ArrayTextFieldComponent = () => {
+            const fieldInfo = useStringFieldInfo();
+
+            expect(fieldInfo.minLength).toBe(min);
+            expect(fieldInfo.maxLength).toBe(max);
+            expect(fieldInfo.label).toBe(label);
+            expect(fieldInfo.uniqueId).toBe(uniqueId);
+
+            return <div>{fieldInfo.label}</div>;
+          };
+
+          return ArrayTextFieldComponent;
+        },
+      },
+    };
+
+    const description = (k: keyof typeof testData) =>
+      `${testData[k].label}${DESCRIPTION_SEPARATOR_SYMBOL}${testData[k].placeholder}`;
+
+    const { textField, arrayTextField } = testData;
 
     const schema = z.object({
-      name: StringSchema.describe(description),
+      name: textField.schema.describe(description("textField")),
+      users: arrayTextField.schema.describe(description("arrayTextField")),
     });
 
-    const mapping = [[StringSchema, CustomTextField]] as const;
+    const mapping = [
+      [textField.schema, textField.component],
+      [arrayTextField.schema, arrayTextField.component],
+    ] as const;
 
     const Form = createTsForm(mapping);
 
-    function CustomTextField() {
-      const fieldInfo = useStringFieldInfo();
-
-      return (
-        <div>
-          <div>{fieldInfo.minLength}</div>
-          <div>{fieldInfo.maxLength}</div>
-          <div>{fieldInfo.label}</div>
-          <div>{fieldInfo.placeholder}</div>
-          <div>{fieldInfo.uniqueId}</div>
-        </div>
-      );
-    }
-
     render(<Form schema={schema} onSubmit={() => {}} />);
 
-    expect(screen.getByText(label)).toBeInTheDocument();
-    expect(screen.getByText(placeholder)).toBeInTheDocument();
-    expect(screen.getByText(MIN_LENGTH)).toBeInTheDocument();
-    expect(screen.getByText(MAX_LENGTH)).toBeInTheDocument();
-    expect(screen.getByText(UNIQUE_STRING_SCHEMA_ID)).toBeInTheDocument();
+    expect(screen.queryByText(testData.textField.label)).toBeInTheDocument();
+    expect(
+      screen.queryByText(testData.arrayTextField.label)
+    ).toBeInTheDocument();
   });
 });

@@ -14,6 +14,7 @@ import {
   RTFSupportedZodFirstPartyTypeKind,
   RTFSupportedZodFirstPartyTypeKindMap,
   isTypeOf,
+  isZodArray,
 } from "./isZodTypeEqual";
 
 import {
@@ -219,9 +220,10 @@ export function enumValuesNotPassedError() {
 
 export function fieldSchemaMismatchHookError(
   hookName: string,
-  expectedType: string
+  { expectedType, receivedType }: { expectedType: string; receivedType: string }
 ) {
-  return `Make sure that the '${hookName}' hook is being called inside of a custom form component which matches the type '${expectedType}'`;
+  return `Make sure that the '${hookName}' hook is being called inside of a custom form component which matches the correct type.
+  The expected type is '${expectedType}' but the received type was '${receivedType}'`;
 }
 
 /**
@@ -304,10 +306,27 @@ export function usePickZodFields<
   const fieldInfo = internal_useFieldInfo<TZodType, TUnwrappedZodType>(
     hookName
   );
-  const { type } = fieldInfo;
+
+  function getType() {
+    const { type } = fieldInfo;
+
+    if (zodKindName !== "ZodArray" && isZodArray(type)) {
+      const element = type.element;
+      return element as any;
+    }
+
+    return type;
+  }
+
+  const type = getType();
 
   if (!isTypeOf(type, zodKindName)) {
-    throw new Error(fieldSchemaMismatchHookError(hookName, zodKindName));
+    throw new Error(
+      fieldSchemaMismatchHookError(hookName, {
+        expectedType: zodKindName,
+        receivedType: type._def.typeName,
+      })
+    );
   }
 
   return {
@@ -346,6 +365,29 @@ export function useStringFieldInfo() {
       minLength: true,
     },
     "useStringFieldInfo"
+  );
+}
+
+/**
+ * Returns schema-related information for a ZodString field
+ *
+ * @example
+ * ```tsx
+ * const CustomComponent = () => {
+ *   const { minLength, maxLength, uniqueId } = useStringFieldInfo();
+ *
+ *   return <input minLength={minLength} maxLength={maxLength} />;
+ * };
+ * ```
+ * @returns Information for a ZodString field
+ */
+export function useArrayFieldInfo() {
+  return usePickZodFields(
+    "ZodArray",
+    {
+      description: true,
+    },
+    "useArrayFieldInfo"
   );
 }
 
