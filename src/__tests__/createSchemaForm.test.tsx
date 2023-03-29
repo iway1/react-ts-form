@@ -25,6 +25,8 @@ import {
   useEnumValues,
   useReqDescription,
   useTsController,
+  useStringFieldInfo,
+  useFieldInfo,
 } from "../FieldContext";
 import { expectTypeOf } from "expect-type";
 import { createUniqueFieldSchema } from "../createFieldSchema";
@@ -1180,5 +1182,176 @@ describe("createSchemaForm", () => {
 
     expect(screen.queryByText("one")).toBeInTheDocument();
     expect(screen.queryByText("two")).toBeInTheDocument();
+  });
+  it("should be possible to get ZodAny information using `useFieldInfo`", () => {
+    const testData = {
+      requiredTextField: {
+        label: "required-label",
+        placeholder: "required-placeholder",
+        uniqueId: "required-text-field",
+      },
+      optionalTextField: {
+        label: "optional-label",
+        placeholder: "optional-placeholder",
+        uniqueId: "optional-text-field",
+      },
+    };
+
+    const description = (k: keyof typeof testData) =>
+      `${testData[k].label}${DESCRIPTION_SEPARATOR_SYMBOL}${testData[k].placeholder}`;
+
+    const RequiredTextFieldSchema = createUniqueFieldSchema(
+      z.string(),
+      testData.requiredTextField.uniqueId
+    );
+
+    const OptionalTextFieldSchema = createUniqueFieldSchema(
+      z.string().optional(),
+      testData.optionalTextField.uniqueId
+    );
+
+    function RequiredTextField() {
+      const fieldInfo = useFieldInfo();
+
+      expect(fieldInfo.isOptional).toBeFalsy();
+      expect(fieldInfo.label).toBe(testData.requiredTextField.label);
+      expect(fieldInfo.placeholder).toBe(
+        testData.requiredTextField.placeholder
+      );
+      expect(fieldInfo.uniqueId).toBe(testData.requiredTextField.uniqueId);
+
+      return <input />;
+    }
+
+    function OptionalTextField() {
+      const fieldInfo = useFieldInfo();
+
+      expect(fieldInfo.isOptional).toBe(true);
+      expect(fieldInfo.label).toBe(testData.optionalTextField.label);
+      expect(fieldInfo.placeholder).toBe(
+        testData.optionalTextField.placeholder
+      );
+      expect(fieldInfo.uniqueId).toBe(testData.optionalTextField.uniqueId);
+
+      return <input />;
+    }
+
+    const defaultEmail = "john@example.com";
+
+    const DefaultTextField = () => {
+      // @ts-expect-error
+      const { defaultValue, type, zodType } = useFieldInfo();
+
+      expect(defaultValue).toBe(defaultEmail);
+
+      return <input />;
+    };
+
+    const schema = z.object({
+      email: z.string().default(defaultEmail),
+      name: RequiredTextFieldSchema.describe(description("requiredTextField")),
+      nickName: OptionalTextFieldSchema.describe(
+        description("optionalTextField")
+      ),
+    });
+
+    const mapping = [
+      [z.string(), DefaultTextField],
+      [RequiredTextFieldSchema, RequiredTextField],
+      [OptionalTextFieldSchema, OptionalTextField],
+    ] as const;
+
+    const Form = createTsForm(mapping);
+
+    render(<Form schema={schema} onSubmit={() => {}} />);
+  });
+  it("should be possible to get ZodString information using `useStringFieldInfo`", () => {
+    const testData = {
+      textField: {
+        uniqueId: "text-field-id",
+        label: "text-field-label",
+        placeholder: "text-field-placeholder",
+        min: 5,
+        max: 16,
+        get schema() {
+          const { min, max, uniqueId } = this;
+          return createUniqueFieldSchema(
+            z.string().min(min).max(max),
+            uniqueId
+          );
+        },
+
+        get component() {
+          const { min, max, label, uniqueId } = this;
+
+          const TextFieldComponent = () => {
+            const fieldInfo = useStringFieldInfo();
+
+            expect(fieldInfo.minLength).toBe(min);
+            expect(fieldInfo.maxLength).toBe(max);
+            expect(fieldInfo.label).toBe(label);
+            expect(fieldInfo.uniqueId).toBe(uniqueId);
+
+            return <div>{fieldInfo.label}</div>;
+          };
+
+          return TextFieldComponent;
+        },
+      },
+      arrayTextField: {
+        uniqueId: "array-text-field-id",
+        label: "array-text-field-label",
+        placeholder: "array-text-field-placeholder",
+        min: 5,
+        max: 16,
+        get schema() {
+          const { min, max, uniqueId } = this;
+          return createUniqueFieldSchema(
+            z.string().min(min).max(max).array(),
+            uniqueId
+          );
+        },
+        get component() {
+          const { min, max, label, uniqueId } = this;
+
+          const ArrayTextFieldComponent = () => {
+            const fieldInfo = useStringFieldInfo();
+
+            expect(fieldInfo.minLength).toBe(min);
+            expect(fieldInfo.maxLength).toBe(max);
+            expect(fieldInfo.label).toBe(label);
+            expect(fieldInfo.uniqueId).toBe(uniqueId);
+
+            return <div>{fieldInfo.label}</div>;
+          };
+
+          return ArrayTextFieldComponent;
+        },
+      },
+    };
+
+    const description = (k: keyof typeof testData) =>
+      `${testData[k].label}${DESCRIPTION_SEPARATOR_SYMBOL}${testData[k].placeholder}`;
+
+    const { textField, arrayTextField } = testData;
+
+    const schema = z.object({
+      name: textField.schema.describe(description("textField")),
+      users: arrayTextField.schema.describe(description("arrayTextField")),
+    });
+
+    const mapping = [
+      [textField.schema, textField.component],
+      [arrayTextField.schema, arrayTextField.component],
+    ] as const;
+
+    const Form = createTsForm(mapping);
+
+    render(<Form schema={schema} onSubmit={() => {}} />);
+
+    expect(screen.queryByText(testData.textField.label)).toBeInTheDocument();
+    expect(
+      screen.queryByText(testData.arrayTextField.label)
+    ).toBeInTheDocument();
   });
 });

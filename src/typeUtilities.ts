@@ -101,3 +101,24 @@ export type IndexOf<V extends readonly any[], T> = {
       : never
     : never;
 }[keyof Indexes<V>];
+
+/**
+ * @internal
+ */
+export type ExpandRecursively<T> = T extends object
+  ? T extends infer O
+    ? { [K in keyof O]: ExpandRecursively<O[K]> }
+    : never
+  : T;
+
+/**
+ * @internal
+ */
+export type NullToUndefined<T> = T extends null ? undefined : T;
+
+/**
+ * @internal
+ */
+export type RemoveNull<T> = ExpandRecursively<{
+  [K in keyof T]: NullToUndefined<T[K]>;
+}>;

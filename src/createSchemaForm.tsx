@@ -420,6 +420,7 @@ export function createTsForm<
               control={control}
               name={stringKey}
               label={ctxLabel}
+              zodType={type}
               placeholder={ctxPlaceholder}
               enumValues={meta.enumValues as string[] | undefined}
               addToCoerceUndefined={submitter.addToCoerceUndefined}
