@@ -1507,4 +1507,90 @@ describe("createSchemaForm", () => {
     await userEvent.click(button);
     expect(mockOnSubmit).toHaveBeenCalledWith(defaultValues);
   });
+
+  it("should render an array component despite recusions", async () => {
+    const mockOnSubmit = jest.fn(() => {});
+    function DynamicArray() {
+      const {
+        field: { value, onChange },
+      } = useTsController<string[]>();
+
+      return (
+        <div data-testid="dynamic-array">
+          <button
+            type="button"
+            data-testid="add-element"
+            onClick={() => {
+              onChange(value?.concat([""]));
+            }}
+          >
+            Add one element to array
+          </button>
+          {value?.map((val, i) => {
+            return (
+              <input
+                key={i}
+                data-testid={`dynamic-array-input${i}`}
+                value={val}
+                onChange={(e) =>
+                  onChange(value?.map((v, j) => (i === j ? e.target.value : v)))
+                }
+              />
+            );
+          })}
+        </div>
+      );
+    }
+
+    function NumberField() {
+      return <div>number</div>;
+    }
+
+    const mapping = [
+      [z.string().array(), DynamicArray],
+      [z.number(), NumberField],
+    ] as const;
+
+    const Form = createTsForm(mapping);
+
+    const schema = z.object({
+      arrayField: z.string().array(),
+      numberArray: z.number().array(),
+    });
+    const defaultValues = {
+      arrayField: ["name", "name2"],
+      numberArray: [1, 2, 3],
+    };
+    render(
+      <Form
+        onSubmit={mockOnSubmit}
+        schema={schema}
+        defaultValues={defaultValues}
+        props={{}}
+        renderAfter={() => {
+          return <button type="submit">submit</button>;
+        }}
+      ></Form>
+    );
+
+    const numberNodes = screen.queryAllByText("number");
+    numberNodes.forEach((node) => expect(node).toBeInTheDocument());
+    expect(numberNodes).toHaveLength(3);
+
+    expect(screen.getByTestId("dynamic-array")).toBeInTheDocument();
+    const addElementButton = screen.getByTestId("add-element");
+    await userEvent.click(addElementButton);
+
+    const inputs = screen.getAllByTestId(/dynamic-array-input/);
+    expect(inputs.length).toBe(3);
+
+    const input3 = screen.getByTestId("dynamic-array-input2");
+    await userEvent.type(input3, "name3");
+    const button = screen.getByText("submit");
+    await userEvent.click(button);
+    expect(mockOnSubmit).toHaveBeenCalledWith({
+      arrayField: ["name", "name2", "name3"],
+      numberArray: [1, 2, 3],
+    });
+  });
 });
