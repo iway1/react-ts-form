@@ -172,6 +172,7 @@ describe("createSchemaForm", () => {
     expect(() =>
       render(
         <Form
+          onSubmit={() => {}}
           schema={Schema}
           props={{
             //@ts-ignore
@@ -1353,5 +1354,243 @@ describe("createSchemaForm", () => {
     expect(
       screen.queryByText(testData.arrayTextField.label)
     ).toBeInTheDocument();
+  });
+  it("should render the correct components for a nested object schema if unmaped", async () => {
+    const NumberSchema = createUniqueFieldSchema(z.number(), "number");
+    const mockOnSubmit = jest.fn();
+
+    function TextField({}: { b: "1" }) {
+      const { error } = useTsController<string>();
+      return (
+        <>
+          <div>text</div>
+          <div data-testid="error">{error?.errorMessage}</div>
+        </>
+      );
+    }
+
+    function NumberField({}: { a: 1 }) {
+      return <div>number</div>;
+    }
+
+    function BooleanField({}: { c: boolean }) {
+      return <div>boolean</div>;
+    }
+
+    const objectSchema = z.object({
+      text: z.string(),
+      age: NumberSchema,
+    });
+    const objectSchema2 = z.object({
+      bool: z.boolean(),
+    });
+
+    const mapping = [
+      [z.string(), TextField],
+      [NumberSchema, NumberField],
+      [z.boolean(), BooleanField],
+      [objectSchema2, BooleanField],
+    ] as const;
+
+    const Form = createTsForm(mapping);
+
+    const schema = z.object({
+      nestedField: objectSchema,
+      nestedField2: objectSchema2,
+    });
+    const defaultValues = {
+      nestedField: { text: "name", age: 9 },
+      nestedField2: { bool: true },
+    };
+    // TODO: test validation
+    render(
+      <Form
+        schema={schema}
+        onSubmit={mockOnSubmit}
+        defaultValues={defaultValues}
+        props={{
+          nestedField2: { c: true },
+          nestedField: { text: { b: "1" }, age: { a: 1 } },
+        }}
+        renderAfter={() => <button type="submit">submit</button>}
+      />
+    );
+    const button = screen.getByText("submit");
+    await userEvent.click(button);
+
+    const textNodes = screen.queryByText("text");
+    expect(textNodes).toBeInTheDocument();
+    const numberNodes = screen.queryByText("number");
+    expect(numberNodes).toBeInTheDocument();
+    expect(screen.queryByTestId("error")).toHaveTextContent("");
+    expect(mockOnSubmit).toHaveBeenCalledWith(defaultValues);
+  });
+  it("should render two copies of an object schema if in an unmapped array schema", async () => {
+    const NumberSchema = createUniqueFieldSchema(z.number(), "number");
+    const mockOnSubmit = jest.fn();
+
+    function TextField({}: { a?: 1 }) {
+      return <div>text</div>;
+    }
+
+    function NumberField() {
+      return <div>number</div>;
+    }
+
+    function ObjectField({ objProp }: { objProp: 2 }) {
+      return <div>{objProp}</div>;
+    }
+
+    const otherObjSchema = z.object({
+      text: z.string().optional(),
+    });
+    const mapping = [
+      [z.string(), TextField],
+      [NumberSchema, NumberField],
+      [otherObjSchema, ObjectField],
+    ] as const;
+
+    const Form = createTsForm(mapping);
+
+    const schema = z.object({
+      arrayField: z
+        .object({
+          text: z.string(),
+          age: NumberSchema,
+          otherObj: otherObjSchema.optional(),
+        })
+        .array(),
+    });
+    const defaultValues = {
+      arrayField: [
+        { text: "name", age: 9 },
+        { text: "name2", age: 10 },
+      ],
+    };
+    render(
+      <Form
+        schema={schema}
+        onSubmit={mockOnSubmit}
+        defaultValues={defaultValues}
+        // otherObj tests that nonrecursive mapping still works at the last level of the recursion depth
+        props={{ arrayField: { text: { a: 1 }, otherObj: { objProp: 2 } } }}
+        renderAfter={() => {
+          return <button type="submit">submit</button>;
+        }}
+      >
+        {(renderedFields) => {
+          return (
+            <>
+              {renderedFields.arrayField.map(
+                ({ text, age }: any, i: number) => (
+                  <React.Fragment key={i}>
+                    {text}
+                    {age}
+                  </React.Fragment>
+                )
+              )}
+            </>
+          );
+        }}
+      </Form>
+    );
+
+    const textNodes = screen.queryAllByText("text");
+    textNodes.forEach((node) => expect(node).toBeInTheDocument());
+    expect(textNodes).toHaveLength(2);
+
+    const numberNodes = screen.queryAllByText("number");
+    numberNodes.forEach((node) => expect(node).toBeInTheDocument());
+    expect(numberNodes).toHaveLength(2);
+
+    const button = screen.getByText("submit");
+    await userEvent.click(button);
+    expect(mockOnSubmit).toHaveBeenCalledWith(defaultValues);
+  });
+
+  it("should render an array component despite recusions", async () => {
+    const mockOnSubmit = jest.fn(() => {});
+    function DynamicArray() {
+      const {
+        field: { value, onChange },
+      } = useTsController<string[]>();
+
+      return (
+        <div data-testid="dynamic-array">
+          <button
+            type="button"
+            data-testid="add-element"
+            onClick={() => {
+              onChange(value?.concat([""]));
+            }}
+          >
+            Add one element to array
+          </button>
+          {value?.map((val, i) => {
+            return (
+              <input
+                key={i}
+                data-testid={`dynamic-array-input${i}`}
+                value={val}
+                onChange={(e) =>
+                  onChange(value?.map((v, j) => (i === j ? e.target.value : v)))
+                }
+              />
+            );
+          })}
+        </div>
+      );
+    }
+
+    function NumberField() {
+      return <div>number</div>;
+    }
+
+    const mapping = [
+      [z.string().array(), DynamicArray],
+      [z.number(), NumberField],
+    ] as const;
+
+    const Form = createTsForm(mapping);
+
+    const schema = z.object({
+      arrayField: z.string().array(),
+      numberArray: z.number().array(),
+    });
+    const defaultValues = {
+      arrayField: ["name", "name2"],
+      numberArray: [1, 2, 3],
+    };
+    render(
+      <Form
+        onSubmit={mockOnSubmit}
+        schema={schema}
+        defaultValues={defaultValues}
+        props={{}}
+        renderAfter={() => {
+          return <button type="submit">submit</button>;
+        }}
+      ></Form>
+    );
+
+    const numberNodes = screen.queryAllByText("number");
+    numberNodes.forEach((node) => expect(node).toBeInTheDocument());
+    expect(numberNodes).toHaveLength(3);
+
+    expect(screen.getByTestId("dynamic-array")).toBeInTheDocument();
+    const addElementButton = screen.getByTestId("add-element");
+    await userEvent.click(addElementButton);
+
+    const inputs = screen.getAllByTestId(/dynamic-array-input/);
+    expect(inputs.length).toBe(3);
+
+    const input3 = screen.getByTestId("dynamic-array-input2");
+    await userEvent.type(input3, "name3");
+    const button = screen.getByText("submit");
+    await userEvent.click(button);
+    expect(mockOnSubmit).toHaveBeenCalledWith({
+      arrayField: ["name", "name2", "name3"],
+      numberArray: [1, 2, 3],
+    });
   });
 });
