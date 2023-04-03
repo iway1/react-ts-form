@@ -252,7 +252,7 @@ export type RTFFormProps<
   /**
    * A callback function that will be called with the data once the form has been submitted and validated successfully.
    */
-  onSubmit: RTFFormSubmitFn<RTFFormSchemaType>;
+  onSubmit: RTFFormSubmitFn<SchemaType>;
   /**
    * Initializes your form with default values. Is a deep partial, so all properties and nested properties are optional.
    */
@@ -584,7 +584,7 @@ function useSubmitter<SchemaType extends RTFFormSchemaType>({
   setError,
 }: {
   resolver: ReturnType<typeof zodResolver>;
-  onSubmit: RTFFormSubmitFn<RTFFormSchemaType>;
+  onSubmit: RTFFormSubmitFn<SchemaType>;
   setError: ReturnType<typeof useForm>["setError"];
 }) {
   const coerceUndefinedFieldsRef = useRef<Set<string>>(new Set());
