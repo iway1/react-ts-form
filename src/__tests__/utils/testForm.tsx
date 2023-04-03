@@ -40,6 +40,14 @@ function BooleanField(props: {
   return <input data-testid={props.testId} />;
 }
 
+function NumberField(props: {
+  control: Control<any>;
+  name: string;
+  testId: string;
+}) {
+  return <input data-testid={props.testId} />;
+}
+
 export const customFieldTestId = "custom";
 
 function CustomTextField(props: {
@@ -81,6 +89,7 @@ export const TestCustomFieldSchema = createUniqueFieldSchema(z.string(), "id");
 const mapping = [
   [z.string(), TextField] as const,
   [z.boolean(), BooleanField] as const,
+  [z.number(), NumberField] as const,
   [TestCustomFieldSchema, CustomTextField] as const,
   [z.enum(enumFieldValues), EnumField] as const,
 ] as const;

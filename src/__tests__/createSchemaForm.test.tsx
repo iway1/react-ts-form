@@ -37,12 +37,14 @@ const testIds = {
   booleanField: "_boolean-field",
 };
 
+function assertNever(_thing: never) {}
+
 describe("createSchemaForm", () => {
   it("should render a text field and a boolean field based on the mapping and schema", () => {
     const testSchema = z.object({
       textField: z.string(),
       textFieldTwo: z.string(),
-      booleanField: z.string(),
+      booleanField: z.boolean(),
       t: z.string(),
       t2: z.string(),
       t3: z.string(),
@@ -71,6 +73,44 @@ describe("createSchemaForm", () => {
     expect(screen.queryByTestId(testIds.textField)).toBeTruthy();
     expect(screen.queryByTestId(testIds.textFieldTwo)).toBeTruthy();
     expect(screen.queryByTestId(testIds.booleanField)).toBeTruthy();
+  });
+  it("should type the onSubmit properly", () => {
+    const testSchema = z.object({
+      textField: z.string(),
+      numberField: z.number(),
+      booleanField: z.boolean(),
+    });
+
+    render(
+      <TestForm
+        onSubmit={(v) => {
+          if (typeof v.textField !== "string") {
+            assertNever(v.textField);
+          }
+          if (typeof v.numberField !== "number") {
+            assertNever(v.numberField);
+          }
+          if (typeof v.booleanField !== "boolean") {
+            assertNever(v.booleanField);
+          }
+        }}
+        schema={testSchema}
+        props={{
+          textField: {
+            testId: testIds.textField,
+          },
+          numberField: {
+            testId: "number-field",
+          },
+          booleanField: {
+            testId: testIds.booleanField,
+          },
+        }}
+      />
+    );
+
+    // this test is just about types
+    expect(true).toBe(true);
   });
   it("should render a text field and a boolean field based on the mapping and schema into slots in a custom form", () => {
     const testSchema = z.object({
