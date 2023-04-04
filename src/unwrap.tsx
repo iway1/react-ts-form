@@ -1,5 +1,6 @@
 import {
   z,
+  ZodArray,
   ZodEnum,
   ZodFirstPartyTypeKind,
   ZodNullable,
@@ -78,12 +79,18 @@ export function unwrapEffects(effects: RTFSupportedZodTypes) {
  */
 export type UnwrapZodType<T extends RTFSupportedZodTypes> =
   T extends ZodOptional<any>
-    ? EnumAsAnyEnum<T["_def"]["innerType"]>
+    ? GenericizeLeafTypes<T["_def"]["innerType"]>
     : T extends ZodNullable<any>
     ? T["_def"]["innerType"] extends ZodOptional<any>
-      ? EnumAsAnyEnum<T["_def"]["innerType"]["_def"]["innerType"]>
-      : EnumAsAnyEnum<T["_def"]["innerType"]>
-    : EnumAsAnyEnum<T>;
+      ? GenericizeLeafTypes<T["_def"]["innerType"]["_def"]["innerType"]>
+      : GenericizeLeafTypes<T["_def"]["innerType"]>
+    : GenericizeLeafTypes<T>;
+
+export type GenericizeLeafTypes<T extends RTFSupportedZodTypes> =
+  ArrayAsLengthAgnostic<EnumAsAnyEnum<T>>;
+
+export type ArrayAsLengthAgnostic<T extends RTFSupportedZodTypes> =
+  T extends ZodArray<any, any> ? ZodArray<T["element"]> : T;
 
 export type EnumAsAnyEnum<T extends RTFSupportedZodTypes> =
   T extends ZodEnum<any> ? ZodEnum<any> : T;
