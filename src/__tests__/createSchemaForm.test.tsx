@@ -1593,4 +1593,91 @@ describe("createSchemaForm", () => {
       numberArray: [1, 2, 3],
     });
   });
+  it("should render an array component with objects, and should map nonempty()", async () => {
+    const mockOnSubmit = jest.fn(() => {});
+    const objectSchema = z.object({
+      text: z.string(),
+      numberField: z.number(),
+    });
+    function DynamicArray(_props: { something?: boolean }) {
+      const {
+        field: { value, onChange },
+      } = useTsController<z.infer<typeof objectSchema>[]>();
+
+      return (
+        <div data-testid="dynamic-array">
+          <button
+            type="button"
+            data-testid="add-element"
+            onClick={() => {
+              onChange(value?.concat([{ text: "", numberField: 2 }]));
+            }}
+          >
+            Add one element to array
+          </button>
+          {value?.map((val, i) => {
+            return (
+              <input
+                key={i}
+                data-testid={`dynamic-array-input${i}`}
+                value={val.text}
+                onChange={(e) =>
+                  onChange(
+                    value?.map((v, j) =>
+                      i === j ? { ...v, text: e.target.value } : v
+                    )
+                  )
+                }
+              />
+            );
+          })}
+        </div>
+      );
+    }
+
+    function NumberField() {
+      return <div>number</div>;
+    }
+
+    const mapping = [
+      [objectSchema.array(), DynamicArray],
+      [z.number(), NumberField],
+    ] as const;
+
+    const Form = createTsForm(mapping);
+
+    const schema = z.object({
+      arrayField: objectSchema.array().nonempty(),
+      numberArray: z.number().array(),
+    });
+    const defaultValues = {
+      arrayField: [
+        { text: "name", numberField: 2 },
+        { text: "name2", numberField: 2 },
+      ],
+      numberArray: [1, 2, 3],
+    };
+    render(
+      <Form
+        onSubmit={mockOnSubmit}
+        schema={schema}
+        defaultValues={defaultValues}
+        props={{ arrayField: { something: true } }}
+        renderAfter={() => {
+          return <button type="submit">submit</button>;
+        }}
+      ></Form>
+    );
+
+    const numberNodes = screen.queryAllByText("number");
+    numberNodes.forEach((node) => expect(node).toBeInTheDocument());
+    expect(numberNodes).toHaveLength(3);
+
+    expect(screen.getByTestId("dynamic-array")).toBeInTheDocument();
+    const addElementButton = screen.getByTestId("add-element");
+    await userEvent.click(addElementButton);
+
+    const inputs = screen.getAllByTestId(/dynamic-array-input/);
+    expect(inputs.length).toBe(3);
+  });
 });
