@@ -12,7 +12,7 @@ import { TextField } from "./utils/testForm";
 
 describe("createFieldSchema", () => {
   it("should throw an error if an ID is used twice", () => {
-    jest.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
     const mapping = [
       [createUniqueFieldSchema(z.string(), "id"), TextField],
       [createUniqueFieldSchema(z.string(), "id"), TextField],

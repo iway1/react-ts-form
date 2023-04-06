@@ -21,9 +21,9 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "resolveJsonModule": true,
-    "jsx": "react"
+    "jsx": "react",
+    "types": ["node", "vitest/globals", "@testing-library/jest-dom"]
   },
-  "types": ["node", "jest", "@testing-library/jest-dom"],
   "include": ["./src/**/*"],
   "exclude": ["node_modules/**/*", "lib/**/*"]
 }

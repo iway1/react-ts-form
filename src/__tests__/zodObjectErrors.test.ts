@@ -3,7 +3,7 @@ import {
   errorFromRhfErrorObject,
   RecursiveErrorType,
 } from "../zodObjectErrors";
-import { expectTypeOf } from "expect-type";
+import { expectTypeOf } from "vitest";
 
 describe("zodObjectErrors", () => {
   it("should parse a react hook form top level error into a top level error message object", () => {

@@ -28,7 +28,7 @@ import {
   useStringFieldInfo,
   useFieldInfo,
 } from "../FieldContext";
-import { expectTypeOf } from "expect-type";
+import { expectTypeOf } from "vitest";
 import { createUniqueFieldSchema } from "../createFieldSchema";
 
 const testIds = {
@@ -208,7 +208,7 @@ describe("createSchemaForm", () => {
     });
     const Form = createTsForm(mapping);
 
-    jest.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
     expect(() =>
       render(
         <Form
@@ -316,7 +316,7 @@ describe("createSchemaForm", () => {
   });
 
   it("should render a custom form component that should call on submit", async () => {
-    const onSubmitMock = jest.fn();
+    const onSubmitMock = vi.fn();
     const Schema = z.object({
       fieldOne: z.string(),
       fieldTwo: z.boolean(),
@@ -426,7 +426,7 @@ describe("createSchemaForm", () => {
     expect(screen.queryByText(afterText)).toBeInTheDocument();
   });
   it("should allow creating a submit button with the 'renderAfter' prop.", async () => {
-    const onSubmitMock = jest.fn();
+    const onSubmitMock = vi.fn();
     const Schema = z.object({
       id: z.string(),
     });
@@ -463,7 +463,7 @@ describe("createSchemaForm", () => {
     expect(onSubmitMock).toHaveBeenCalledWith(expectedOutput);
   });
   it("should allow creating a submit button with the 'renderBefore' prop.", async () => {
-    const onSubmitMock = jest.fn();
+    const onSubmitMock = vi.fn();
     const Schema = z.object({
       id: z.string(),
     });
@@ -500,7 +500,7 @@ describe("createSchemaForm", () => {
     expect(onSubmitMock).toHaveBeenCalledWith(expectedOutput);
   });
   it("should throw an error if the value of 'useFormResult' goes from undefined to defined", async () => {
-    jest.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
     const buttonId = "button";
     function TestComponent() {
       const uf = useForm<{ id: string }>();
@@ -569,7 +569,7 @@ describe("createSchemaForm", () => {
     }
     const mapping = [[z.string(), Component] as const] as const;
     const Form = createTsForm(mapping);
-    const submitMock = jest.fn();
+    const submitMock = vi.fn();
     const expectedOutput: z.infer<typeof FormSchema> = {
       field: testInput,
     };
@@ -676,7 +676,7 @@ describe("createSchemaForm", () => {
 
   it("should throw an error if useTsController is called outside of a @ts-react/form rendered component", () => {
     // hello 100% test coverage =D
-    jest.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
     function C() {
       useTsController();
       return <div />;
@@ -787,7 +787,7 @@ describe("createSchemaForm", () => {
     expect(screen.getByText(placeholder)).toBeInTheDocument();
   });
   it("should throw an error when there is no placeholder passed via .describe() and useReqDesription is called", () => {
-    jest.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
     const label = "label";
     function Component() {
       const { label, placeholder } = useReqDescription();
@@ -813,7 +813,7 @@ describe("createSchemaForm", () => {
     ).toThrow();
   });
   it("should throw an error when there is nothing passed via .describe() and useReqDesription is called", () => {
-    jest.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
     function Component() {
       const { label, placeholder } = useReqDescription();
       return (
@@ -887,7 +887,7 @@ describe("createSchemaForm", () => {
     );
   });
   it("should throw an error if useEnumValues() is called in a field not rendered by an enum schema", () => {
-    jest.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
     const Schema = z.object({
       id: z.string(),
     });
@@ -945,7 +945,7 @@ describe("createSchemaForm", () => {
     />;
   });
   it("should show a required error and not submit after deleting a default value and submitting", async () => {
-    const mockOnSubmit = jest.fn();
+    const mockOnSubmit = vi.fn();
     function Input() {
       const {
         field: { onChange, value },
@@ -999,7 +999,7 @@ describe("createSchemaForm", () => {
     expect(mockOnSubmit).not.toHaveBeenCalled();
   });
   it("should be to clear an input, type into the input, and then submit.", async () => {
-    const mockOnSubmit = jest.fn();
+    const mockOnSubmit = vi.fn();
     function Input() {
       const {
         field: { onChange, value },
@@ -1054,7 +1054,7 @@ describe("createSchemaForm", () => {
     expect(mockOnSubmit).toHaveBeenCalledWith({ number: 5 });
   });
   it("should be possible to submit with default values with no edits.", async () => {
-    const mockOnSubmit = jest.fn();
+    const mockOnSubmit = vi.fn();
     function Input() {
       const {
         field: { onChange, value },
@@ -1103,7 +1103,7 @@ describe("createSchemaForm", () => {
     expect(mockOnSubmit).toHaveBeenCalledWith({ number: 5 });
   });
   it("should be possible to pass 'defaultValues' prop and 'form' prop and apply the default values.", async () => {
-    const mockOnSubmit = jest.fn();
+    const mockOnSubmit = vi.fn();
     function Input() {
       const {
         field: { onChange, value },
