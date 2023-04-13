@@ -21,12 +21,3 @@ export function duplicateTypeError() {
 export function printWarningsForSchema(_type: RTFSupportedZodTypes) {
   // placeholder in case we need future schema warnings
 }
-
-export function printUseEnumWarning() {
-  if (!shownWarnings.useEnum) {
-    err(
-      "useEnumValues is deprecated and will be removed in future versions. See https://github.com/iway1/react-ts-form/blob/main/field-examples.md for examples of how to implement selects/dropdowns etc without enums."
-    );
-    shownWarnings.useEnum = true;
-  }
-}
