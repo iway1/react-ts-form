@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { createContext, ReactNode } from "react";
 import {
   Control,
@@ -6,7 +6,6 @@ import {
   useController,
   UseControllerReturn,
 } from "react-hook-form";
-import { printUseEnumWarning } from "./logging";
 import { errorFromRhfErrorObject } from "./zodObjectErrors";
 import { RTFSupportedZodTypes } from "./supportedZodTypes";
 import { UnwrapZodType, unwrap } from "./unwrap";
@@ -118,7 +117,7 @@ export function useTsController<FieldType extends any>() {
   };
   const {
     fieldState,
-    field: { onChange },
+    field: { onChange, value },
   } = controller;
   const [isUndefined, setIsUndefined] = useState(false);
 
@@ -132,6 +131,14 @@ export function useTsController<FieldType extends any>() {
       onChange(value);
     }
   }
+
+  useEffect(() => {
+    if (value && isUndefined) {
+      setIsUndefined(false);
+      context.removeFromCoerceUndefined(context.name);
+    }
+  }, [value]);
+
   return {
     ...controller,
     error: errorFromRhfErrorObject<FieldType>(fieldState.error),
@@ -251,7 +258,6 @@ export function fieldSchemaMismatchHookError(
  */
 export function useEnumValues() {
   const { enumValues } = useContextProt("useEnumValues");
-  printUseEnumWarning();
   if (!enumValues) throw new Error(enumValuesNotPassedError());
   return enumValues;
 }
