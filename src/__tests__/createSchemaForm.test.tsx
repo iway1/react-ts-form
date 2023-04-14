@@ -1397,7 +1397,7 @@ describe("createSchemaForm", () => {
   });
   it("should render the correct components for a nested object schema if unmaped", async () => {
     const NumberSchema = createUniqueFieldSchema(z.number(), "number");
-    const mockOnSubmit = jest.fn();
+    const mockOnSubmit = vi.fn();
 
     function TextField({}: { b: "1" }) {
       const { error } = useTsController<string>();
@@ -1467,7 +1467,7 @@ describe("createSchemaForm", () => {
   });
   it("should render two copies of an object schema if in an unmapped array schema", async () => {
     const NumberSchema = createUniqueFieldSchema(z.number(), "number");
-    const mockOnSubmit = jest.fn();
+    const mockOnSubmit = vi.fn();
 
     function TextField({}: { a?: 1 }) {
       return <div>text</div>;
@@ -1549,7 +1549,7 @@ describe("createSchemaForm", () => {
   });
 
   it("should render an array component despite recusions", async () => {
-    const mockOnSubmit = jest.fn(() => {});
+    const mockOnSubmit = vi.fn(() => {});
     function DynamicArray() {
       const {
         field: { value, onChange },
@@ -1634,7 +1634,7 @@ describe("createSchemaForm", () => {
     });
   });
   it("should render an array component with objects, and should map nonempty()", async () => {
-    const mockOnSubmit = jest.fn(() => {});
+    const mockOnSubmit = vi.fn(() => {});
     const objectSchema = z.object({
       text: z.string(),
       numberField: z.number(),
