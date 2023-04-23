@@ -53,7 +53,7 @@
     "!lib/src/__tests__"
   ],
   "peerDependencies": {
-    "@hookform/resolvers": "^2.8.0",
+    "@hookform/resolvers": "^2.8.0 || ^3.0.0",
     "react": "^16.8.0 || ^17 || ^18",
     "react-hook-form": "^7.39.0",
     "zod": "^3.19.0"
