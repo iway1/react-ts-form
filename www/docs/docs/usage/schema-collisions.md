@@ -2,7 +2,7 @@
 
 ## Dealing with collisions
 
-Some times you want multiple types of for the same zod schema type. You can deal with collisions using `createUniqueFieldSchema`:
+Some times you may want to use multiple types for the same zod schema type. You can deal with collisions using `createUniqueFieldSchema`:
 
 ```tsx
 const PhoneNumberSchema = createUniqueFieldSchema(
