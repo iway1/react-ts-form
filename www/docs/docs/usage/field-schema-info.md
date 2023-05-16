@@ -33,7 +33,7 @@ import { useStringFieldInfo } from "@ts-react/form";
 
 const MyStringCustomField = () => {
     
-  const { label, placeholder, isOptional, minLength, maxLength, zodType } =
+  const { label, placeholder, description, isOptional, minLength, maxLength, zodType } =
     useStringFieldInfo();
 
   return (
@@ -58,7 +58,7 @@ Returns schema-related information for a ZodNumber field
 import { useNumberFieldInfo } from "@ts-react/form";
 
 const MyNumberCustomField = () => {
-  const { label, placeholder, isOptional, minValue, maxValue, isInt, zodType } =
+  const { label, placeholder, description, isOptional, minValue, maxValue, isInt, zodType } =
     useNumberFieldInfo();
   return (
     <div>
@@ -69,6 +69,30 @@ const MyNumberCustomField = () => {
         min={minValue}
         max={maxValue}
         step={isInt ? undefined : 0.1}
+      />
+    </div>
+  );
+};
+```
+
+## `useNumberFieldInfo` 
+
+Returns schema-related information for a ZodNumber field
+
+```tsx
+import { useDateFieldInfo } from "@ts-react/form";
+
+const MyDateCustomField = () => {
+  const { label, placeholder, description, maxDate, minDate, zodType } =
+    useDateFieldInfo();
+  return (
+    <div>
+      {label}
+      <input
+        placeholder={placeholder}
+        required={!isOptional}
+        min={minDate?.toISOString().slice(0, 10)}
+        max={maxDate?.toISOString().slice(0, 10)}
       />
     </div>
   );
