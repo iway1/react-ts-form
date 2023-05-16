@@ -373,6 +373,7 @@ export function useStringFieldInfo() {
   return usePickZodFields(
     "ZodString",
     {
+      description: true,
       isCUID: true,
       isCUID2: true,
       isDatetime: true,
@@ -390,17 +391,16 @@ export function useStringFieldInfo() {
 }
 
 /**
- * Returns schema-related information for a ZodString field
+ * Returns schema-related information for a ZodArray field
  *
  * @example
  * ```tsx
  * const CustomComponent = () => {
- *   const { minLength, maxLength, uniqueId } = useStringFieldInfo();
- *
- *   return <input minLength={minLength} maxLength={maxLength} />;
+ *   const { description } = useArrayFieldInfo();
+ *   return <p>{description}</p>;
  * };
  * ```
- * @returns Information for a ZodString field
+ * @returns Information for a ZodArray field
  */
 export function useArrayFieldInfo() {
   return usePickZodFields(
@@ -413,14 +413,57 @@ export function useArrayFieldInfo() {
 }
 
 /**
+ * Returns schema-related information for a ZodDate field
+ *
+ * @example
+ * ```tsx
+ * const CustomComponent = () => {
+ *   const { description, maxDate, minDate } = useDateFieldInfo();
+ *   return <input type="date" min={minDate} max={maxDate} />;
+ * };
+ * ```
+ * @returns Information for a ZodDate field
+ */
+export function useDateFieldInfo() {
+  const result = usePickZodFields(
+    "ZodDate",
+    {
+      description: true,
+      maxDate: true,
+      minDate: true,
+    },
+    "useDateFieldInfo"
+  );
+  return {
+    ...result,
+    maxDate: result.type.maxDate,
+    minDate: result.type.minDate,
+  };
+}
+
+/**
  * Returns schema-related information for a ZodNumber field
  *
- * @returns data for a ZodNumber field
+ * @example
+ * ```tsx
+ * const CustomComponent = () => {
+ *   const {
+ *     description,
+ *     isFinite,
+ *     isInt,
+ *     maxValue,
+ *     minValue
+ *   } = useNumberFieldInfo();
+ *   return <input type="number" min={minValue} max={maxValue} />;
+ * };
+ * ```
+ * @returns Information for a ZodDate field
  */
 export function useNumberFieldInfo() {
   return usePickZodFields(
     "ZodNumber",
     {
+      description: true,
       isFinite: true,
       isInt: true,
       maxValue: true,
