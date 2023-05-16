@@ -16,7 +16,8 @@ export function parseDescription(description?: string) {
   };
 }
 
-export function getEnumValues(type: RTFSupportedZodTypes) {
+export function getEnumValues(type: RTFSupportedZodTypes): readonly string[] | undefined {
+  if (type._def.typeName === z.ZodFirstPartyTypeKind.ZodArray) return getEnumValues(type._def.type)
   if (!(type._def.typeName === z.ZodFirstPartyTypeKind.ZodEnum)) return;
   return type._def.values as readonly string[];
 }
