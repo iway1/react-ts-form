@@ -55,8 +55,11 @@ export type SafeOmit<T, Key extends keyof T> = IsEmpty<
 /**
  * @internal
  */
-export type DistributiveOmit<T, K extends keyof T> = T extends any
-  ? SafeOmit<T, K>
+export type DistributiveOmit<T, K extends keyof T> = T extends T
+  ? // Typescript actually is fine with Omit<T, K>, but this is surprising because
+    // K might include elements that are not in every member of the union T. In other words,
+    // K does not extend keyof T.
+    Omit<T, K & keyof T>
   : never;
 
 /**
