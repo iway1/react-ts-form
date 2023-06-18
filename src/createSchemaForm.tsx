@@ -25,6 +25,7 @@ import {
 import { getComponentForZodType } from "./getComponentForZodType";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  DistributiveOmit,
   IndexOf,
   IndexOfUnwrapZodType,
   RequireKeysWithRequiredChildren,
@@ -210,7 +211,7 @@ export type PropType<
               any,
               any
             ] // I guess this tells typescript it has a second element? errors without this check.
-          ? Omit<
+          ? DistributiveOmit<
               ComponentProps<GetTupleFromMapping<Mapping, SchemaType, key>[1]>,
               PropsMapType[number][1]
             > &
@@ -316,7 +317,10 @@ export type RTFFormProps<
     /**
      * Props to pass to the form container component (by default the props that "form" tags accept)
      */
-    formProps?: Omit<ComponentProps<FormType>, "children" | "onSubmit">;
+    formProps?: DistributiveOmit<
+      ComponentProps<FormType>,
+      "children" | "onSubmit"
+    >;
   }>;
 
 /**

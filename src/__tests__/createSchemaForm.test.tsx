@@ -74,6 +74,47 @@ describe("createSchemaForm", () => {
     expect(screen.queryByTestId(testIds.textFieldTwo)).toBeTruthy();
     expect(screen.queryByTestId(testIds.booleanField)).toBeTruthy();
   });
+  it("should allow union props in components", () => {
+    const testSchema = z.object({
+      textField: z.string(),
+    });
+
+    function TextField(props: { testText: string } | { testNumber: number }) {
+      return (
+        <div>{"testText" in props ? props.testText : props.testNumber}</div>
+      );
+    }
+
+    const mapping = [[z.string(), TextField] as const] as const;
+    const TSForm = createTsForm(mapping);
+
+    render(
+      <TSForm
+        onSubmit={() => {}}
+        schema={testSchema}
+        props={{
+          textField: {
+            testText: "text",
+          },
+        }}
+      />
+    );
+
+    expect(screen.queryByText("text")).toBeTruthy();
+    render(
+      <TSForm
+        onSubmit={() => {}}
+        schema={testSchema}
+        props={{
+          textField: {
+            testNumber: 101,
+          },
+        }}
+      />
+    );
+
+    expect(screen.queryByText("101")).toBeTruthy();
+  });
   it("should type the onSubmit properly", () => {
     const testSchema = z.object({
       textField: z.string(),
