@@ -610,7 +610,7 @@ function useSubmitter<SchemaType extends RTFFormSchemaType>({
       async (e) => {
         const errorKeys = Object.keys(e.errors);
         if (!errorKeys.length) {
-          await onSubmit(data);
+          await onSubmit(e.values);
           return;
         }
         for (const key of errorKeys) {
