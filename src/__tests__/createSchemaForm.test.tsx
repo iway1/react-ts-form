@@ -27,6 +27,7 @@ import {
   useTsController,
   useStringFieldInfo,
   useFieldInfo,
+  useDateFieldInfo,
 } from "../FieldContext";
 import { expectTypeOf } from "expect-type";
 import { createUniqueFieldSchema } from "../createFieldSchema";
@@ -1436,6 +1437,91 @@ describe("createSchemaForm", () => {
       screen.queryByText(testData.arrayTextField.label)
     ).toBeInTheDocument();
   });
+
+  it("should be possible to get ZodDate information using `useDateFieldInfo`", () => {
+    const testData = {
+      dateField: {
+        uniqueId: "date-field-id",
+        label: "date-field-label",
+        placeholder: "date-field-placeholder",
+        min: new Date(2021, 1, 1),
+        max: new Date(2020, 1, 1),
+        get schema() {
+          const { uniqueId, min, max } = this;
+          return createUniqueFieldSchema(z.date().min(min).max(max), uniqueId);
+        },
+
+        get component() {
+          const { min, max, label, uniqueId } = this;
+
+          const DateFieldComponent = () => {
+            const fieldInfo = useDateFieldInfo();
+
+            expect(fieldInfo.minDate).toStrictEqual(min);
+            expect(fieldInfo.maxDate).toStrictEqual(max);
+            expect(fieldInfo.label).toBe(label);
+            expect(fieldInfo.uniqueId).toBe(uniqueId);
+
+            return <div>{fieldInfo.label}</div>;
+          };
+
+          return DateFieldComponent;
+        },
+      },
+      arrayDateField: {
+        uniqueId: "array-date-field-id",
+        label: "array-date-field-label",
+        placeholder: "array-date-field-placeholder",
+        min: new Date(2021, 1, 1),
+        max: new Date(2020, 1, 1),
+        get schema() {
+          const { uniqueId, min, max } = this;
+          return createUniqueFieldSchema(z.date().min(min).max(max), uniqueId);
+        },
+        get component() {
+          const { min,max, label, uniqueId } = this;
+
+          const ArrayDateFieldComponent = () => {
+            const fieldInfo = useDateFieldInfo();
+
+            expect(fieldInfo.minDate).toStrictEqual(min);
+            expect(fieldInfo.maxDate).toStrictEqual(max);
+            expect(fieldInfo.label).toBe(label);
+            expect(fieldInfo.uniqueId).toBe(uniqueId);
+
+            return <div>{fieldInfo.label}</div>;
+          };
+
+          return ArrayDateFieldComponent;
+        },
+      },
+    };
+
+    const description = (k: keyof typeof testData) =>
+      `${testData[k].label}${DESCRIPTION_SEPARATOR_SYMBOL}${testData[k].placeholder}`;
+
+    const { dateField, arrayDateField } = testData;
+
+    const schema = z.object({
+      name: dateField.schema.describe(description("dateField")),
+      users: arrayDateField.schema.describe(description("arrayDateField")),
+    });
+
+    const mapping = [
+      [dateField.schema, dateField.component],
+      [arrayDateField.schema, arrayDateField.component],
+    ] as const;
+
+    const Form = createTsForm(mapping);
+
+    render(<Form schema={schema} onSubmit={() => {}} />);
+
+    expect(screen.queryByText(testData.dateField.label)).toBeInTheDocument();
+    expect(
+      screen.queryByText(testData.arrayDateField.label)
+    ).toBeInTheDocument();
+  });
+
   it("should render the correct components for a nested object schema if unmaped", async () => {
     const NumberSchema = createUniqueFieldSchema(z.number(), "number");
     const mockOnSubmit = jest.fn();
