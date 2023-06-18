@@ -6,7 +6,7 @@ sidebar_position: 5
 
 ## Complex field types
 
-You can use most any zod schema and have it map to an appropriate component:
+You can use almost any zod schema and have it map to an appropriate component:
 
 ```tsx
 function AddressEntryField() {
