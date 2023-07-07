@@ -79,7 +79,9 @@ export function unwrapEffects(effects: RTFSupportedZodTypes) {
  */
 export type UnwrapZodType<T extends RTFSupportedZodTypes> =
   T extends ZodOptional<any>
-    ? GenericizeLeafTypes<T["_def"]["innerType"]>
+    ? T["_def"]["innerType"] extends ZodNullable<any>
+      ? GenericizeLeafTypes<T["_def"]["innerType"]["_def"]["innerType"]>
+      : GenericizeLeafTypes<T["_def"]["innerType"]>
     : T extends ZodNullable<any>
     ? T["_def"]["innerType"] extends ZodOptional<any>
       ? GenericizeLeafTypes<T["_def"]["innerType"]["_def"]["innerType"]>
