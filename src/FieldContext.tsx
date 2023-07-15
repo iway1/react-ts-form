@@ -73,6 +73,11 @@ export function FieldContextProvider({
   );
 }
 
+export function useMaybeFieldName() {
+  const context = useContext(FieldContext);
+  return context?.name;
+}
+
 function useContextProt(name: string) {
   const context = useContext(FieldContext);
   if (!context)

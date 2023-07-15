@@ -4,6 +4,8 @@ import React, {
   FunctionComponent,
   ReactNode,
   RefAttributes,
+  createContext,
+  useContext,
   useEffect,
   useRef,
 } from "react";
@@ -13,6 +15,7 @@ import {
   ErrorOption,
   FormProvider,
   useForm,
+  useFormContext,
   UseFormReturn,
 } from "react-hook-form";
 import {
@@ -34,7 +37,7 @@ import {
 import { getMetaInformationForZodType } from "./getMetaInformationForZodType";
 import { unwrapEffects } from "./unwrap";
 import { RTFBaseZodType, RTFSupportedZodTypes } from "./supportedZodTypes";
-import { FieldContextProvider } from "./FieldContext";
+import { FieldContextProvider, useMaybeFieldName } from "./FieldContext";
 import { isZodTypeEqual } from "./isZodTypeEqual";
 import { duplicateTypeError, printWarningsForSchema } from "./logging";
 import {
@@ -240,24 +243,18 @@ export type RenderedFieldMap<
         : JSX.Element;
     };
 
-export type RTFFormProps<
-  Mapping extends FormComponentMapping,
+export type RTFFormSpecificProps<
   SchemaType extends z.AnyZodObject | ZodEffects<any, any>,
-  PropsMapType extends PropsMapping = typeof defaultPropsMap,
   FormType extends FormComponent = "form"
 > = {
-  /**
-   * A Zod Schema - An input field will be rendered for each property in the schema, based on the mapping passed to `createTsForm`
-   */
-  schema: SchemaType;
-  /**
-   * A callback function that will be called with the data once the form has been submitted and validated successfully.
-   */
-  onSubmit: RTFFormSubmitFn<SchemaType>;
   /**
    * Initializes your form with default values. Is a deep partial, so all properties and nested properties are optional.
    */
   defaultValues?: DeepPartial<z.infer<UnwrapEffects<SchemaType>>>;
+  /**
+   * A callback function that will be called with the data once the form has been submitted and validated successfully.
+   */
+  onSubmit: RTFFormSubmitFn<SchemaType>;
   /**
    * A function that renders components after the form, the function is passed a `submit` function that can be used to trigger
    * form submission.
@@ -294,6 +291,26 @@ export type RTFFormProps<
    * ```
    */
   form?: UseFormReturn<z.infer<SchemaType>>;
+} & RequireKeysWithRequiredChildren<{
+  /**
+   * Props to pass to the form container component (by default the props that "form" tags accept)
+   */
+  formProps?: DistributiveOmit<
+    ComponentProps<FormType>,
+    "children" | "onSubmit"
+  >;
+}>;
+
+export type RTFSharedFormProps<
+  Mapping extends FormComponentMapping,
+  SchemaType extends z.AnyZodObject | ZodEffects<any, any>,
+  PropsMapType extends PropsMapping = typeof defaultPropsMap
+> = {
+  /**
+   * A Zod Schema - An input field will be rendered for each property in the schema, based on the mapping passed to `createTsForm`
+   */
+  schema: SchemaType;
+
   children?: FunctionComponent<RenderedFieldMap<SchemaType>>;
 } & RequireKeysWithRequiredChildren<{
   /**
@@ -312,29 +329,72 @@ export type RTFFormProps<
    * ```
    */
   props?: PropType<Mapping, SchemaType, PropsMapType>;
-}> &
-  RequireKeysWithRequiredChildren<{
-    /**
-     * Props to pass to the form container component (by default the props that "form" tags accept)
-     */
-    formProps?: DistributiveOmit<
-      ComponentProps<FormType>,
-      "children" | "onSubmit"
-    >;
-  }>;
+}>;
 
-/**
- * Creates a reusable, typesafe form component based on a zod-component mapping.
- * @example
- * ```tsx
- * const mapping = [
- *  [z.string, TextField] as const
- * ] as const
- * const MyForm = createTsForm(mapping)
- * ```
- * @param componentMap A zod-component mapping. An array of 2-tuples where the first element is a zod schema and the second element is a React Functional Component.
- * @param options Optional - A custom form component to use as the container for the input fields.
- */
+export type RTFFormProps<
+  Mapping extends FormComponentMapping,
+  SchemaType extends z.AnyZodObject | ZodEffects<any, any>,
+  PropsMapType extends PropsMapping = typeof defaultPropsMap,
+  FormType extends FormComponent = "form"
+> = RTFSharedFormProps<Mapping, SchemaType, PropsMapType> &
+  RTFFormSpecificProps<SchemaType, FormType>;
+
+export type TsForm<
+  Mapping extends FormComponentMapping,
+  PropsMapType extends PropsMapping,
+  FormType extends FormComponent
+> = <SchemaType extends RTFFormSchemaType>(
+  props: RTFFormProps<Mapping, SchemaType, PropsMapType, FormType>
+) => React.ReactElement<any, any>;
+
+export type TsFormCreateOptions<
+  FormType extends FormComponent,
+  PropsMapType extends PropsMapping
+> = {
+  /**
+   * The component to wrap your fields in. By default, it is a `<form/>`.
+   * @example
+   * ```tsx
+   * function MyCustomFormContainer({children, onSubmit}:{children: ReactNode, onSubmit: ()=>void}) {
+   *  return (
+   *    <form onSubmit={onSubmit}>
+   *      {children}
+   *      <button>Submit</button>
+   *    </form>
+   *  )
+   * }
+   * const MyForm = createTsForm(mapping, {
+   *  FormComponent: MyCustomFormContainer
+   * })
+   * ```
+   */
+  FormComponent?: FormType;
+  /**
+   * Modify which props the form control and such get passed to when rendering components. This can make it easier to integrate existing
+   * components with `@ts-react/form` or modify its behavior. The values of the object are the names of the props to forward the corresponding
+   * data to.
+   * @default
+   * {
+   *  name: "name",
+   *  control: "control",
+   *  enumValues: "enumValues",
+   * }
+   * @example
+   * ```tsx
+   * function MyTextField({someControlProp}:{someControlProp: Control<any>}) {
+   *  //...
+   * }
+   *
+   * const createTsForm(mapping, {
+   *  propsMap: {
+   *    control: "someControlProp"
+   *  }
+   * })
+   * ```
+   */
+  propsMap?: PropsMapType;
+};
+
 export function createTsForm<
   Mapping extends FormComponentMapping,
   PropsMapType extends PropsMapping = typeof defaultPropsMap,
@@ -356,62 +416,53 @@ export function createTsForm<
   /**
    * Options to customize your form.
    */
-  options?: {
-    /**
-     * The component to wrap your fields in. By default, it is a `<form/>`.
-     * @example
-     * ```tsx
-     * function MyCustomFormContainer({children, onSubmit}:{children: ReactNode, onSubmit: ()=>void}) {
-     *  return (
-     *    <form onSubmit={onSubmit}>
-     *      {children}
-     *      <button>Submit</button>
-     *    </form>
-     *  )
-     * }
-     * const MyForm = createTsForm(mapping, {
-     *  FormComponent: MyCustomFormContainer
-     * })
-     * ```
-     */
-    FormComponent?: FormType;
-    /**
-     * Modify which props the form control and such get passed to when rendering components. This can make it easier to integrate existing
-     * components with `@ts-react/form` or modify its behavior. The values of the object are the names of the props to forward the corresponding
-     * data to.
-     * @default {
-     *  name: "name",
-     *  control: "control",
-     *  enumValues: "enumValues",
-     * }
-     * @example
-     * ```tsx
-     * function MyTextField({someControlProp}:{someControlProp: Control<any>}) {
-     *  //...
-     * }
-     *
-     * const createTsForm(mapping, {
-     *  propsMap: {
-     *    control: "someControlProp"
-     *  }
-     * })
-     * ```
-     */
-    propsMap?: PropsMapType;
-  }
-): <SchemaType extends RTFFormSchemaType>(
-  props: RTFFormProps<Mapping, SchemaType, PropsMapType, FormType>
-) => React.ReactElement<any, any> {
-  const ActualFormComponent = options?.FormComponent
-    ? options.FormComponent
-    : "form";
+  options?: TsFormCreateOptions<FormType, PropsMapType>
+): TsForm<Mapping, PropsMapType, FormType> {
+  return createTsFormAndFragment(componentMap, options)[0];
+}
+
+/**
+ * Creates a reusable, typesafe form component based on a zod-component mapping.
+ * @example
+ * ```tsx
+ * const mapping = [
+ *  [z.string, TextField] as const
+ * ] as const
+ * const MyForm = createTsForm(mapping)
+ * ```
+ * @param componentMap A zod-component mapping. An array of 2-tuples where the first element is a zod schema and the second element is a React Functional Component.
+ * @param options Optional - A custom form component to use as the container for the input fields.
+ */
+export function createTsFormAndFragment<
+  Mapping extends FormComponentMapping,
+  PropsMapType extends PropsMapping = typeof defaultPropsMap,
+  FormType extends FormComponent = "form"
+>(
+  /**
+   * An array mapping zod schemas to components.
+   * @example
+   * ```tsx
+   * const mapping = [
+   *  [z.string(), TextField] as const
+   *  [z.boolean(), CheckBoxField] as const
+   * ] as const
+   *
+   * const MyForm = createTsForm(mapping);
+   * ```
+   */
+  componentMap: Mapping,
+  /**
+   * Options to customize your form.
+   */
+  options?: TsFormCreateOptions<FormType, PropsMapType>
+) {
   const schemas = componentMap.map((e) => e[0]);
   checkForDuplicateTypes(schemas);
   checkForDuplicateUniqueFields(schemas);
-  const propsMap = propsMapToObect(
-    options?.propsMap ? options.propsMap : defaultPropsMap
-  );
-  return function Component<SchemaType extends RTFFormSchemaType>({
+  const propsMap = propsMapToObect(options?.propsMap ?? defaultPropsMap);
+  const FormComponent = options?.FormComponent || "form";
+
+  function TsForm<SchemaType extends RTFFormSchemaType>({
     schema,
     onSubmit,
     props,
@@ -443,7 +494,7 @@ export function createTsForm<
         form.reset(defaultValues);
       }
     }, []);
-    const { control, handleSubmit, setError, getValues } = _form;
+    const { handleSubmit, setError } = _form;
     const submitter = useSubmitter({
       resolver,
       onSubmit,
@@ -451,6 +502,42 @@ export function createTsForm<
     });
     const submitFn = handleSubmit(submitter.submit);
 
+    return (
+      <FormProvider {..._form}>
+        <SubmitterContextProvider {...submitter}>
+          <FormComponent {...formProps} onSubmit={submitFn}>
+            <FormFragment
+              {...({
+                schema,
+                props,
+                renderAfter:
+                  renderAfter && (() => renderAfter({ submit: submitFn })),
+                renderBefore:
+                  renderBefore && (() => renderBefore({ submit: submitFn })),
+                children: CustomChildrenComponent,
+              } as any)}
+            />
+          </FormComponent>
+        </SubmitterContextProvider>
+      </FormProvider>
+    );
+  }
+
+  function FormFragment<SchemaType extends RTFFormSchemaType>({
+    schema,
+    props,
+    renderAfter,
+    renderBefore,
+    children: CustomChildrenComponent,
+  }: RTFSharedFormProps<Mapping, SchemaType, PropsMapType> & {
+    renderBefore?: (props: { submit?: () => void }) => ReactNode;
+    renderAfter?: (props: { submit?: () => void }) => ReactNode;
+    name?: string;
+  }) {
+    const { control, getValues } = useFormContext<z.TypeOf<SchemaType>>();
+
+    const namePrefix = useMaybeFieldName();
+    const submitter = useSubmitterContext();
     function renderComponentForSchemaDeep<
       NestedSchemaType extends RTFSupportedZodTypes | ZodEffects<any, any>,
       K extends keyof z.infer<UnwrapEffects<SchemaType>>
@@ -553,7 +640,7 @@ export function createTsForm<
             type,
             props as any,
             stringKey,
-            stringKey,
+            [namePrefix, stringKey].filter(Boolean).join("."),
             getValues()[key]
           );
           return accum;
@@ -565,20 +652,21 @@ export function createTsForm<
     const renderedFields = renderFields(schema, props);
     const renderedFieldNodes = flattenRenderedElements(renderedFields);
     return (
-      <FormProvider {..._form}>
-        <ActualFormComponent {...formProps} onSubmit={submitFn}>
-          {renderBefore && renderBefore({ submit: submitFn })}
-          {CustomChildrenComponent ? (
-            <CustomChildrenComponent {...renderedFields} />
-          ) : (
-            renderedFieldNodes
-          )}
-          {renderAfter && renderAfter({ submit: submitFn })}
-        </ActualFormComponent>
-      </FormProvider>
+      <>
+        {renderBefore && renderBefore({})}
+        {CustomChildrenComponent ? (
+          <CustomChildrenComponent {...renderedFields} />
+        ) : (
+          renderedFieldNodes
+        )}
+        {renderAfter && renderAfter({})}
+      </>
     );
-  };
+  }
+
+  return [TsForm, FormFragment] as const;
 }
+
 // handles internal custom submit logic
 // Implements a workaround to allow devs to set form values to undefined (as it breaks react hook form)
 // For example https://github.com/react-hook-form/react-hook-form/discussions/2797
@@ -633,6 +721,26 @@ function useSubmitter<SchemaType extends RTFFormSchemaType>({
     removeFromCoerceUndefined,
     addToCoerceUndefined,
   };
+}
+
+const SubmitterContext = createContext<ReturnType<typeof useSubmitter> | null>(
+  null
+);
+
+export function useSubmitterContext() {
+  const context = useContext(SubmitterContext);
+  if (!context)
+    throw new Error(
+      "useSubmitterContext must be used within a SubmitterContextProvider"
+    );
+  return context;
+}
+
+export function SubmitterContextProvider({
+  children,
+  ...submitter
+}: ReturnType<typeof useSubmitter> & { children: ReactNode }) {
+  return <SubmitterContext.Provider value={submitter} children={children} />;
 }
 
 const isAnyZodObject = (schema: RTFSupportedZodTypes): schema is AnyZodObject =>

@@ -11,6 +11,7 @@ import {
 } from "./utils/testForm";
 import {
   createTsForm,
+  createTsFormAndFragment,
   noMatchingSchemaErrorMessage,
   useFormResultValueChangedErrorMesssage,
 } from "../createSchemaForm";
@@ -1479,7 +1480,7 @@ describe("createSchemaForm", () => {
           return createUniqueFieldSchema(z.date().min(min).max(max), uniqueId);
         },
         get component() {
-          const { min,max, label, uniqueId } = this;
+          const { min, max, label, uniqueId } = this;
 
           const ArrayDateFieldComponent = () => {
             const fieldInfo = useDateFieldInfo();
@@ -1846,5 +1847,73 @@ describe("createSchemaForm", () => {
 
     const inputs = screen.getAllByTestId(/dynamic-array-input/);
     expect(inputs.length).toBe(3);
+  });
+  it("should provide a nested renderer for use in complex components", async () => {
+    const NumberSchema = createUniqueFieldSchema(z.number(), "number");
+    const mockOnSubmit = jest.fn();
+
+    function TextField({}: { b?: "1" }) {
+      const { error } = useTsController<string>();
+      return (
+        <>
+          <div>text</div>
+          <div data-testid="error">{error?.errorMessage}</div>
+        </>
+      );
+    }
+
+    function NumberField({}: { a?: 1 }) {
+      return <div>number</div>;
+    }
+
+    function ComplexField({}: { complexProp1: boolean }) {
+      return (
+        <div>
+          <FormFragment schema={objectSchema2} props={{ num: { a: 1 } }} />
+        </div>
+      );
+    }
+
+    const objectSchema2 = z.object({
+      num: NumberSchema,
+      str: z.string(),
+    });
+
+    const mapping = [
+      [z.string(), TextField],
+      [NumberSchema, NumberField],
+      [objectSchema2, ComplexField],
+    ] as const;
+
+    const [Form, FormFragment] = createTsFormAndFragment(mapping);
+
+    const schema = z.object({
+      nestedField2: objectSchema2,
+    });
+    const defaultValues = {
+      nestedField2: { num: 4, str: "this" },
+    };
+    // TODO: test validation
+    render(
+      <Form
+        schema={schema}
+        onSubmit={mockOnSubmit}
+        defaultValues={defaultValues}
+        props={{
+          nestedField2: { complexProp1: true },
+        }}
+        renderAfter={() => <button type="submit">submit</button>}
+      />
+    );
+    screen.debug();
+    const button = screen.getByText("submit");
+    await userEvent.click(button);
+
+    const textNodes = screen.queryByText("text");
+    expect(textNodes).toBeInTheDocument();
+    const numberNodes = screen.queryByText("number");
+    expect(numberNodes).toBeInTheDocument();
+    expect(screen.queryByTestId("error")).toHaveTextContent("");
+    expect(mockOnSubmit).toHaveBeenCalledWith(defaultValues);
   });
 });
