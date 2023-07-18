@@ -529,6 +529,7 @@ export function createTsFormAndFragment<
     renderAfter,
     renderBefore,
     children: CustomChildrenComponent,
+    name,
   }: RTFSharedFormProps<Mapping, SchemaType, PropsMapType> & {
     renderBefore?: (props: { submit?: () => void }) => ReactNode;
     renderAfter?: (props: { submit?: () => void }) => ReactNode;
@@ -640,7 +641,7 @@ export function createTsFormAndFragment<
             type,
             props as any,
             stringKey,
-            [namePrefix, stringKey].filter(Boolean).join("."),
+            [namePrefix, name, stringKey].filter(Boolean).join("."),
             getValues()[key]
           );
           return accum;

@@ -104,17 +104,21 @@ function useContextProt(name: string) {
  *  </>
  * )
  */
-export function useTsController<FieldType extends any>() {
+export function useTsController<FieldType extends any>({
+  name,
+}: {
+  name?: string;
+} = {}) {
   const context = useContextProt("useTsController");
   type IsObj = FieldType extends Object ? true : false;
   type OnChangeValue = IsObj extends true
     ? DeepPartial<FieldType> | undefined
     : FieldType | undefined;
   // Just gives better types to useController
-  const controller = useController(context) as any as Omit<
-    UseControllerReturn,
-    "field"
-  > & {
+  const controller = useController({
+    ...context,
+    name: name ?? context.name,
+  }) as unknown as Omit<UseControllerReturn, "field"> & {
     field: Omit<UseControllerReturn["field"], "value" | "onChange"> & {
       value: FieldType | undefined;
       onChange: (value: OnChangeValue) => void;

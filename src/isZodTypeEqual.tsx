@@ -12,9 +12,10 @@ import {
 import { RTFSupportedZodTypes } from "./supportedZodTypes";
 import { unwrap } from "./unwrap";
 
-export function isZodTypeEqual(
+export function isZodTypeEqualImpl(
   _a: RTFSupportedZodTypes,
-  _b: RTFSupportedZodTypes
+  _b: RTFSupportedZodTypes,
+  visitedTypes: Set<RTFSupportedZodTypes>
 ) {
   // Recursively check objects
   // if typeNames are equal Unwrap Appropriate Types:
@@ -22,6 +23,9 @@ export function isZodTypeEqual(
 
   let { type: a, _rtf_id: idA } = unwrap(_a);
   let { type: b, _rtf_id: idB } = unwrap(_b);
+  if (visitedTypes.has(a) && visitedTypes.has(b)) return true;
+  visitedTypes.add(a);
+  visitedTypes.add(b);
 
   if (idA || idB) {
     return idA === idB;
@@ -35,7 +39,7 @@ export function isZodTypeEqual(
     a._def.typeName === ZodFirstPartyTypeKind.ZodArray &&
     b._def.typeName === ZodFirstPartyTypeKind.ZodArray
   ) {
-    if (isZodTypeEqual(a._def.type, b._def.type)) return true;
+    if (isZodTypeEqualImpl(a._def.type, b._def.type, visitedTypes)) return true;
     return false;
   }
 
@@ -45,7 +49,8 @@ export function isZodTypeEqual(
     a._def.typeName === ZodFirstPartyTypeKind.ZodSet &&
     b._def.typeName === ZodFirstPartyTypeKind.ZodSet
   ) {
-    if (isZodTypeEqual(a._def.valueType, b._def.valueType)) return true;
+    if (isZodTypeEqualImpl(a._def.valueType, b._def.valueType, visitedTypes))
+      return true;
     return false;
   }
 
@@ -56,8 +61,8 @@ export function isZodTypeEqual(
     b._def.typeName === ZodFirstPartyTypeKind.ZodMap
   ) {
     if (
-      isZodTypeEqual(a._def.keyType, b._def.keyType) &&
-      isZodTypeEqual(a._def.valueType, b._def.valueType)
+      isZodTypeEqualImpl(a._def.keyType, b._def.keyType, visitedTypes) &&
+      isZodTypeEqualImpl(a._def.valueType, b._def.valueType, visitedTypes)
     )
       return true;
 
@@ -69,7 +74,8 @@ export function isZodTypeEqual(
     a._def.typeName === ZodFirstPartyTypeKind.ZodRecord &&
     b._def.typeName === ZodFirstPartyTypeKind.ZodRecord
   ) {
-    if (isZodTypeEqual(a._def.valueType, b._def.valueType)) return true;
+    if (isZodTypeEqualImpl(a._def.valueType, b._def.valueType, visitedTypes))
+      return true;
     return false;
   }
 
@@ -82,7 +88,7 @@ export function isZodTypeEqual(
     const itemsB = b._def.items;
     if (itemsA.length !== itemsB.length) return false;
     for (let i = 0; i < itemsA.length; i++) {
-      if (!isZodTypeEqual(itemsA[i], itemsB[i])) return false;
+      if (!isZodTypeEqualImpl(itemsA[i], itemsB[i], visitedTypes)) return false;
     }
     return true;
   }
@@ -114,10 +120,17 @@ export function isZodTypeEqual(
     for (var key of keysA) {
       const valA = shapeA[key];
       const valB = shapeB[key];
-      if (!valB || !isZodTypeEqual(valA, valB)) return false;
+      if (!valB || !isZodTypeEqualImpl(valA, valB, visitedTypes)) return false;
     }
   }
   return true;
+}
+
+export function isZodTypeEqual(
+  _a: RTFSupportedZodTypes,
+  _b: RTFSupportedZodTypes
+) {
+  return isZodTypeEqualImpl(_a, _b, new Set());
 }
 
 // Guards
