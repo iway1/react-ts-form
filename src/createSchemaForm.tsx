@@ -506,46 +506,44 @@ export function createTsFormAndFragment<
       <FormProvider {..._form}>
         <SubmitterContextProvider {...submitter}>
           <FormComponent {...formProps} onSubmit={submitFn}>
+            {renderAfter?.({ submit: submitFn })}
             <FormFragment
               {...({
                 schema,
                 props,
-                renderAfter:
-                  renderAfter && (() => renderAfter({ submit: submitFn })),
-                renderBefore:
-                  renderBefore && (() => renderBefore({ submit: submitFn })),
                 children: CustomChildrenComponent,
               } as any)}
             />
+            {renderBefore?.({ submit: submitFn })}
           </FormComponent>
         </SubmitterContextProvider>
       </FormProvider>
     );
   }
 
-  function FormFragment<SchemaType extends RTFFormSchemaType>({
+  type RenderFieldProps<Type extends RTFSupportedZodTypes> = {
+    schema: Type;
+    props: PropType<Mapping, Type, PropsMapType>;
+    // when a number schemaKey is assumed to be an array index
+    schemaKey: string | number;
+    form: UseFormReturn<Record<string, any>, any>;
+    namePrefix: string | undefined;
+    submitter: Submitter;
+  };
+
+  function renderField<Type extends RTFSupportedZodTypes>({
     schema,
     props,
-    renderAfter,
-    renderBefore,
-    children: CustomChildrenComponent,
-    name,
-  }: RTFSharedFormProps<Mapping, SchemaType, PropsMapType> & {
-    renderBefore?: (props: { submit?: () => void }) => ReactNode;
-    renderAfter?: (props: { submit?: () => void }) => ReactNode;
-    name?: string;
-  }) {
-    const { control, getValues } = useFormContext<z.TypeOf<SchemaType>>();
-
-    const namePrefix = useMaybeFieldName();
-    const submitter = useSubmitterContext();
+    schemaKey,
+    form: { control, getValues },
+    namePrefix,
+    submitter,
+  }: RenderFieldProps<Type>): RenderedElement {
     function renderComponentForSchemaDeep<
-      NestedSchemaType extends RTFSupportedZodTypes | ZodEffects<any, any>,
-      K extends keyof z.infer<UnwrapEffects<SchemaType>>
+      NestedSchemaType extends RTFSupportedZodTypes | ZodEffects<any, any>
     >(
       _type: NestedSchemaType,
       props: PropType<Mapping, NestedSchemaType, PropsMapType> | undefined,
-      key: K,
       prefixedKey: string,
       currentValue: any
     ): RenderedElement {
@@ -558,7 +556,6 @@ export function createTsFormAndFragment<
             accum[subKey] = renderComponentForSchemaDeep(
               subType,
               props && props[subKey] ? (props[subKey] as any) : undefined,
-              subKey,
               `${prefixedKey}.${subKey}`,
               currentValue && currentValue[subKey]
             );
@@ -571,7 +568,6 @@ export function createTsFormAndFragment<
               return renderComponentForSchemaDeep(
                 type.element,
                 props,
-                key,
                 `${prefixedKey}[${index}]`,
                 item
               );
@@ -579,16 +575,15 @@ export function createTsFormAndFragment<
           );
         }
         throw new Error(
-          noMatchingSchemaErrorMessage(key.toString(), type._def.typeName)
+          noMatchingSchemaErrorMessage(
+            prefixedKey.toString(),
+            type._def.typeName
+          )
         );
       }
       const meta = getMetaInformationForZodType(type);
 
-      // TODO: we could define a LeafType in the recursive PropType above that only gets applied when we have an actual mapping then we could typeguard to it or cast here
-      // until then this thinks (correctly) that fieldProps might not have beforeElement, afterElement at this level of the prop tree
-      const fieldProps = props && props[key] ? (props[key] as any) : {};
-
-      const { beforeElement, afterElement } = fieldProps;
+      const { beforeElement, afterElement } = (props ?? {}) as ExtraProps;
 
       const mergedProps = {
         ...(propsMap.name && { [propsMap.name]: prefixedKey }),
@@ -602,7 +597,7 @@ export function createTsFormAndFragment<
         ...(propsMap.descriptionPlaceholder && {
           [propsMap.descriptionPlaceholder]: meta.description?.placeholder,
         }),
-        ...fieldProps,
+        ...props,
       };
       const ctxLabel = meta.description?.label;
       const ctxPlaceholder = meta.description?.placeholder;
@@ -626,6 +621,55 @@ export function createTsFormAndFragment<
         </Fragment>
       );
     }
+    const name = [namePrefix, stringifySchemaKey(schemaKey)]
+      .filter(Boolean)
+      .join(".");
+    return renderComponentForSchemaDeep(
+      schema,
+      props as any,
+      name,
+      getValues()[name]
+    );
+  }
+
+  function FormFragmentField<
+    Type extends RTFSupportedZodTypes | ZodEffects<any, any>
+  >(
+    props: Pick<RenderFieldProps<Type>, "schema" | "schemaKey"> &
+      RequireKeysWithRequiredChildren<{
+        props?: PropType<Mapping, Type, PropsMapType>;
+      }>
+  ) {
+    return (
+      <>
+        {flattenRenderedElements(
+          renderField({
+            ...props,
+            // TS can't understand that props will be required  when necessary because of the generic
+            props: props.props!!,
+            form: useFormContext(),
+            namePrefix: useMaybeFieldName(),
+            submitter: useSubmitterContext(),
+          })
+        )}
+      </>
+    );
+  }
+
+  function FormFragment<SchemaType extends RTFFormSchemaType>({
+    schema,
+    props,
+    children: CustomChildrenComponent,
+    schemaKey,
+  }: RTFSharedFormProps<Mapping, SchemaType, PropsMapType> & {
+    // when a number schemaKey is assumed to be an array index
+    schemaKey?: string | number;
+  }) {
+    const form = useFormContext<Record<string, any>>();
+
+    const namePrefix = useMaybeFieldName();
+    const submitter = useSubmitterContext();
+
     function renderFields(
       schema: SchemaType,
       props: PropType<Mapping, SchemaType, PropsMapType> | undefined
@@ -634,16 +678,20 @@ export function createTsFormAndFragment<
       const _schema = unwrapEffects(schema);
       const shape: Record<string, RTFSupportedZodTypes> = _schema._def.shape();
       return Object.entries(shape).reduce(
-        (accum, [key, type]: [SchemaKey, RTFSupportedZodTypes]) => {
+        (accum, [key, subSchema]: [SchemaKey, RTFSupportedZodTypes]) => {
           // we know this is a string but TS thinks it can be number and symbol so just in case stringify
           const stringKey = key.toString();
-          accum[stringKey] = renderComponentForSchemaDeep(
-            type,
-            props as any,
-            stringKey,
-            [namePrefix, name, stringKey].filter(Boolean).join("."),
-            getValues()[key]
-          );
+          const fieldProps = props && props[key] ? props[key] : undefined;
+          accum[stringKey] = renderField({
+            form,
+            schema: subSchema,
+            props: fieldProps as any,
+            namePrefix,
+            submitter,
+            schemaKey: [stringifySchemaKey(schemaKey), stringKey]
+              .filter(Boolean)
+              .join("."),
+          });
           return accum;
         },
         {} as RenderedObjectElements
@@ -654,18 +702,20 @@ export function createTsFormAndFragment<
     const renderedFieldNodes = flattenRenderedElements(renderedFields);
     return (
       <>
-        {renderBefore && renderBefore({})}
         {CustomChildrenComponent ? (
           <CustomChildrenComponent {...renderedFields} />
         ) : (
           renderedFieldNodes
         )}
-        {renderAfter && renderAfter({})}
       </>
     );
   }
 
-  return [TsForm, FormFragment] as const;
+  function stringifySchemaKey(schemaKey: string | number | undefined) {
+    return typeof schemaKey == "number" ? `[${schemaKey}]` : schemaKey;
+  }
+
+  return [TsForm, FormFragment, FormFragmentField] as const;
 }
 
 // handles internal custom submit logic
@@ -723,10 +773,9 @@ function useSubmitter<SchemaType extends RTFFormSchemaType>({
     addToCoerceUndefined,
   };
 }
+type Submitter = ReturnType<typeof useSubmitter>;
 
-const SubmitterContext = createContext<ReturnType<typeof useSubmitter> | null>(
-  null
-);
+const SubmitterContext = createContext<Submitter | null>(null);
 
 export function useSubmitterContext() {
   const context = useContext(SubmitterContext);

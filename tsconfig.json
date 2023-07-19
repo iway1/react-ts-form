@@ -21,6 +21,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "resolveJsonModule": true,
+    // uncomment to see full errors!
+    // "noErrorTruncation": true,
     "jsx": "react"
   },
   "types": ["node", "jest", "@testing-library/jest-dom"],

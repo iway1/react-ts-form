@@ -41,7 +41,6 @@ import {
   useStringFieldInfo,
   useFieldInfo,
   useDateFieldInfo,
-  useMaybeFieldName,
 } from "../FieldContext";
 import { expectTypeOf } from "expect-type";
 import { createUniqueFieldSchema } from "../createFieldSchema";
@@ -1610,14 +1609,6 @@ describe("createSchemaForm", () => {
     const NumberSchema = createUniqueFieldSchema(z.number(), "number");
     const mockOnSubmit = jest.fn();
 
-    function TextField({}: { a?: 1 }) {
-      return <div>text</div>;
-    }
-
-    function NumberField() {
-      return <div>number</div>;
-    }
-
     function ObjectField({ objProp }: { objProp: 2 }) {
       return <div>{objProp}</div>;
     }
@@ -1654,7 +1645,13 @@ describe("createSchemaForm", () => {
         onSubmit={mockOnSubmit}
         defaultValues={defaultValues}
         // otherObj tests that nonrecursive mapping still works at the last level of the recursion depth
-        props={{ arrayField: { text: { a: 1 }, otherObj: { objProp: 2 } } }}
+        props={{
+          arrayField: {
+            // this tests that the prop actually makes it to the component not just the type
+            text: { testId: "recursive-custom-text" },
+            otherObj: { objProp: 2 },
+          },
+        }}
         renderAfter={() => {
           return <button type="submit">submit</button>;
         }}
@@ -1676,11 +1673,11 @@ describe("createSchemaForm", () => {
       </Form>
     );
 
-    const textNodes = screen.queryAllByText("text");
+    const textNodes = screen.queryAllByTestId("recursive-custom-text");
     textNodes.forEach((node) => expect(node).toBeInTheDocument());
     expect(textNodes).toHaveLength(2);
 
-    const numberNodes = screen.queryAllByText("number");
+    const numberNodes = screen.queryAllByTestId(defaultNumberInputTestId);
     numberNodes.forEach((node) => expect(node).toBeInTheDocument());
     expect(numberNodes).toHaveLength(2);
 
@@ -1935,7 +1932,7 @@ describe("createSchemaForm", () => {
           <div>
             {value?.map((_val, i) => {
               return (
-                <FormFragment key={i} schema={objectSchema} name={`[${i}]`} />
+                <FormFragment key={i} schema={objectSchema} schemaKey={i} />
               );
             })}
             <button
@@ -2031,7 +2028,7 @@ describe("createSchemaForm", () => {
           <div>
             {value?.map((_val, i) => {
               return (
-                <FormFragment key={i} schema={objectSchema} name={`[${i}]`} />
+                <FormFragment key={i} schema={objectSchema} schemaKey={i} />
               );
             })}
             <button
@@ -2193,18 +2190,10 @@ describe("createSchemaForm", () => {
     });
     it("should render recursive object schemas", async () => {
       const mockOnSubmit = jest.fn();
-      function RecursiveObjectField({
-        name,
-      }: {
-        complexProp1?: boolean;
-        name: string;
-      }) {
-        const namePrefix = useMaybeFieldName();
+      function RecursiveObjectField({}: { complexProp1?: boolean }) {
         const {
           field: { value },
-        } = useTsController<z.infer<RecursiveObjectSchema>>({
-          name: [namePrefix, name].join(""),
-        });
+        } = useTsController<z.infer<RecursiveObjectSchema>>();
         return !!value?.hideThisNode ? (
           <></>
         ) : (
@@ -2230,7 +2219,11 @@ describe("createSchemaForm", () => {
         return (
           <>
             {value?.map((_obj, i) => (
-              <RecursiveObjectField key={i} name={`[${i}]`} />
+              <FormFragmentField
+                key={i}
+                schema={recursiveObjectSchema}
+                schemaKey={i}
+              />
             ))}
           </>
         );
@@ -2275,7 +2268,8 @@ describe("createSchemaForm", () => {
         [recursiveObjectSchema.array(), RecursiveObjectArrayField],
       ] as const;
 
-      const [Form, FormFragment] = createTsFormAndFragment(mapping);
+      const [Form, FormFragment, FormFragmentField] =
+        createTsFormAndFragment(mapping);
 
       const schema = z.object({
         nestedField: recursiveObjectSchema,
