@@ -623,7 +623,7 @@ export function createTsFormAndFragment<
     }
     const name = [namePrefix, stringifySchemaKey(schemaKey)]
       .filter(Boolean)
-      .join(".");
+      .join(typeof schemaKey === "number" ? "" : ".");
     return renderComponentForSchemaDeep(
       schema,
       props as any,

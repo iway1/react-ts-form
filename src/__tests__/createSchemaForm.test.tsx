@@ -1920,9 +1920,9 @@ describe("createSchemaForm", () => {
         .forEach((node) => expect(node).toBeEmptyDOMElement());
       expect(mockOnSubmit).toHaveBeenCalledWith(defaultValues);
     });
-    it("should allow deep rendering", async () => {
+    fit("should allow deep rendering", async () => {
       const mockOnSubmit = jest.fn();
-
+      debugger;
       function ComplexField({}: { complexProp1: boolean }) {
         const {
           field: { value },
@@ -1978,22 +1978,38 @@ describe("createSchemaForm", () => {
         />
       );
       const { rerender } = render(form);
+
+      expect(screen.queryByText("Yay")).toBeInTheDocument();
+      const textNode = screen.queryByTestId(defaultTextInputTestId);
+      if (!textNode) {
+        throw new Error("textNode is null");
+      }
+      expect(textNode).toBeInTheDocument();
+      expect(textNode).toHaveDisplayValue("this");
+      await userEvent.type(textNode, "2");
+      expect(textNode).toHaveDisplayValue("this2");
+      const numberNodes = screen.queryByTestId(defaultNumberInputTestId);
+      expect(numberNodes).toBeInTheDocument();
+      expect(numberNodes).toHaveDisplayValue("4");
+
       const button = screen.getByText("submit");
       await userEvent.click(button);
       // this rerender is currently needed because setError seemingly doesn't rerender the component using useController
       rerender(form);
       screen.debug();
-      expect(screen.queryByText("Yay")).toBeInTheDocument();
-      const textNodes = screen.queryByTestId(defaultTextInputTestId);
-      expect(textNodes).toBeInTheDocument();
-      expect(textNodes).toHaveDisplayValue("this");
-      const numberNodes = screen.queryByTestId(defaultNumberInputTestId);
-      expect(numberNodes).toBeInTheDocument();
-      expect(numberNodes).toHaveDisplayValue("4");
       screen
         .queryAllByTestId(errorMessageTestId)
         .forEach((node) => expect(node).toBeEmptyDOMElement());
-      expect(mockOnSubmit).toHaveBeenCalledWith(defaultValues);
+      expect(mockOnSubmit).toHaveBeenCalledWith({
+        ...defaultValues,
+        nestedField: {
+          ...defaultValues.nestedField,
+          nestedLevel2: {
+            ...defaultValues.nestedField.nestedLevel2,
+            str: "this2",
+          },
+        },
+      });
     });
     //TODO: add props to the nested fields and not just custom props of the component
     it("should render dynamic arrays", async () => {
