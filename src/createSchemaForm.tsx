@@ -568,11 +568,9 @@ export function createTsForm<
       <FormProvider {..._form}>
         <ActualFormComponent {...formProps} onSubmit={submitFn}>
           {renderBefore && renderBefore({ submit: submitFn })}
-          {CustomChildrenComponent ? (
-            <CustomChildrenComponent {...renderedFields} />
-          ) : (
-            renderedFieldNodes
-          )}
+          {CustomChildrenComponent
+            ? CustomChildrenComponent(renderedFields)
+            : renderedFieldNodes}
           {renderAfter && renderAfter({ submit: submitFn })}
         </ActualFormComponent>
       </FormProvider>
