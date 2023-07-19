@@ -1920,6 +1920,81 @@ describe("createSchemaForm", () => {
         .forEach((node) => expect(node).toBeEmptyDOMElement());
       expect(mockOnSubmit).toHaveBeenCalledWith(defaultValues);
     });
+    it("should allow deep rendering", async () => {
+      const mockOnSubmit = jest.fn();
+
+      function ComplexField({}: { complexProp1: boolean }) {
+        const {
+          field: { value },
+        } = useTsController<z.infer<typeof deepObjectSchema>>();
+        return (
+          <div>
+            <div>{value?.displayValue}</div>
+            <FormFragment
+              schema={objectSchema}
+              props={{ num: { suffix: "%" } }}
+              schemaKey={"nestedLevel2"}
+            />
+          </div>
+        );
+      }
+
+      const objectSchema = z.object({
+        num: z.number(),
+        str: z.string(),
+      });
+
+      const deepObjectSchema = z.object({
+        nestedLevel2: objectSchema,
+        displayValue: z.string(),
+      });
+
+      const mapping = [
+        [z.string(), TextField],
+        [z.number(), NumberField],
+        [deepObjectSchema, ComplexField],
+      ] as const;
+
+      const [Form, FormFragment] = createTsFormAndFragment(mapping);
+
+      const schema = z.object({
+        nestedField: deepObjectSchema,
+      });
+      const defaultValues = {
+        nestedField: {
+          nestedLevel2: { num: 4, str: "this" },
+          displayValue: "Yay",
+        },
+      };
+      const form = (
+        <Form
+          schema={schema}
+          onSubmit={mockOnSubmit}
+          defaultValues={defaultValues}
+          props={{
+            nestedField: { complexProp1: true },
+          }}
+          renderAfter={() => <button type="submit">submit</button>}
+        />
+      );
+      const { rerender } = render(form);
+      const button = screen.getByText("submit");
+      await userEvent.click(button);
+      // this rerender is currently needed because setError seemingly doesn't rerender the component using useController
+      rerender(form);
+      screen.debug();
+      expect(screen.queryByText("Yay")).toBeInTheDocument();
+      const textNodes = screen.queryByTestId(defaultTextInputTestId);
+      expect(textNodes).toBeInTheDocument();
+      expect(textNodes).toHaveDisplayValue("this");
+      const numberNodes = screen.queryByTestId(defaultNumberInputTestId);
+      expect(numberNodes).toBeInTheDocument();
+      expect(numberNodes).toHaveDisplayValue("4");
+      screen
+        .queryAllByTestId(errorMessageTestId)
+        .forEach((node) => expect(node).toBeEmptyDOMElement());
+      expect(mockOnSubmit).toHaveBeenCalledWith(defaultValues);
+    });
     //TODO: add props to the nested fields and not just custom props of the component
     it("should render dynamic arrays", async () => {
       const mockOnSubmit = jest.fn();
