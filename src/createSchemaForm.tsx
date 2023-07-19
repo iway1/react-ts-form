@@ -563,19 +563,39 @@ export function createTsForm<
     }
 
     const renderedFields = renderFields(schema, props);
-    const renderedFieldNodes = flattenRenderedElements(renderedFields);
     return (
       <FormProvider {..._form}>
         <ActualFormComponent {...formProps} onSubmit={submitFn}>
           {renderBefore && renderBefore({ submit: submitFn })}
-          {CustomChildrenComponent
-            ? CustomChildrenComponent(renderedFields)
-            : renderedFieldNodes}
+          <Children
+            renderedFields={renderedFields}
+            CustomChildrenComponent={CustomChildrenComponent}
+          />
+
           {renderAfter && renderAfter({ submit: submitFn })}
         </ActualFormComponent>
       </FormProvider>
     );
   };
+
+  // these needs to at least have one component wrapping it or the context won't propogate
+  // i believe that means any hooks used in the CustomChildrenComponent are really tied to the lifecycle of this Children component... 😬
+  // i ~think~ that's ok
+  function Children<SchemaType extends RTFFormSchemaType>({
+    CustomChildrenComponent,
+    renderedFields,
+  }: {
+    renderedFields: RenderedFieldMap<SchemaType>;
+    CustomChildrenComponent?: FunctionComponent<RenderedFieldMap<SchemaType>>;
+  }) {
+    return (
+      <>
+        {CustomChildrenComponent
+          ? CustomChildrenComponent(renderedFields)
+          : flattenRenderedElements(renderedFields)}
+      </>
+    );
+  }
 }
 // handles internal custom submit logic
 // Implements a workaround to allow devs to set form values to undefined (as it breaks react hook form)
