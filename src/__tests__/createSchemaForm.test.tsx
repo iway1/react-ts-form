@@ -1,4 +1,4 @@
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import { z } from "zod";
 import { render, screen, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
@@ -7,6 +7,7 @@ import {
   TestCustomFieldSchema,
   TestForm,
   TestFormWithSubmit,
+  TextField,
   textFieldTestId,
 } from "./utils/testForm";
 import {
@@ -18,7 +19,13 @@ import {
   SPLIT_DESCRIPTION_SYMBOL as DESCRIPTION_SEPARATOR_SYMBOL,
   SPLIT_DESCRIPTION_SYMBOL,
 } from "../getMetaInformationForZodType";
-import { Control, useController, useForm } from "react-hook-form";
+import {
+  Control,
+  useController,
+  useForm,
+  useFormState,
+  useWatch,
+} from "react-hook-form";
 import userEvent from "@testing-library/user-event";
 import {
   useDescription,
@@ -31,6 +38,7 @@ import {
 } from "../FieldContext";
 import { expectTypeOf } from "expect-type";
 import { createUniqueFieldSchema } from "../createFieldSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const testIds = {
   textField: "_text-field",
@@ -1479,7 +1487,7 @@ describe("createSchemaForm", () => {
           return createUniqueFieldSchema(z.date().min(min).max(max), uniqueId);
         },
         get component() {
-          const { min,max, label, uniqueId } = this;
+          const { min, max, label, uniqueId } = this;
 
           const ArrayDateFieldComponent = () => {
             const fieldInfo = useDateFieldInfo();
@@ -1846,5 +1854,85 @@ describe("createSchemaForm", () => {
 
     const inputs = screen.getAllByTestId(/dynamic-array-input/);
     expect(inputs.length).toBe(3);
+  });
+  describe("CustomChildComponent", () => {
+    it("should not drop focus on rerender", async () => {
+      const schema = z.object({
+        fieldOne: z.string().regex(/moo/),
+        fieldTwo: z.string(),
+      });
+
+      const Form = createTsForm([[z.string(), TextField]] as const, {
+        FormComponent: ({
+          children,
+        }: {
+          onSubmit: () => void;
+          children: ReactNode;
+        }) => {
+          const { isSubmitting } = useFormState();
+          return (
+            <form>
+              {children}
+              {isSubmitting}
+            </form>
+          );
+        },
+      });
+
+      const TestComponent = () => {
+        const form = useForm<z.infer<typeof schema>>({
+          mode: "onChange",
+          resolver: zodResolver(schema),
+        });
+        const values = {
+          ...form.getValues(),
+          ...useWatch({ control: form.control }),
+        };
+
+        return (
+          <Form
+            form={form}
+            schema={schema}
+            defaultValues={{}}
+            props={{
+              fieldOne: {
+                testId: "fieldOne",
+                beforeElement: <>Moo{JSON.stringify(values)}</>,
+              },
+              fieldTwo: { testId: "fieldTwo" },
+            }}
+            onSubmit={() => {}}
+          >
+            {(fields) => {
+              const { isDirty } = useFormState();
+              const [state, setState] = useState(0);
+              useEffect(() => {
+                setState(1);
+              }, []);
+              return (
+                <>
+                  {Object.values(fields)}
+                  <div data-testid="dirty">{JSON.stringify(isDirty)}</div>
+                  <div data-testid="state">{state}</div>
+                </>
+              );
+            }}
+          </Form>
+        );
+      };
+      render(<TestComponent />);
+      const fieldOne = screen.queryByTestId("fieldOne");
+      if (!fieldOne) throw new Error("fieldOne not found");
+      fieldOne.focus();
+      expect(fieldOne).toHaveFocus();
+      await userEvent.type(fieldOne, "t");
+      expect(fieldOne).toHaveFocus();
+      await userEvent.type(fieldOne, "2");
+      expect(fieldOne).toHaveFocus();
+      // verify that context and stateful hooks still work
+      expect(screen.queryByTestId("dirty")).toHaveTextContent("true");
+      expect(screen.queryByTestId("state")).toHaveTextContent("1");
+      screen.debug();
+    });
   });
 });
