@@ -1855,7 +1855,7 @@ describe("createSchemaForm", () => {
     const inputs = screen.getAllByTestId(/dynamic-array-input/);
     expect(inputs.length).toBe(3);
   });
-  describe("CustomChildComponent", () => {
+  describe("CustomChildRenderProp", () => {
     it("should not drop focus on rerender", async () => {
       const schema = z.object({
         fieldOne: z.string().regex(/moo/),

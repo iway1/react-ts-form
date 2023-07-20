@@ -1,7 +1,7 @@
 import React, {
   ForwardRefExoticComponent,
   Fragment,
-  FunctionComponent,
+  ReactElement,
   ReactNode,
   RefAttributes,
   useEffect,
@@ -240,6 +240,10 @@ export type RenderedFieldMap<
         : JSX.Element;
     };
 
+export type CustomChildRenderProp<SchemaType extends RTFFormSchemaType> = (
+  fieldMap: RenderedFieldMap<SchemaType>
+) => ReactElement<any, any> | null;
+
 export type RTFFormProps<
   Mapping extends FormComponentMapping,
   SchemaType extends z.AnyZodObject | ZodEffects<any, any>,
@@ -294,7 +298,7 @@ export type RTFFormProps<
    * ```
    */
   form?: UseFormReturn<z.infer<SchemaType>>;
-  children?: FunctionComponent<RenderedFieldMap<SchemaType>>;
+  children?: CustomChildRenderProp<SchemaType>;
 } & RequireKeysWithRequiredChildren<{
   /**
    * Props to pass to the individual form components. The keys of `props` will be the names of your form properties in the form schema, and they will
@@ -420,7 +424,7 @@ export function createTsForm<
     renderAfter,
     renderBefore,
     form,
-    children: CustomChildrenComponent,
+    children,
   }: RTFFormProps<Mapping, SchemaType, PropsMapType, FormType>) {
     const useFormResultInitialValue = useRef<
       undefined | ReturnType<typeof useForm>
@@ -567,9 +571,9 @@ export function createTsForm<
       <FormProvider {..._form}>
         <ActualFormComponent {...formProps} onSubmit={submitFn}>
           {renderBefore && renderBefore({ submit: submitFn })}
-          <Children
+          <FormChildren
             renderedFields={renderedFields}
-            CustomChildrenComponent={CustomChildrenComponent}
+            customChildRenderProp={children}
           />
 
           {renderAfter && renderAfter({ submit: submitFn })}
@@ -579,19 +583,19 @@ export function createTsForm<
   };
 
   // these needs to at least have one component wrapping it or the context won't propogate
-  // i believe that means any hooks used in the CustomChildrenComponent are really tied to the lifecycle of this Children component... 😬
+  // i believe that means any hooks used in the CustomChildRenderProp are really tied to the lifecycle of this Children component... 😬
   // i ~think~ that's ok
-  function Children<SchemaType extends RTFFormSchemaType>({
-    CustomChildrenComponent,
+  function FormChildren<SchemaType extends RTFFormSchemaType>({
+    customChildRenderProp,
     renderedFields,
   }: {
     renderedFields: RenderedFieldMap<SchemaType>;
-    CustomChildrenComponent?: FunctionComponent<RenderedFieldMap<SchemaType>>;
+    customChildRenderProp?: CustomChildRenderProp<SchemaType>;
   }) {
     return (
       <>
-        {CustomChildrenComponent
-          ? CustomChildrenComponent(renderedFields)
+        {customChildRenderProp
+          ? customChildRenderProp(renderedFields)
           : flattenRenderedElements(renderedFields)}
       </>
     );
@@ -666,7 +670,7 @@ export type RenderedElement =
 export type RenderedObjectElements = { [key: string]: RenderedElement };
 
 /***
- * Can be useful in CustomChildComponents to flatten the rendered field map at a given leve
+ * Can be useful in CustomChildRenderProp to flatten the rendered field map at a given leve
  */
 export function flattenRenderedElements(val: RenderedElement): JSX.Element[] {
   return Array.isArray(val)
