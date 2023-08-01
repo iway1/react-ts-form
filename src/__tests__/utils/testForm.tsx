@@ -13,7 +13,9 @@ export const errorMessageTestId = "error-message";
 
 export function ErrorMessage() {
   const { error } = useTsController();
-  return <div data-testid={errorMessageTestId}>{error?.errorMessage}</div>;
+  return !error ? null : (
+    <div data-testid={errorMessageTestId}>{error?.errorMessage}</div>
+  );
 }
 
 export function TextField(props: {

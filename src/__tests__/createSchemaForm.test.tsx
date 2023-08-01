@@ -1916,14 +1916,11 @@ describe("createSchemaForm", () => {
       const numberNodes = screen.queryByTestId(defaultNumberInputTestId);
       expect(numberNodes).toBeInTheDocument();
       expect(numberNodes).toHaveDisplayValue("4");
-      screen
-        .queryAllByTestId(errorMessageTestId)
-        .forEach((node) => expect(node).toBeEmptyDOMElement());
+      expect(screen.queryAllByTestId(errorMessageTestId)).toHaveLength(0);
       expect(mockOnSubmit).toHaveBeenCalledWith(defaultValues);
     });
     it("should allow deep rendering", async () => {
       const mockOnSubmit = jest.fn();
-      debugger;
       function ComplexField({ complexProp1 }: { complexProp1: boolean }) {
         const {
           field: { value },
@@ -1999,10 +1996,7 @@ describe("createSchemaForm", () => {
       await userEvent.click(button);
       // this rerender is currently needed because setError seemingly doesn't rerender the component using useController
       rerender(form);
-      screen.debug();
-      screen
-        .queryAllByTestId(errorMessageTestId)
-        .forEach((node) => expect(node).toBeEmptyDOMElement());
+      expect(screen.queryAllByTestId(errorMessageTestId)).toHaveLength(0);
       expect(mockOnSubmit).toHaveBeenCalledWith({
         ...defaultValues,
         nestedField: {
@@ -2108,9 +2102,7 @@ describe("createSchemaForm", () => {
       expect(basicNodes[2]).toHaveDisplayValue("4");
       expect(basicNodes[1]).toHaveDisplayValue(addedValue.str);
       expect(basicNodes[3]).toHaveDisplayValue(addedValue.num.toString());
-      screen
-        .queryAllByTestId(errorMessageTestId)
-        .forEach((node) => expect(node).toBeEmptyDOMElement());
+      expect(screen.queryAllByTestId(errorMessageTestId)).toHaveLength(0);
       expect(mockOnSubmit).toHaveBeenCalledWith({
         ...defaultValues,
         nestedField: [...defaultValues.nestedField, addedValue],
@@ -2203,9 +2195,7 @@ describe("createSchemaForm", () => {
       expect(basicNodes[2]).toHaveDisplayValue("4");
       expect(basicNodes[1]).toHaveDisplayValue(addedValue.str);
       expect(basicNodes[3]).toHaveDisplayValue(addedValue.num.toString());
-      screen
-        .queryAllByTestId(errorMessageTestId)
-        .forEach((node) => expect(node).toBeEmptyDOMElement());
+      expect(screen.queryAllByTestId(errorMessageTestId)).toHaveLength(0);
       expect(mockOnSubmit).toHaveBeenCalledWith({
         ...defaultValues,
         nestedField: [...defaultValues.nestedField, addedValue],
@@ -2223,7 +2213,6 @@ describe("createSchemaForm", () => {
 
     it("should be able to split up and reorder complex schemas", async () => {
       const mockOnSubmit = jest.fn();
-      debugger;
       function ComplexField({}: { complexProp1: boolean }) {
         return (
           <div>
@@ -2291,9 +2280,7 @@ describe("createSchemaForm", () => {
       const booleanNodes = screen.queryByTestId(defaultBooleanInputTestId);
       expect(booleanNodes).toBeInTheDocument();
       expect(booleanNodes).toBeChecked();
-      screen
-        .queryAllByTestId(errorMessageTestId)
-        .forEach((node) => expect(node).toBeEmptyDOMElement());
+      expect(screen.queryAllByTestId(errorMessageTestId)).toHaveLength(0);
       expect(mockOnSubmit).toHaveBeenCalledWith(defaultValues);
     });
     it("should render recursive object schemas", async () => {
@@ -2419,9 +2406,7 @@ describe("createSchemaForm", () => {
       const numberNodes = screen.queryByTestId(defaultNumberInputTestId);
       expect(numberNodes).toBeInTheDocument();
       expect(numberNodes).toHaveDisplayValue("4");
-      screen
-        .queryAllByTestId(errorMessageTestId)
-        .forEach((node) => expect(node).toBeEmptyDOMElement());
+      expect(screen.queryAllByTestId(errorMessageTestId)).toHaveLength(0);
       expect(mockOnSubmit).toHaveBeenCalledWith(defaultValues);
     });
   });
