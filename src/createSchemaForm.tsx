@@ -1,7 +1,7 @@
 import React, {
   ForwardRefExoticComponent,
   Fragment,
-  FunctionComponent,
+  ReactElement,
   ReactNode,
   RefAttributes,
   createContext,
@@ -243,6 +243,10 @@ export type RenderedFieldMap<
         : JSX.Element;
     };
 
+export type CustomChildRenderProp<SchemaType extends RTFFormSchemaType> = (
+  fieldMap: RenderedFieldMap<SchemaType>
+) => ReactElement<any, any> | null;
+
 export type RTFFormSpecificProps<
   SchemaType extends z.AnyZodObject | ZodEffects<any, any>,
   FormType extends FormComponent = "form"
@@ -311,7 +315,7 @@ export type RTFSharedFormProps<
    */
   schema: SchemaType;
 
-  children?: FunctionComponent<RenderedFieldMap<SchemaType>>;
+  children?: CustomChildRenderProp<SchemaType>;
 } & RequireKeysWithRequiredChildren<{
   /**
    * Props to pass to the individual form components. The keys of `props` will be the names of your form properties in the form schema, and they will
@@ -471,7 +475,7 @@ export function createTsFormAndFragment<
     renderAfter,
     renderBefore,
     form,
-    children: CustomChildrenComponent,
+    children,
   }: RTFFormProps<Mapping, SchemaType, PropsMapType, FormType>) {
     const useFormResultInitialValue = useRef<
       undefined | ReturnType<typeof useForm>
@@ -511,7 +515,7 @@ export function createTsFormAndFragment<
               {...({
                 schema,
                 props,
-                children: CustomChildrenComponent,
+                children,
               } as any)}
             />
             {renderBefore?.({ submit: submitFn })}
@@ -659,7 +663,7 @@ export function createTsFormAndFragment<
   function FormFragment<SchemaType extends RTFFormSchemaType>({
     schema,
     props,
-    children: CustomChildrenComponent,
+    children,
     schemaKey,
   }: RTFSharedFormProps<Mapping, SchemaType, PropsMapType> & {
     // when a number schemaKey is assumed to be an array index
@@ -699,20 +703,37 @@ export function createTsFormAndFragment<
     }
 
     const renderedFields = renderFields(schema, props);
-    const renderedFieldNodes = flattenRenderedElements(renderedFields);
     return (
       <>
-        {CustomChildrenComponent ? (
-          <CustomChildrenComponent {...renderedFields} />
-        ) : (
-          renderedFieldNodes
-        )}
+        <FormChildren
+          renderedFields={renderedFields}
+          customChildRenderProp={children}
+        />
       </>
     );
   }
 
   function stringifySchemaKey(schemaKey: string | number | undefined) {
     return typeof schemaKey == "number" ? `[${schemaKey}]` : schemaKey;
+  }
+
+  // these needs to at least have one component wrapping it or the context won't propogate
+  // i believe that means any hooks used in the CustomChildRenderProp are really tied to the lifecycle of this Children component... 😬
+  // i ~think~ that's ok
+  function FormChildren<SchemaType extends RTFFormSchemaType>({
+    customChildRenderProp,
+    renderedFields,
+  }: {
+    renderedFields: RenderedFieldMap<SchemaType>;
+    customChildRenderProp?: CustomChildRenderProp<SchemaType>;
+  }) {
+    return (
+      <>
+        {customChildRenderProp
+          ? customChildRenderProp(renderedFields)
+          : flattenRenderedElements(renderedFields)}
+      </>
+    );
   }
 
   return [TsForm, FormFragment, FormFragmentField] as const;
@@ -806,7 +827,7 @@ export type RenderedElement =
 export type RenderedObjectElements = { [key: string]: RenderedElement };
 
 /***
- * Can be useful in CustomChildComponents to flatten the rendered field map at a given leve
+ * Can be useful in CustomChildRenderProp to flatten the rendered field map at a given leve
  */
 export function flattenRenderedElements(val: RenderedElement): JSX.Element[] {
   return Array.isArray(val)
