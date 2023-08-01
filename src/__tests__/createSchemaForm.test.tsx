@@ -17,6 +17,7 @@ import {
   textFieldTestId,
 } from "./utils/testForm";
 import {
+  PropType,
   createTsForm,
   createTsFormAndFragment,
   noMatchingSchemaErrorMessage,
@@ -1335,8 +1336,7 @@ describe("createSchemaForm", () => {
     const defaultEmail = "john@example.com";
 
     const DefaultTextField = () => {
-      // @ts-expect-error
-      const { defaultValue, type, zodType } = useFieldInfo();
+      const { defaultValue } = useFieldInfo();
 
       expect(defaultValue).toBe(defaultEmail);
 
@@ -1582,7 +1582,7 @@ describe("createSchemaForm", () => {
       nestedField: { text: "name", age: 9 },
       nestedField2: { bool: true },
     };
-    // TODO: test validation
+
     render(
       <Form
         schema={schema}
@@ -1862,9 +1862,10 @@ describe("createSchemaForm", () => {
     it("should provide a nested renderer for use in complex components", async () => {
       const mockOnSubmit = jest.fn();
 
-      function ComplexField({}: { complexProp1: boolean }) {
+      function ComplexField({ complexProp1 }: { complexProp1: boolean }) {
         return (
           <div>
+            {complexProp1 && <div>complexProp1</div>}
             <FormFragment
               schema={objectSchema}
               props={{ num: { suffix: "%" } }}
@@ -1908,7 +1909,7 @@ describe("createSchemaForm", () => {
       await userEvent.click(button);
       // this rerender is currently needed because setError seemingly doesn't rerender the component using useController
       rerender(form);
-
+      expect(screen.queryByText("complexProp1")).toBeInTheDocument();
       const textNodes = screen.queryByTestId(defaultTextInputTestId);
       expect(textNodes).toBeInTheDocument();
       expect(textNodes).toHaveDisplayValue("this");
@@ -1920,15 +1921,16 @@ describe("createSchemaForm", () => {
         .forEach((node) => expect(node).toBeEmptyDOMElement());
       expect(mockOnSubmit).toHaveBeenCalledWith(defaultValues);
     });
-    fit("should allow deep rendering", async () => {
+    it("should allow deep rendering", async () => {
       const mockOnSubmit = jest.fn();
       debugger;
-      function ComplexField({}: { complexProp1: boolean }) {
+      function ComplexField({ complexProp1 }: { complexProp1: boolean }) {
         const {
           field: { value },
         } = useTsController<z.infer<typeof deepObjectSchema>>();
         return (
           <div>
+            {complexProp1 && <div>complexProp1</div>}
             <div>{value?.displayValue}</div>
             <FormFragment
               schema={objectSchema}
@@ -1984,6 +1986,7 @@ describe("createSchemaForm", () => {
       if (!textNode) {
         throw new Error("textNode is null");
       }
+      expect(screen.queryByText("complexProp1")).toBeInTheDocument();
       expect(textNode).toBeInTheDocument();
       expect(textNode).toHaveDisplayValue("this");
       await userEvent.type(textNode, "2");
@@ -2015,15 +2018,27 @@ describe("createSchemaForm", () => {
     it("should render dynamic arrays", async () => {
       const mockOnSubmit = jest.fn();
       const addedValue = { num: 3, str: "this2" };
-      function ComplexField({}: { complexProp1: boolean }) {
+      function ComplexField({
+        complexProp1,
+        ...restProps
+      }: { complexProp1: boolean } & PropType<
+        typeof mapping,
+        typeof objectSchema
+      >) {
         const {
           field: { value, onChange },
         } = useTsController<z.infer<typeof complexSchema>>();
         return (
           <div>
+            {complexProp1 && <div>complexProp1</div>}
             {value?.map((_val, i) => {
               return (
-                <FormFragment key={i} schema={objectSchema} schemaKey={i} />
+                <FormFragment
+                  key={i}
+                  schema={objectSchema}
+                  schemaKey={i}
+                  props={restProps}
+                />
               );
             })}
             <button
@@ -2070,12 +2085,11 @@ describe("createSchemaForm", () => {
           onSubmit={mockOnSubmit}
           defaultValues={defaultValues}
           props={{
-            nestedField: { complexProp1: true },
+            nestedField: { complexProp1: true, num: { suffix: "%" } },
           }}
           renderAfter={() => <button type="submit">submit</button>}
         />
       );
-      // TODO: test validation
       const { rerender } = render(form);
       await userEvent.click(screen.getByText("Add item"));
       await userEvent.click(screen.getByText("submit"));
@@ -2085,8 +2099,10 @@ describe("createSchemaForm", () => {
       const basicNodes = [
         ...screen.queryAllByTestId(defaultTextInputTestId),
         ...screen.queryAllByTestId(defaultNumberInputTestId),
+        screen.queryByText("complexProp1"),
+        ...screen.queryAllByText("%"),
       ];
-      expect(basicNodes).toHaveLength(4);
+      expect(basicNodes).toHaveLength(7);
       basicNodes.forEach((node) => expect(node).toBeInTheDocument());
       expect(basicNodes[0]).toHaveDisplayValue("this");
       expect(basicNodes[2]).toHaveDisplayValue("4");
@@ -2171,7 +2187,7 @@ describe("createSchemaForm", () => {
           renderAfter={() => <button type="submit">submit</button>}
         />
       );
-      // TODO: test validation
+
       const { rerender } = render(form);
       await userEvent.click(screen.getByText("Add item"));
       await userEvent.click(screen.getByText("submit"));
@@ -2271,6 +2287,7 @@ describe("createSchemaForm", () => {
       const numberNodes = screen.queryByTestId(defaultNumberInputTestId);
       expect(numberNodes).toBeInTheDocument();
       expect(numberNodes).toHaveDisplayValue("4");
+      expect(screen.queryByText("%")).toBeInTheDocument();
       const booleanNodes = screen.queryByTestId(defaultBooleanInputTestId);
       expect(booleanNodes).toBeInTheDocument();
       expect(booleanNodes).toBeChecked();
