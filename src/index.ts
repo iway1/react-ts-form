@@ -9,5 +9,6 @@ export {
   useStringFieldInfo,
   useNumberFieldInfo,
   useDateFieldInfo,
+  useMaybeFieldName,
 } from "./FieldContext";
 export type { RTFSupportedZodTypes } from "./supportedZodTypes";
