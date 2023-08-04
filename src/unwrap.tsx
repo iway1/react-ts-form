@@ -1,6 +1,7 @@
 import {
   z,
   ZodArray,
+  ZodDefault,
   ZodEnum,
   ZodFirstPartyTypeKind,
   ZodNullable,
@@ -73,26 +74,27 @@ export function unwrapEffects(effects: RTFSupportedZodTypes) {
   return effects;
 }
 
+export type UnwrapPreviousLevel = [never, 0, 1, 2, 3];
+export type UnwrapMaxRecursionDepth = 3;
+
 /**
- * I'd like this to be recursive but it creates an "infinite instantiation error" if I make it call itself.
- * This is probably just as good for normal usage?
+ * At most we can see for a given type z.enum().optional().nullable().default("foo")
+ * so we limit recursion depth to 3
+ * then we can see the same again for the inner type of an array
+ * z.enum(["moo"]).optional().nullable().default('moo').array().optional().nullable().default(['moo'])
+ * so we restart the counter for array only, leaving us with a max of 6
+ * and ts seems ok with this because the type is very simple
  */
-export type UnwrapZodType<T extends RTFSupportedZodTypes> =
-  T extends ZodOptional<any>
-    ? T["_def"]["innerType"] extends ZodNullable<any>
-      ? GenericizeLeafTypes<T["_def"]["innerType"]["_def"]["innerType"]>
-      : GenericizeLeafTypes<T["_def"]["innerType"]>
-    : T extends ZodNullable<any>
-    ? T["_def"]["innerType"] extends ZodOptional<any>
-      ? GenericizeLeafTypes<T["_def"]["innerType"]["_def"]["innerType"]>
-      : GenericizeLeafTypes<T["_def"]["innerType"]>
-    : GenericizeLeafTypes<T>;
-
-export type GenericizeLeafTypes<T extends RTFSupportedZodTypes> =
-  ArrayAsLengthAgnostic<EnumAsAnyEnum<T>>;
-
-export type ArrayAsLengthAgnostic<T extends RTFSupportedZodTypes> =
-  T extends ZodArray<any, any> ? ZodArray<T["element"]> : T;
-
-export type EnumAsAnyEnum<T extends RTFSupportedZodTypes> =
-  T extends ZodEnum<any> ? ZodEnum<any> : T;
+export type UnwrapZodType<
+  T extends RTFSupportedZodTypes,
+  Level extends UnwrapPreviousLevel[number] = UnwrapMaxRecursionDepth
+> = [Level] extends [never]
+  ? never
+  : T extends ZodOptional<any> | ZodNullable<any> | ZodDefault<any>
+  ? UnwrapZodType<T["_def"]["innerType"], UnwrapPreviousLevel[Level]>
+  : T extends ZodArray<any, any>
+  ? // allow another 4 levels of recursiion for the array
+    ZodArray<UnwrapZodType<T["element"], UnwrapMaxRecursionDepth>>
+  : T extends ZodEnum<any>
+  ? ZodEnum<any>
+  : T;
