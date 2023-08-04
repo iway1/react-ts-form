@@ -93,7 +93,7 @@ export type UnwrapZodType<
   : T extends ZodOptional<any> | ZodNullable<any> | ZodDefault<any>
   ? UnwrapZodType<T["_def"]["innerType"], UnwrapPreviousLevel[Level]>
   : T extends ZodArray<any, any>
-  ? // allow another 4 levels of recursiion for the array
+  ? // allow another 3 levels of recursion for the array
     ZodArray<UnwrapZodType<T["element"], UnwrapMaxRecursionDepth>>
   : T extends ZodEnum<any>
   ? ZodEnum<any>
