@@ -128,8 +128,8 @@ export function useTsController<FieldType extends any>() {
     } else {
       setIsUndefined(false);
       context.removeFromCoerceUndefined(context.name);
-      onChange(value);
     }
+    onChange(value);
   }
 
   useEffect(() => {
