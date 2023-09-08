@@ -15,6 +15,7 @@ import {
   ZodString,
   ZodTuple,
   ZodEffects,
+  ZodLazy,
 } from "zod";
 
 /**
@@ -39,4 +40,5 @@ export type RTFBaseZodType =
 export type RTFSupportedZodTypes =
   | RTFBaseZodType
   | ZodOptional<any>
-  | ZodNullable<any>;
+  | ZodNullable<any>
+  | ZodLazy<any>;

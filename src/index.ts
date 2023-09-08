@@ -1,5 +1,5 @@
 export { createUniqueFieldSchema } from "./createFieldSchema";
-export { createTsForm } from "./createSchemaForm";
+export { createTsForm, createTsFormAndFragment } from "./createSchemaForm";
 export {
   useDescription,
   useReqDescription,
@@ -9,5 +9,6 @@ export {
   useStringFieldInfo,
   useNumberFieldInfo,
   useDateFieldInfo,
+  useMaybeFieldName,
 } from "./FieldContext";
 export type { RTFSupportedZodTypes } from "./supportedZodTypes";

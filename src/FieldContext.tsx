@@ -73,6 +73,11 @@ export function FieldContextProvider({
   );
 }
 
+export function useMaybeFieldName() {
+  const context = useContext(FieldContext);
+  return context?.name;
+}
+
 function useContextProt(name: string) {
   const context = useContext(FieldContext);
   if (!context)
@@ -106,7 +111,7 @@ export function useTsController<FieldType extends any>() {
     ? DeepPartial<FieldType> | undefined
     : FieldType | undefined;
   // Just gives better types to useController
-  const controller = useController(context) as any as Omit<
+  const controller = useController(context) as unknown as Omit<
     UseControllerReturn,
     "field"
   > & {

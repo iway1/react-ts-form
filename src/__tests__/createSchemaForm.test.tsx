@@ -3,7 +3,13 @@ import { z } from "zod";
 import { render, screen, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import {
+  BooleanField,
   customFieldTestId,
+  defaultBooleanInputTestId,
+  defaultNumberInputTestId,
+  defaultTextInputTestId,
+  errorMessageTestId,
+  NumberField,
   TestCustomFieldSchema,
   TestForm,
   TestFormWithSubmit,
@@ -11,7 +17,9 @@ import {
   textFieldTestId,
 } from "./utils/testForm";
 import {
+  PropType,
   createTsForm,
+  createTsFormAndFragment,
   noMatchingSchemaErrorMessage,
   useFormResultValueChangedErrorMesssage,
 } from "../createSchemaForm";
@@ -22,6 +30,7 @@ import {
 import {
   Control,
   useController,
+  useFieldArray,
   useForm,
   useFormState,
   useWatch,
@@ -1330,8 +1339,7 @@ describe("createSchemaForm", () => {
     const defaultEmail = "john@example.com";
 
     const DefaultTextField = () => {
-      // @ts-expect-error
-      const { defaultValue, type, zodType } = useFieldInfo();
+      const { defaultValue } = useFieldInfo();
 
       expect(defaultValue).toBe(defaultEmail);
 
@@ -1577,7 +1585,7 @@ describe("createSchemaForm", () => {
       nestedField: { text: "name", age: 9 },
       nestedField2: { bool: true },
     };
-    // TODO: test validation
+
     render(
       <Form
         schema={schema}
@@ -1597,20 +1605,12 @@ describe("createSchemaForm", () => {
     expect(textNodes).toBeInTheDocument();
     const numberNodes = screen.queryByText("number");
     expect(numberNodes).toBeInTheDocument();
-    expect(screen.queryByTestId("error")).toHaveTextContent("");
+    expect(screen.queryByTestId("error")).toBeEmptyDOMElement();
     expect(mockOnSubmit).toHaveBeenCalledWith(defaultValues);
   });
   it("should render two copies of an object schema if in an unmapped array schema", async () => {
     const NumberSchema = createUniqueFieldSchema(z.number(), "number");
     const mockOnSubmit = jest.fn();
-
-    function TextField({}: { a?: 1 }) {
-      return <div>text</div>;
-    }
-
-    function NumberField() {
-      return <div>number</div>;
-    }
 
     function ObjectField({ objProp }: { objProp: 2 }) {
       return <div>{objProp}</div>;
@@ -1648,7 +1648,13 @@ describe("createSchemaForm", () => {
         onSubmit={mockOnSubmit}
         defaultValues={defaultValues}
         // otherObj tests that nonrecursive mapping still works at the last level of the recursion depth
-        props={{ arrayField: { text: { a: 1 }, otherObj: { objProp: 2 } } }}
+        props={{
+          arrayField: {
+            // this tests that the prop actually makes it to the component not just the type
+            text: { testId: "recursive-custom-text" },
+            otherObj: { objProp: 2 },
+          },
+        }}
         renderAfter={() => {
           return <button type="submit">submit</button>;
         }}
@@ -1670,11 +1676,11 @@ describe("createSchemaForm", () => {
       </Form>
     );
 
-    const textNodes = screen.queryAllByText("text");
+    const textNodes = screen.queryAllByTestId("recursive-custom-text");
     textNodes.forEach((node) => expect(node).toBeInTheDocument());
     expect(textNodes).toHaveLength(2);
 
-    const numberNodes = screen.queryAllByText("number");
+    const numberNodes = screen.queryAllByTestId(defaultNumberInputTestId);
     numberNodes.forEach((node) => expect(node).toBeInTheDocument());
     expect(numberNodes).toHaveLength(2);
 
@@ -1855,84 +1861,636 @@ describe("createSchemaForm", () => {
     const inputs = screen.getAllByTestId(/dynamic-array-input/);
     expect(inputs.length).toBe(3);
   });
-  describe("CustomChildRenderProp", () => {
-    it("should not drop focus on rerender", async () => {
-      const schema = z.object({
-        fieldOne: z.string().regex(/moo/),
-        fieldTwo: z.string(),
+  describe("FormFragment", () => {
+    it("should provide a nested renderer for use in complex components", async () => {
+      const mockOnSubmit = jest.fn();
+
+      function ComplexField({ complexProp1 }: { complexProp1: boolean }) {
+        return (
+          <div>
+            {complexProp1 && <div>complexProp1</div>}
+            <FormFragment
+              schema={objectSchema}
+              props={{ num: { suffix: "%" } }}
+            />
+          </div>
+        );
+      }
+
+      const objectSchema = z.object({
+        num: z.number(),
+        str: z.string(),
       });
 
-      const Form = createTsForm([[z.string(), TextField]] as const, {
-        FormComponent: ({
-          children,
-        }: {
-          onSubmit: () => void;
-          children: ReactNode;
-        }) => {
-          const { isSubmitting } = useFormState();
-          return (
-            <form>
-              {children}
-              {isSubmitting}
-            </form>
-          );
+      const mapping = [
+        [z.string(), TextField],
+        [z.number(), NumberField],
+        [objectSchema, ComplexField],
+      ] as const;
+
+      const [Form, FormFragment] = createTsFormAndFragment(mapping);
+
+      const schema = z.object({
+        nestedField: objectSchema,
+      });
+      const defaultValues = {
+        nestedField: { num: 4, str: "this" },
+      };
+      const form = (
+        <Form
+          schema={schema}
+          onSubmit={mockOnSubmit}
+          defaultValues={defaultValues}
+          props={{
+            nestedField: { complexProp1: true },
+          }}
+          renderAfter={() => <button type="submit">submit</button>}
+        />
+      );
+      const { rerender } = render(form);
+      const button = screen.getByText("submit");
+      await userEvent.click(button);
+      // this rerender is currently needed because setError seemingly doesn't rerender the component using useController
+      rerender(form);
+      expect(screen.queryByText("complexProp1")).toBeInTheDocument();
+      const textNodes = screen.queryByTestId(defaultTextInputTestId);
+      expect(textNodes).toBeInTheDocument();
+      expect(textNodes).toHaveDisplayValue("this");
+      const numberNodes = screen.queryByTestId(defaultNumberInputTestId);
+      expect(numberNodes).toBeInTheDocument();
+      expect(numberNodes).toHaveDisplayValue("4");
+      expect(screen.queryAllByTestId(errorMessageTestId)).toHaveLength(0);
+      expect(mockOnSubmit).toHaveBeenCalledWith(defaultValues);
+    });
+    it("should allow deep rendering", async () => {
+      const mockOnSubmit = jest.fn();
+      function ComplexField({ complexProp1 }: { complexProp1: boolean }) {
+        const {
+          field: { value },
+        } = useTsController<z.infer<typeof deepObjectSchema>>();
+        return (
+          <div>
+            {complexProp1 && <div>complexProp1</div>}
+            <div>{value?.displayValue}</div>
+            <FormFragment
+              schema={objectSchema}
+              props={{ num: { suffix: "%" } }}
+              schemaKey={"nestedLevel2"}
+            />
+          </div>
+        );
+      }
+
+      const objectSchema = z.object({
+        num: z.number(),
+        str: z.string(),
+      });
+
+      const deepObjectSchema = z.object({
+        nestedLevel2: objectSchema,
+        displayValue: z.string(),
+      });
+
+      const mapping = [
+        [z.string(), TextField],
+        [z.number(), NumberField],
+        [deepObjectSchema, ComplexField],
+      ] as const;
+
+      const [Form, FormFragment] = createTsFormAndFragment(mapping);
+
+      const schema = z.object({
+        nestedField: deepObjectSchema,
+      });
+      const defaultValues = {
+        nestedField: {
+          nestedLevel2: { num: 4, str: "this" },
+          displayValue: "Yay",
+        },
+      };
+      const form = (
+        <Form
+          schema={schema}
+          onSubmit={mockOnSubmit}
+          defaultValues={defaultValues}
+          props={{
+            nestedField: { complexProp1: true },
+          }}
+          renderAfter={() => <button type="submit">submit</button>}
+        />
+      );
+      const { rerender } = render(form);
+
+      expect(screen.queryByText("Yay")).toBeInTheDocument();
+      const textNode = screen.queryByTestId(defaultTextInputTestId);
+      if (!textNode) {
+        throw new Error("textNode is null");
+      }
+      expect(screen.queryByText("complexProp1")).toBeInTheDocument();
+      expect(textNode).toBeInTheDocument();
+      expect(textNode).toHaveDisplayValue("this");
+      await userEvent.type(textNode, "2");
+      expect(textNode).toHaveDisplayValue("this2");
+      const numberNodes = screen.queryByTestId(defaultNumberInputTestId);
+      expect(numberNodes).toBeInTheDocument();
+      expect(numberNodes).toHaveDisplayValue("4");
+
+      const button = screen.getByText("submit");
+      await userEvent.click(button);
+      // this rerender is currently needed because setError seemingly doesn't rerender the component using useController
+      rerender(form);
+      expect(screen.queryAllByTestId(errorMessageTestId)).toHaveLength(0);
+      expect(mockOnSubmit).toHaveBeenCalledWith({
+        ...defaultValues,
+        nestedField: {
+          ...defaultValues.nestedField,
+          nestedLevel2: {
+            ...defaultValues.nestedField.nestedLevel2,
+            str: "this2",
+          },
         },
       });
-
-      const TestComponent = () => {
-        const form = useForm<z.infer<typeof schema>>({
-          mode: "onChange",
-          resolver: zodResolver(schema),
-        });
-        const values = {
-          ...form.getValues(),
-          ...useWatch({ control: form.control }),
-        };
-
-        return (
-          <Form
-            form={form}
-            schema={schema}
-            defaultValues={{}}
-            props={{
-              fieldOne: {
-                testId: "fieldOne",
-                beforeElement: <>Moo{JSON.stringify(values)}</>,
-              },
-              fieldTwo: { testId: "fieldTwo" },
-            }}
-            onSubmit={() => {}}
-          >
-            {(fields) => {
-              const { isDirty } = useFormState();
-              const [state, setState] = useState(0);
-              useEffect(() => {
-                setState(1);
-              }, []);
-              return (
-                <>
-                  {Object.values(fields)}
-                  <div data-testid="dirty">{JSON.stringify(isDirty)}</div>
-                  <div data-testid="state">{state}</div>
-                </>
-              );
-            }}
-          </Form>
-        );
-      };
-      render(<TestComponent />);
-      const fieldOne = screen.queryByTestId("fieldOne");
-      if (!fieldOne) throw new Error("fieldOne not found");
-      fieldOne.focus();
-      expect(fieldOne).toHaveFocus();
-      await userEvent.type(fieldOne, "t");
-      expect(fieldOne).toHaveFocus();
-      await userEvent.type(fieldOne, "2");
-      expect(fieldOne).toHaveFocus();
-      // verify that context and stateful hooks still work
-      expect(screen.queryByTestId("dirty")).toHaveTextContent("true");
-      expect(screen.queryByTestId("state")).toHaveTextContent("1");
-      screen.debug();
     });
+    //TODO: add props to the nested fields and not just custom props of the component
+    it("should render dynamic arrays", async () => {
+      const mockOnSubmit = jest.fn();
+      const addedValue = { num: 3, str: "this2" };
+      function ComplexField({
+        complexProp1,
+        ...restProps
+      }: { complexProp1: boolean } & PropType<
+        typeof mapping,
+        typeof objectSchema
+      >) {
+        const {
+          field: { value, onChange },
+        } = useTsController<z.infer<typeof complexSchema>>();
+        return (
+          <div>
+            {complexProp1 && <div>complexProp1</div>}
+            {value?.map((_val, i) => {
+              return (
+                <FormFragment
+                  key={i}
+                  schema={objectSchema}
+                  schemaKey={i}
+                  props={restProps}
+                />
+              );
+            })}
+            <button
+              onClick={() => {
+                onChange(value?.concat([addedValue]));
+              }}
+            >
+              Add item
+            </button>
+            <button
+              onClick={() => {
+                onChange(value?.slice(0, value.length - 1));
+              }}
+            >
+              Remove item
+            </button>
+          </div>
+        );
+      }
+
+      const objectSchema = z.object({
+        num: z.number(),
+        str: z.string(),
+      });
+
+      const complexSchema = z.array(objectSchema);
+      const mapping = [
+        [z.string(), TextField],
+        [z.number(), NumberField],
+        [complexSchema, ComplexField],
+      ] as const;
+
+      const [Form, FormFragment] = createTsFormAndFragment(mapping);
+
+      const schema = z.object({
+        nestedField: complexSchema,
+      });
+      const defaultValues = {
+        nestedField: [{ num: 4, str: "this" }],
+      };
+      const form = (
+        <Form
+          schema={schema}
+          onSubmit={mockOnSubmit}
+          defaultValues={defaultValues}
+          props={{
+            nestedField: { complexProp1: true, num: { suffix: "%" } },
+          }}
+          renderAfter={() => <button type="submit">submit</button>}
+        />
+      );
+      const { rerender } = render(form);
+      await userEvent.click(screen.getByText("Add item"));
+      await userEvent.click(screen.getByText("submit"));
+      // this rerender is currently needed because setError seemingly doesn't rerender the component using useController
+      rerender(form);
+
+      const basicNodes = [
+        ...screen.queryAllByTestId(defaultTextInputTestId),
+        ...screen.queryAllByTestId(defaultNumberInputTestId),
+        screen.queryByText("complexProp1"),
+        ...screen.queryAllByText("%"),
+      ];
+      expect(basicNodes).toHaveLength(7);
+      basicNodes.forEach((node) => expect(node).toBeInTheDocument());
+      expect(basicNodes[0]).toHaveDisplayValue("this");
+      expect(basicNodes[2]).toHaveDisplayValue("4");
+      expect(basicNodes[1]).toHaveDisplayValue(addedValue.str);
+      expect(basicNodes[3]).toHaveDisplayValue(addedValue.num.toString());
+      expect(screen.queryAllByTestId(errorMessageTestId)).toHaveLength(0);
+      expect(mockOnSubmit).toHaveBeenCalledWith({
+        ...defaultValues,
+        nestedField: [...defaultValues.nestedField, addedValue],
+      });
+      await userEvent.click(screen.getByText("Remove item"));
+      const afterRemoveNodes = [
+        ...screen.queryAllByTestId(defaultTextInputTestId),
+        ...screen.queryAllByTestId(defaultNumberInputTestId),
+      ];
+      expect(afterRemoveNodes).toHaveLength(2);
+      afterRemoveNodes.forEach((node) => expect(node).toBeInTheDocument());
+      expect(afterRemoveNodes[0]).toHaveDisplayValue("this");
+      expect(afterRemoveNodes[1]).toHaveDisplayValue("4");
+    });
+
+    it("should be able to render dynamic arrays with useFieldArray for performance", async () => {
+      const mockOnSubmit = jest.fn();
+      const addedValue = { num: 3, str: "this2" };
+      function ComplexField({ name }: { complexProp1: boolean; name: string }) {
+        const { fields: value, append, remove } = useFieldArray({ name });
+        return (
+          <div>
+            {value?.map((_val, i) => {
+              return (
+                <FormFragment key={i} schema={objectSchema} schemaKey={i} />
+              );
+            })}
+            <button
+              onClick={() => {
+                append(addedValue);
+              }}
+            >
+              Add item
+            </button>
+            <button
+              onClick={() => {
+                remove(value.length - 1);
+              }}
+            >
+              Remove item
+            </button>
+          </div>
+        );
+      }
+
+      const objectSchema = z.object({
+        num: z.number(),
+        str: z.string(),
+      });
+
+      const complexSchema = z.array(objectSchema);
+      const mapping = [
+        [z.string(), TextField],
+        [z.number(), NumberField],
+        [complexSchema, ComplexField],
+      ] as const;
+
+      const [Form, FormFragment] = createTsFormAndFragment(mapping);
+
+      const schema = z.object({
+        nestedField: complexSchema,
+      });
+      const defaultValues = {
+        nestedField: [{ num: 4, str: "this" }],
+      };
+      const form = (
+        <Form
+          schema={schema}
+          onSubmit={mockOnSubmit}
+          defaultValues={defaultValues}
+          props={{
+            nestedField: { complexProp1: true },
+          }}
+          renderAfter={() => <button type="submit">submit</button>}
+        />
+      );
+
+      const { rerender } = render(form);
+      await userEvent.click(screen.getByText("Add item"));
+      await userEvent.click(screen.getByText("submit"));
+      // this rerender is currently needed because setError seemingly doesn't rerender the component using useController
+      rerender(form);
+      const basicNodes = [
+        ...screen.queryAllByTestId(defaultTextInputTestId),
+        ...screen.queryAllByTestId(defaultNumberInputTestId),
+      ];
+      expect(basicNodes).toHaveLength(4);
+      basicNodes.forEach((node) => expect(node).toBeInTheDocument());
+      expect(basicNodes[0]).toHaveDisplayValue("this");
+      expect(basicNodes[2]).toHaveDisplayValue("4");
+      expect(basicNodes[1]).toHaveDisplayValue(addedValue.str);
+      expect(basicNodes[3]).toHaveDisplayValue(addedValue.num.toString());
+      expect(screen.queryAllByTestId(errorMessageTestId)).toHaveLength(0);
+      expect(mockOnSubmit).toHaveBeenCalledWith({
+        ...defaultValues,
+        nestedField: [...defaultValues.nestedField, addedValue],
+      });
+      await userEvent.click(screen.getByText("Remove item"));
+      const afterRemoveNodes = [
+        ...screen.queryAllByTestId(defaultTextInputTestId),
+        ...screen.queryAllByTestId(defaultNumberInputTestId),
+      ];
+      expect(afterRemoveNodes).toHaveLength(2);
+      afterRemoveNodes.forEach((node) => expect(node).toBeInTheDocument());
+      expect(afterRemoveNodes[0]).toHaveDisplayValue("this");
+      expect(afterRemoveNodes[1]).toHaveDisplayValue("4");
+    });
+
+    it("should be able to split up and reorder complex schemas", async () => {
+      const mockOnSubmit = jest.fn();
+      function ComplexField({}: { complexProp1: boolean }) {
+        return (
+          <div>
+            <div>
+              Number and boolean in a row
+              <FormFragment
+                schema={objectSchema
+                  .pick({ bool: true })
+                  .merge(objectSchema.pick({ num: true }))}
+                props={{ num: { suffix: "%" } }}
+              />
+            </div>
+            <div>
+              String fields in a row
+              <FormFragment schema={objectSchema.pick({ str: true })} />
+            </div>
+          </div>
+        );
+      }
+
+      const objectSchema = z.object({
+        num: z.number(),
+        str: z.string(),
+        bool: z.boolean(),
+      });
+
+      const mapping = [
+        [z.string(), TextField],
+        [z.number(), NumberField],
+        [z.boolean(), BooleanField],
+        [objectSchema, ComplexField],
+      ] as const;
+
+      const [Form, FormFragment] = createTsFormAndFragment(mapping);
+
+      const schema = z.object({
+        nestedField: objectSchema,
+      });
+      const defaultValues = {
+        nestedField: { num: 4, str: "this", bool: true },
+      };
+      const form = (
+        <Form
+          schema={schema}
+          onSubmit={mockOnSubmit}
+          defaultValues={defaultValues}
+          props={{
+            nestedField: { complexProp1: true },
+          }}
+          renderAfter={() => <button type="submit">submit</button>}
+        />
+      );
+      const { rerender } = render(form);
+      const button = screen.getByText("submit");
+      await userEvent.click(button);
+      // this rerender is currently needed because setError seemingly doesn't rerender the component using useController
+      rerender(form);
+      const textNodes = screen.queryByTestId(defaultTextInputTestId);
+      expect(textNodes).toBeInTheDocument();
+      expect(textNodes).toHaveDisplayValue("this");
+      const numberNodes = screen.queryByTestId(defaultNumberInputTestId);
+      expect(numberNodes).toBeInTheDocument();
+      expect(numberNodes).toHaveDisplayValue("4");
+      expect(screen.queryByText("%")).toBeInTheDocument();
+      const booleanNodes = screen.queryByTestId(defaultBooleanInputTestId);
+      expect(booleanNodes).toBeInTheDocument();
+      expect(booleanNodes).toBeChecked();
+      expect(screen.queryAllByTestId(errorMessageTestId)).toHaveLength(0);
+      expect(mockOnSubmit).toHaveBeenCalledWith(defaultValues);
+    });
+    it("should render recursive object schemas", async () => {
+      const mockOnSubmit = jest.fn();
+      function RecursiveObjectField({}: { complexProp1?: boolean }) {
+        const {
+          field: { value },
+        } = useTsController<z.infer<RecursiveObjectSchema>>();
+        return !!value?.hideThisNode ? (
+          <></>
+        ) : (
+          <div>
+            {JSON.stringify(value)}
+            <FormFragment
+              schema={recursiveObjectSchema.pick({
+                num: true,
+                str: true,
+                objects: true,
+              })}
+              props={{ num: { suffix: "%" } }}
+            />
+          </div>
+        );
+      }
+
+      function RecursiveObjectArrayField({}: {}) {
+        const {
+          field: { value },
+        } =
+          useTsController<z.infer<RecursiveObjectSchema["shape"]["objects"]>>();
+        return (
+          <>
+            {value?.map((_obj, i) => (
+              <FormFragmentField
+                key={i}
+                schema={recursiveObjectSchema}
+                schemaKey={i}
+              />
+            ))}
+          </>
+        );
+      }
+
+      const baseObjectSchema = z.object({
+        num: z.number(),
+        str: z.string(),
+        hideThisNode: z.boolean().optional(),
+      });
+
+      type ObjectType = z.infer<typeof baseObjectSchema> & {
+        objects?: ObjectType[];
+      };
+
+      type ZodObjectWithShape<S extends z.ZodRawShape, T> = z.ZodObject<
+        S,
+        "strip",
+        z.ZodTypeAny,
+        T,
+        T
+      >;
+
+      type ObjectShape = (typeof baseObjectSchema)["shape"] & {
+        objects: z.ZodOptional<
+          z.ZodLazy<z.ZodArray<ZodObjectWithShape<ObjectShape, ObjectType>>>
+        >;
+      };
+
+      type RecursiveObjectSchema = ZodObjectWithShape<ObjectShape, ObjectType>;
+
+      const recursiveObjectSchema: RecursiveObjectSchema =
+        baseObjectSchema.extend({
+          objects: z.lazy(() => recursiveObjectSchema.array()).optional(),
+        });
+
+      const mapping = [
+        [z.string(), TextField],
+        [z.number(), NumberField],
+        [z.boolean(), BooleanField],
+        [recursiveObjectSchema, RecursiveObjectField],
+        [recursiveObjectSchema.array(), RecursiveObjectArrayField],
+      ] as const;
+
+      const [Form, FormFragment, FormFragmentField] =
+        createTsFormAndFragment(mapping);
+
+      const schema = z.object({
+        nestedField: recursiveObjectSchema,
+      });
+      const defaultValues = {
+        nestedField: {
+          num: 4,
+          str: "this",
+          hideThisNode: false,
+          objects: [
+            {
+              num: 5,
+              str: "whatever",
+              hideThisNode: true,
+              objects: [{ num: 6, str: "whatever2" }],
+            },
+          ],
+        },
+      };
+      const form = (
+        <Form
+          schema={schema}
+          onSubmit={mockOnSubmit}
+          defaultValues={defaultValues}
+          props={{
+            nestedField: { complexProp1: true },
+          }}
+          renderAfter={() => <button type="submit">submit</button>}
+        />
+      );
+      const { rerender } = render(form);
+      const button = screen.getByText("submit");
+      await userEvent.click(button);
+      // this rerender is currently needed because setError seemingly doesn't rerender the component using useController
+      rerender(form);
+      const textNodes = screen.queryByTestId(defaultTextInputTestId);
+      expect(textNodes).toBeInTheDocument();
+      expect(textNodes).toHaveDisplayValue("this");
+      const numberNodes = screen.queryByTestId(defaultNumberInputTestId);
+      expect(numberNodes).toBeInTheDocument();
+      expect(numberNodes).toHaveDisplayValue("4");
+      expect(screen.queryAllByTestId(errorMessageTestId)).toHaveLength(0);
+      expect(mockOnSubmit).toHaveBeenCalledWith(defaultValues);
+    });
+  });
+});
+
+describe("CustomChildRenderProp", () => {
+  it("should not drop focus on rerender", async () => {
+    const schema = z.object({
+      fieldOne: z.string().regex(/moo/),
+      fieldTwo: z.string(),
+    });
+
+    const Form = createTsForm([[z.string(), TextField]] as const, {
+      FormComponent: ({
+        children,
+      }: {
+        onSubmit: () => void;
+        children: ReactNode;
+      }) => {
+        const { isSubmitting } = useFormState();
+        return (
+          <form>
+            {children}
+            {isSubmitting}
+          </form>
+        );
+      },
+    });
+
+    const TestComponent = () => {
+      const form = useForm<z.infer<typeof schema>>({
+        mode: "onChange",
+        resolver: zodResolver(schema),
+      });
+      const values = {
+        ...form.getValues(),
+        ...useWatch({ control: form.control }),
+      };
+
+      return (
+        <Form
+          form={form}
+          schema={schema}
+          defaultValues={{}}
+          props={{
+            fieldOne: {
+              testId: "fieldOne",
+              beforeElement: <>Moo{JSON.stringify(values)}</>,
+            },
+            fieldTwo: { testId: "fieldTwo" },
+          }}
+          onSubmit={() => {}}
+        >
+          {(fields) => {
+            const { isDirty } = useFormState();
+            const [state, setState] = useState(0);
+            useEffect(() => {
+              setState(1);
+            }, []);
+            return (
+              <>
+                {Object.values(fields)}
+                <div data-testid="dirty">{JSON.stringify(isDirty)}</div>
+                <div data-testid="state">{state}</div>
+              </>
+            );
+          }}
+        </Form>
+      );
+    };
+    render(<TestComponent />);
+    const fieldOne = screen.queryByTestId("fieldOne");
+    if (!fieldOne) throw new Error("fieldOne not found");
+    fieldOne.focus();
+    expect(fieldOne).toHaveFocus();
+    await userEvent.type(fieldOne, "t");
+    expect(fieldOne).toHaveFocus();
+    await userEvent.type(fieldOne, "2");
+    expect(fieldOne).toHaveFocus();
+    // verify that context and stateful hooks still work
+    expect(screen.queryByTestId("dirty")).toHaveTextContent("true");
+    expect(screen.queryByTestId("state")).toHaveTextContent("1");
   });
 });

@@ -13,17 +13,29 @@ import {
 } from "./createFieldSchema";
 import { RTFSupportedZodTypes } from "./supportedZodTypes";
 
-const unwrappable = new Set<z.ZodFirstPartyTypeKind>([
+const unwrappableTypes = [
   z.ZodFirstPartyTypeKind.ZodOptional,
   z.ZodFirstPartyTypeKind.ZodNullable,
   z.ZodFirstPartyTypeKind.ZodBranded,
   z.ZodFirstPartyTypeKind.ZodDefault,
-]);
+  z.ZodFirstPartyTypeKind.ZodLazy,
+] as const;
+const unwrappable = new Set(unwrappableTypes);
 
 export type UnwrappedRTFSupportedZodTypes = {
   type: RTFSupportedZodTypes;
   [HIDDEN_ID_PROPERTY]: string | null;
 };
+
+export function assertNever(x: never): never {
+  throw new Error("[assertNever] Unexpected value: " + x);
+}
+
+type UnwrappableType = (typeof unwrappableTypes)[number];
+
+function isUnwrappable(type: ZodFirstPartyTypeKind): type is UnwrappableType {
+  return unwrappable.has(type as UnwrappableType);
+}
 
 export function unwrap(
   type: RTFSupportedZodTypes
@@ -33,7 +45,7 @@ export function unwrap(
   let r = type;
   let unwrappedHiddenId: null | string = null;
 
-  while (unwrappable.has(r._def.typeName)) {
+  while (isUnwrappable(r._def.typeName)) {
     if (isSchemaWithHiddenProperties(r)) {
       unwrappedHiddenId = r._def[HIDDEN_ID_PROPERTY];
     }
@@ -52,6 +64,12 @@ export function unwrap(
         // @ts-ignore
         r = r._def.innerType;
         break;
+      case z.ZodFirstPartyTypeKind.ZodLazy:
+        // @ts-ignore
+        r = r._def.getter();
+        break;
+      default:
+        assertNever(r._def.typeName);
     }
   }
 

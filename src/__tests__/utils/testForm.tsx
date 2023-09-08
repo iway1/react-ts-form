@@ -3,8 +3,20 @@ import { Control, useController } from "react-hook-form";
 import { z } from "zod";
 import { createUniqueFieldSchema } from "../../createFieldSchema";
 import { createTsForm } from "../../createSchemaForm";
+import { useTsController } from "../../FieldContext";
 
 export const textFieldTestId = "text-field";
+export const defaultTextInputTestId = "text-input";
+export const defaultBooleanInputTestId = "boolean-input";
+export const defaultNumberInputTestId = "number-input";
+export const errorMessageTestId = "error-message";
+
+export function ErrorMessage() {
+  const { error } = useTsController();
+  return !error ? null : (
+    <div data-testid={errorMessageTestId}>{error?.errorMessage}</div>
+  );
+}
 
 export function TextField(props: {
   control: Control<any>;
@@ -17,35 +29,72 @@ export function TextField(props: {
   const {
     field: { onChange, value },
   } = useController({ control: props.control, name: props.name });
+
   return (
     <div data-testid={textFieldTestId}>
       {label && <label>{label}</label>}
       <input
-        data-testid={props.testId}
+        name={props.name}
+        data-testid={props.testId || defaultTextInputTestId}
         onChange={(e) => {
           onChange(e.target.value);
         }}
         value={value ? value : ""}
         placeholder={placeholder}
       />
+      <ErrorMessage />
     </div>
   );
 }
 
-function BooleanField(props: {
+export function BooleanField(props: {
   control: Control<any>;
   name: string;
-  testId: string;
+  testId?: string;
 }) {
-  return <input data-testid={props.testId} />;
+  const {
+    field: { onChange, value },
+  } = useController({ control: props.control, name: props.name });
+  return (
+    <div>
+      <input
+        name={props.name}
+        data-testid={props.testId ?? defaultBooleanInputTestId}
+        type="checkbox"
+        checked={value}
+        onChange={(e) => {
+          onChange(e.target.checked);
+        }}
+      />
+      <ErrorMessage />
+    </div>
+  );
 }
 
-function NumberField(props: {
+export function NumberField(props: {
   control: Control<any>;
   name: string;
-  testId: string;
+  testId?: string;
+  suffix?: string;
 }) {
-  return <input data-testid={props.testId} />;
+  const {
+    field: { onChange, value },
+  } = useController({ control: props.control, name: props.name });
+  return (
+    <div>
+      <input
+        name={props.name}
+        data-testid={props.testId ?? defaultNumberInputTestId}
+        type="number"
+        value={value}
+        onChange={(e) => {
+          onChange(e.target.value);
+        }}
+      />
+      <div>{props.suffix}</div>
+      <ErrorMessage />
+    </div>
+  );
 }
 
 export const customFieldTestId = "custom";
@@ -59,6 +108,7 @@ function CustomTextField(props: {
   return (
     <div data-testid={customFieldTestId}>
       <input data-testid={props.testId} />
+      <ErrorMessage />
     </div>
   );
 }

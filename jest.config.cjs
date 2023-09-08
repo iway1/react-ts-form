@@ -1,6 +1,9 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
   preset: "ts-jest",
+  testTimeout: process.env.JEST_TIMEOUT
+    ? parseInt(process.env.JEST_TIMEOUT)
+    : undefined,
   testEnvironment: "jsdom",
   testPathIgnorePatterns: ["utils", "lib"],
   restoreMocks: true,
