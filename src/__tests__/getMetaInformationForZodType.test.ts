@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  getEnumValues,
   getMetaInformationForZodType,
   SPLIT_DESCRIPTION_SYMBOL,
 } from "../getMetaInformationForZodType";
@@ -58,4 +59,24 @@ describe("getMetaInformationForZodType", () => {
       placeholder: undefined,
     });
   });
+
+  it("should get the enum values if the schema is an enum", () => {
+    const result = getEnumValues(z.enum(["a", "b", "c"]));
+    expect(result).toStrictEqual(["a", "b", "c"]);
+  })
+
+  it("should get the enum values if the schema is an array of enums", () => {
+    const result = getEnumValues(z.array(z.enum(["a", "b", "c"])));
+    expect(result).toStrictEqual(["a", "b", "c"]);
+  })
+
+  it("should get the enum values if the schema is an array of enums 2", () => {
+    const result = getEnumValues(z.enum(["a", "b", "c"]).array());
+    expect(result).toStrictEqual(["a", "b", "c"]);
+  })
+
+  it("should return undefined if the schema is not an enum", () => {
+    const result = getEnumValues(z.string());
+    expect(result).toBeUndefined();
+  })
 });

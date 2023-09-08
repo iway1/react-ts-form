@@ -1,9 +1,16 @@
 # API
 
-- [createTsForm](#createtsform)
-- [createUniqueFieldSchema](#createuniquefieldschema)
-- [FormComponent](#formcomponent)
-- [Hooks](#hooks)
+- [API](#api)
+  - [createTsForm](#createtsform)
+    - [createTsForm params](#createtsform-params)
+  - [createUniqueFieldSchema](#createuniquefieldschema)
+  - [FormComponent](#formcomponent)
+    - [Props](#props)
+  - [Hooks](#hooks)
+    - [`useTsController`](#usetscontroller)
+    - [`useDescription`](#usedescription)
+    - [`useReqDescription`](#usereqdescription)
+    - [`useEnumValues` (**deprecated**, don't use)](#useenumvalues-deprecated-dont-use)
 
 ## createTsForm
 
@@ -203,5 +210,24 @@ function MyDropdown() {
 }
 const FormSchema = z.object({
   favoriteColor: z.enum(["red", "green", "blue"]),
+});
+```
+
+It can be used to extract the enum values passed to `z.enum()` from array of enums:
+
+```tsx
+function MyDropdown() {
+  const values = useEnumValues(); // ['red', 'green', 'blue']
+  return (
+    <select>
+      {values.map((e) => {
+        //...
+      })}
+    </select>
+  );
+}
+
+const FormSchema = z.object({
+  favoriteColors: z.array(z.enum(["red", "green", "blue"])),
 });
 ```

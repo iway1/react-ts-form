@@ -23,3 +23,22 @@ const FormSchema = z.object({
   favoriteColor: z.enum(["red", "green", "blue"]),
 });
 ```
+
+It can be used to extract the enum values passed to `z.enum()` from array of enums:
+
+```tsx
+function MyDropdown() {
+  const values = useEnumValues(); // ['red', 'green', 'blue']
+  return (
+    <select multiple>
+      {values.map((e) => {
+        //...
+      })}
+    </select>
+  );
+}
+
+const FormSchema = z.object({
+  favoriteColors: z.array(z.enum(["red", "green", "blue"])),
+});
+```
