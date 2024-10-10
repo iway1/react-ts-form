@@ -45,7 +45,7 @@ const AddressSchema = z.object({
 });
 
 const mapping = [
-  [z.string, TextField] as const,
+  [z.string(), TextField] as const,
   [AddressSchema, AddressEntryField] as const,
 ] as const;
 
