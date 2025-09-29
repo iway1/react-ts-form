@@ -1,85 +1,82 @@
-import React, { useContext, useEffect, useState } from "react";
-import { createContext, ReactNode } from "react";
+import React, {
+	createContext,
+	type ReactNode,
+	useContext,
+	useEffect,
+	useState,
+} from "react";
 import {
-  Control,
-  DeepPartial,
-  useController,
-  UseControllerReturn,
+	type Control,
+	type DeepPartial,
+	type UseControllerReturn,
+	useController,
 } from "react-hook-form";
-import { errorFromRhfErrorObject } from "./zodObjectErrors";
-import { RTFSupportedZodTypes } from "./supportedZodTypes";
-import { UnwrapZodType, unwrap } from "./unwrap";
-import {
-  RTFSupportedZodFirstPartyTypeKind,
-  RTFSupportedZodFirstPartyTypeKindMap,
-  isTypeOf,
-  isZodArray,
-  isZodDefaultDef,
-} from "./isZodTypeEqual";
+import * as z from "zod";
+import type { RTFSupportedZodTypes } from "./supportedZodTypes";
+import { unwrap } from "./unwrap";
 
 import {
-  PickPrimitiveObjectProperties,
-  pickPrimitiveObjectProperties,
+	pickPrimitiveObjectProperties,
 } from "./utilities";
-import { ZodDefaultDef } from "zod";
+import { errorFromRhfErrorObject } from "./zodObjectErrors";
 
 export const FieldContext = createContext<null | {
-  control: Control<any>;
-  name: string;
-  label?: string;
-  placeholder?: string;
-  enumValues?: string[];
-  zodType: RTFSupportedZodTypes;
-  addToCoerceUndefined: (v: string) => void;
-  removeFromCoerceUndefined: (v: string) => void;
+	control: Control<any>;
+	name: string;
+	label?: string;
+	placeholder?: string;
+	enumValues?: string[];
+	zodType: RTFSupportedZodTypes;
+	addToCoerceUndefined: (v: string) => void;
+	removeFromCoerceUndefined: (v: string) => void;
 }>(null);
 
 export function FieldContextProvider({
-  name,
-  control,
-  children,
-  label,
-  placeholder,
-  enumValues,
-  zodType,
-  addToCoerceUndefined,
-  removeFromCoerceUndefined,
+	name,
+	control,
+	children,
+	label,
+	placeholder,
+	enumValues,
+	zodType,
+	addToCoerceUndefined,
+	removeFromCoerceUndefined,
 }: {
-  name: string;
-  control: Control<any>;
-  label?: string;
-  placeholder?: string;
-  enumValues?: string[];
-  children: ReactNode;
-  zodType: RTFSupportedZodTypes;
-  addToCoerceUndefined: (v: string) => void;
-  removeFromCoerceUndefined: (v: string) => void;
+	name: string;
+	control: Control<any>;
+	label?: string;
+	placeholder?: string;
+	enumValues?: string[];
+	children: ReactNode;
+	zodType: RTFSupportedZodTypes;
+	addToCoerceUndefined: (v: string) => void;
+	removeFromCoerceUndefined: (v: string) => void;
 }) {
-  return (
-    <FieldContext.Provider
-      value={{
-        control,
-        name,
-        label,
-        placeholder,
-        enumValues,
-        zodType,
-        addToCoerceUndefined,
-        removeFromCoerceUndefined,
-      }}
-    >
-      {children}
-    </FieldContext.Provider>
-  );
+	return (
+		<FieldContext.Provider
+			value={{
+				control,
+				name,
+				label,
+				placeholder,
+				enumValues,
+				zodType,
+				addToCoerceUndefined,
+				removeFromCoerceUndefined,
+			}}
+		>
+			{children}
+		</FieldContext.Provider>
+	);
 }
 
 function useContextProt(name: string) {
-  const context = useContext(FieldContext);
-  if (!context)
-    throw Error(
-      `${name} must be called from within a FieldContextProvider... if you use this hook, the component must be rendered by @ts-react/form.`
-    );
-  return context;
+	const context = useContext(FieldContext);
+	if (!context)
+		throw Error(
+			`${name} must be called from within a FieldContextProvider... if you use this hook, the component must be rendered by @ts-react/form.`,
+		);
+	return context;
 }
 
 /**
@@ -99,62 +96,62 @@ function useContextProt(name: string) {
  *  </>
  * )
  */
-export function useTsController<FieldType extends any>() {
-  const context = useContextProt("useTsController");
-  type IsObj = FieldType extends Object ? true : false;
-  type OnChangeValue = IsObj extends true
-    ? DeepPartial<FieldType> | undefined
-    : FieldType | undefined;
-  // Just gives better types to useController
-  const controller = useController(context) as any as Omit<
-    UseControllerReturn,
-    "field"
-  > & {
-    field: Omit<UseControllerReturn["field"], "value" | "onChange"> & {
-      value: FieldType | undefined;
-      onChange: (value: OnChangeValue) => void;
-    };
-  };
-  const {
-    fieldState,
-    field: { onChange, value },
-  } = controller;
-  const [isUndefined, setIsUndefined] = useState(false);
+export function useTsController<FieldType>() {
+	const context = useContextProt("useTsController");
+	type IsObj = FieldType extends Object ? true : false;
+	type OnChangeValue = IsObj extends true
+		? DeepPartial<FieldType> | undefined
+		: FieldType | undefined;
+	// Just gives better types to useController
+	const controller = useController(context) as any as Omit<
+		UseControllerReturn,
+		"field"
+	> & {
+		field: Omit<UseControllerReturn["field"], "value" | "onChange"> & {
+			value: FieldType | undefined;
+			onChange: (value: OnChangeValue) => void;
+		};
+	};
+	const {
+		fieldState,
+		field: { onChange, value },
+	} = controller;
+	const [isUndefined, setIsUndefined] = useState(false);
 
-  function _onChange(value: OnChangeValue) {
-    if (value === undefined) {
-      setIsUndefined(true);
-      context.addToCoerceUndefined(context.name);
-    } else {
-      setIsUndefined(false);
-      context.removeFromCoerceUndefined(context.name);
-      onChange(value);
-    }
-  }
+	function _onChange(value: OnChangeValue) {
+		if (value === undefined) {
+			setIsUndefined(true);
+			context.addToCoerceUndefined(context.name);
+		} else {
+			setIsUndefined(false);
+			context.removeFromCoerceUndefined(context.name);
+			onChange(value);
+		}
+	}
 
-  useEffect(() => {
-    if (value && isUndefined) {
-      setIsUndefined(false);
-      context.removeFromCoerceUndefined(context.name);
-    }
-  }, [value]);
+	useEffect(() => {
+		if (value && isUndefined) {
+			setIsUndefined(false);
+			context.removeFromCoerceUndefined(context.name);
+		}
+	}, [value]);
 
-  return {
-    ...controller,
-    error: errorFromRhfErrorObject<FieldType>(fieldState.error),
-    field: {
-      ...controller.field,
-      value: isUndefined ? undefined : controller.field.value,
-      onChange: _onChange,
-    },
-  };
+	return {
+		...controller,
+		error: errorFromRhfErrorObject<FieldType>(fieldState.error),
+		field: {
+			...controller.field,
+			value: isUndefined ? undefined : controller.field.value,
+			onChange: _onChange,
+		},
+	};
 }
 
 export function requiredDescriptionDataNotPassedError(
-  name: string,
-  hookName: string
+	name: string,
+	hookName: string,
 ) {
-  return `No ${name} found when calling ${hookName}. Either pass it as a prop or pass it using the zod .describe() syntax.`;
+	return `No ${name} found when calling ${hookName}. Either pass it as a prop or pass it using the zod .describe() syntax.`;
 }
 
 /**
@@ -178,11 +175,11 @@ export function requiredDescriptionDataNotPassedError(
  * @returns `{label: string, placeholder: string}`
  */
 export function useDescription() {
-  const { label, placeholder } = useContextProt("useReqDescription");
-  return {
-    label,
-    placeholder,
-  };
+	const { label, placeholder } = useContextProt("useReqDescription");
+	return {
+		label,
+		placeholder,
+	};
 }
 
 /**
@@ -206,32 +203,35 @@ export function useDescription() {
  * @returns `{label: string, placeholder: string}`
  */
 export function useReqDescription() {
-  const { label, placeholder } = useContextProt("useReqDescription");
-  if (!label) {
-    throw new Error(
-      requiredDescriptionDataNotPassedError("label", "useReqDescription")
-    );
-  }
-  if (!placeholder) {
-    throw new Error(
-      requiredDescriptionDataNotPassedError("placeholder", "useReqDescription")
-    );
-  }
-  return {
-    label,
-    placeholder,
-  };
+	const { label, placeholder } = useContextProt("useReqDescription");
+	if (!label) {
+		throw new Error(
+			requiredDescriptionDataNotPassedError("label", "useReqDescription"),
+		);
+	}
+	if (!placeholder) {
+		throw new Error(
+			requiredDescriptionDataNotPassedError("placeholder", "useReqDescription"),
+		);
+	}
+	return {
+		label,
+		placeholder,
+	};
 }
 
 export function enumValuesNotPassedError() {
-  return `Enum values not passed. Any component that calls useEnumValues should be rendered from an '.enum()' zod field.`;
+	return `Enum values not passed. Any component that calls useEnumValues should be rendered from an '.enum()' zod field.`;
 }
 
 export function fieldSchemaMismatchHookError(
-  hookName: string,
-  { expectedType, receivedType }: { expectedType: string; receivedType: string }
+	hookName: string,
+	{
+		expectedType,
+		receivedType,
+	}: { expectedType: string; receivedType: string },
 ) {
-  return `Make sure that the '${hookName}' hook is being called inside of a custom form component which matches the correct type.
+	return `Make sure that the '${hookName}' hook is being called inside of a custom form component which matches the correct type.
   The expected type is '${expectedType}' but the received type was '${receivedType}'`;
 }
 
@@ -257,50 +257,40 @@ export function fieldSchemaMismatchHookError(
  * ```
  */
 export function useEnumValues() {
-  const { enumValues } = useContextProt("useEnumValues");
-  if (!enumValues) throw new Error(enumValuesNotPassedError());
-  return enumValues;
+	const { enumValues } = useContextProt("useEnumValues");
+	if (!enumValues) throw new Error(enumValuesNotPassedError());
+	return enumValues;
 }
 
-function getFieldInfo<
-  TZodType extends RTFSupportedZodTypes,
-  TUnwrapZodType extends UnwrapZodType<TZodType> = UnwrapZodType<TZodType>
->(zodType: TZodType) {
-  const { type, _rtf_id } = unwrap(zodType);
+function getFieldInfo(zodType: RTFSupportedZodTypes) {
+	const { type, _rtf_id } = unwrap(zodType);
 
-  function getDefaultValue() {
-    const def = zodType._def;
-    if (isZodDefaultDef(def)) {
-      const defaultValue = (def as ZodDefaultDef<TZodType>).defaultValue();
-      return defaultValue;
-    }
-    return undefined;
-  }
+	function getDefaultValue() {
+		if (type instanceof z.ZodDefault) {
+			const defaultValue = type._zod.def.defaultValue;
+			return defaultValue;
+		}
+	}
 
-  return {
-    type: type as TUnwrapZodType,
-    zodType,
-    uniqueId: _rtf_id ?? undefined,
-    isOptional: zodType.isOptional(),
-    isNullable: zodType.isNullable(),
-    defaultValue: getDefaultValue(),
-  };
+	return {
+		type: type as RTFSupportedZodTypes,
+		zodType,
+		uniqueId: _rtf_id ?? undefined,
+		isOptional: zodType.isOptional(),
+		isNullable: zodType.isNullable(),
+		defaultValue: getDefaultValue(),
+	};
 }
 
 /**
  * @internal
  */
-export function internal_useFieldInfo<
-  TZodType extends RTFSupportedZodTypes = RTFSupportedZodTypes,
-  TUnwrappedZodType extends UnwrapZodType<TZodType> = UnwrapZodType<TZodType>
->(hookName: string) {
-  const { zodType, label, placeholder } = useContextProt(hookName);
+export function internal_useFieldInfo(hookName: string) {
+	const { zodType, label, placeholder } = useContextProt(hookName);
 
-  const fieldInfo = getFieldInfo<TZodType, TUnwrappedZodType>(
-    zodType as TZodType
-  );
+	const fieldInfo = getFieldInfo(zodType);
 
-  return { ...fieldInfo, label, placeholder };
+	return { ...fieldInfo, label, placeholder };
 }
 
 /**
@@ -309,51 +299,34 @@ export function internal_useFieldInfo<
  * @returns The Zod type for the field.
  */
 export function useFieldInfo() {
-  return internal_useFieldInfo("useFieldInfo");
+	return internal_useFieldInfo("useFieldInfo");
 }
 
 /**
  * The zod type objects contain virtual properties which requires us to
  * manually pick the properties we'd like inorder to get their values.
  */
-export function usePickZodFields<
-  TZodKindName extends RTFSupportedZodFirstPartyTypeKind,
-  TZodType extends RTFSupportedZodFirstPartyTypeKindMap[TZodKindName] = RTFSupportedZodFirstPartyTypeKindMap[TZodKindName],
-  TUnwrappedZodType extends UnwrapZodType<TZodType> = UnwrapZodType<TZodType>,
-  TPick extends Partial<
-    PickPrimitiveObjectProperties<TUnwrappedZodType, true>
-  > = Partial<PickPrimitiveObjectProperties<TUnwrappedZodType, true>>
->(zodKindName: TZodKindName, pick: TPick, hookName: string) {
-  const fieldInfo = internal_useFieldInfo<TZodType, TUnwrappedZodType>(
-    hookName
-  );
+export function usePickZodFields(zodType: RTFSupportedZodTypes['_zod']['def']['type'], pick: object, hookName: string) {
+	const fieldInfo = internal_useFieldInfo(
+		hookName,
+	);
+  const { type: fieldInfoType } = fieldInfo;
 
-  function getType() {
-    const { type } = fieldInfo;
+  const type: RTFSupportedZodTypes = fieldInfoType instanceof z.ZodArray ? fieldInfoType._zod.def.element : fieldInfoType;
 
-    if (zodKindName !== "ZodArray" && isZodArray(type)) {
-      const element = type.element;
-      return element as any;
-    }
+	if (type._zod.def.type !== zodType) {
+		throw new Error(
+			fieldSchemaMismatchHookError(hookName, {
+				expectedType: zodType,
+				receivedType: type._zod.def.type,
+			}),
+		);
+	}
 
-    return type;
-  }
-
-  const type = getType();
-
-  if (!isTypeOf(type, zodKindName)) {
-    throw new Error(
-      fieldSchemaMismatchHookError(hookName, {
-        expectedType: zodKindName,
-        receivedType: type._def.typeName,
-      })
-    );
-  }
-
-  return {
-    ...pickPrimitiveObjectProperties<TUnwrappedZodType, TPick>(type, pick),
-    ...fieldInfo,
-  };
+	return {
+		...pickPrimitiveObjectProperties<RTFSupportedZodTypes, object>(type, pick),
+		...fieldInfo,
+	};
 }
 
 /**
@@ -370,24 +343,24 @@ export function usePickZodFields<
  * @returns Information for a ZodString field
  */
 export function useStringFieldInfo() {
-  return usePickZodFields(
-    "ZodString",
-    {
-      description: true,
-      isCUID: true,
-      isCUID2: true,
-      isDatetime: true,
-      isEmail: true,
-      isEmoji: true,
-      isIP: true,
-      isULID: true,
-      isURL: true,
-      isUUID: true,
-      maxLength: true,
-      minLength: true,
-    },
-    "useStringFieldInfo"
-  );
+	return usePickZodFields(
+		"string",
+		{
+			description: true,
+			isCUID: true,
+			isCUID2: true,
+			isDatetime: true,
+			isEmail: true,
+			isEmoji: true,
+			isIP: true,
+			isULID: true,
+			isURL: true,
+			isUUID: true,
+			maxLength: true,
+			minLength: true,
+		},
+		"useStringFieldInfo",
+	);
 }
 
 /**
@@ -403,13 +376,13 @@ export function useStringFieldInfo() {
  * @returns Information for a ZodArray field
  */
 export function useArrayFieldInfo() {
-  return usePickZodFields(
-    "ZodArray",
-    {
-      description: true,
-    },
-    "useArrayFieldInfo"
-  );
+	return usePickZodFields(
+		"array",
+		{
+			description: true,
+		},
+		"useArrayFieldInfo",
+	);
 }
 
 /**
@@ -425,20 +398,20 @@ export function useArrayFieldInfo() {
  * @returns Information for a ZodDate field
  */
 export function useDateFieldInfo() {
-  const result = usePickZodFields(
-    "ZodDate",
-    {
-      description: true,
-      maxDate: true,
-      minDate: true,
-    },
-    "useDateFieldInfo"
-  );
-  return {
-    ...result,
-    maxDate: result.type.maxDate,
-    minDate: result.type.minDate,
-  };
+	const result = usePickZodFields(
+		"date",
+		{
+			description: true,
+			maxDate: true,
+			minDate: true,
+		},
+		"useDateFieldInfo",
+	);
+	return {
+		...result,
+		maxDate: (result.type as z.ZodDate).maxDate,
+		minDate: (result.type as z.ZodDate).minDate,
+	};
 }
 
 /**
@@ -460,15 +433,15 @@ export function useDateFieldInfo() {
  * @returns Information for a ZodDate field
  */
 export function useNumberFieldInfo() {
-  return usePickZodFields(
-    "ZodNumber",
-    {
-      description: true,
-      isFinite: true,
-      isInt: true,
-      maxValue: true,
-      minValue: true,
-    },
-    "useNumberFieldInfo"
-  );
+	return usePickZodFields(
+		"number",
+		{
+			description: true,
+			isFinite: true,
+			isInt: true,
+			maxValue: true,
+			minValue: true,
+		},
+		"useNumberFieldInfo",
+	);
 }

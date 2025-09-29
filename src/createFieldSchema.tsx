@@ -1,5 +1,5 @@
-import { z, ZodBranded } from "zod";
-import { RTFSupportedZodTypes } from "./supportedZodTypes";
+import type * as z from "zod";
+import type { RTFSupportedZodTypes } from "./supportedZodTypes";
 
 export const HIDDEN_ID_PROPERTY = "_rtf_id";
 
@@ -7,34 +7,34 @@ export const HIDDEN_ID_PROPERTY = "_rtf_id";
  * @internal
  */
 export type HiddenProperties = {
-  [HIDDEN_ID_PROPERTY]: string;
+	[HIDDEN_ID_PROPERTY]: string;
 };
 
 /**
  * @internal
  */
 export type SchemaWithHiddenProperties<T extends RTFSupportedZodTypes> = T & {
-  _def: T["_def"] & HiddenProperties;
+	_def: T["_def"] & HiddenProperties;
 };
 
 export function isSchemaWithHiddenProperties<T extends RTFSupportedZodTypes>(
-  schemaType: T
+	schemaType: T,
 ): schemaType is SchemaWithHiddenProperties<T> {
-  return HIDDEN_ID_PROPERTY in schemaType._def;
+	return HIDDEN_ID_PROPERTY in schemaType._zod.def;
 }
 
 export function addHiddenProperties<
-  ID extends string,
-  T extends RTFSupportedZodTypes
+	ID extends string,
+	T extends RTFSupportedZodTypes,
 >(schema: T, properties: HiddenProperties) {
-  for (const key in properties) {
-    (schema._def as any)[key] = properties[key as keyof typeof properties];
-  }
-  return schema as ZodBranded<T, ID>;
+	for (const key in properties) {
+		(schema._def as any)[key] = properties[key as keyof typeof properties];
+	}
+	return schema as z.core.$ZodBranded<T, ID>;
 }
 
 export function duplicateIdErrorMessage(id: string) {
-  return `Duplicate id passed to createFieldSchema: ${id}. Ensure that each id is only being used once and that createFieldSchema is only called at the top level.`;
+	return `Duplicate id passed to createFieldSchema: ${id}. Ensure that each id is only being used once and that createFieldSchema is only called at the top level.`;
 }
 
 /**
@@ -57,11 +57,11 @@ export function duplicateIdErrorMessage(id: string) {
  * @returns A normal zod schema that will be uniquely identified in the zod-component mapping.
  */
 export function createUniqueFieldSchema<
-  T extends RTFSupportedZodTypes,
-  Identifier extends string
+	T extends RTFSupportedZodTypes,
+	Identifier extends string,
 >(schema: T, id: Identifier) {
-  const r = schema.brand<Identifier>();
-  return addHiddenProperties<Identifier, typeof r>(r, {
-    [HIDDEN_ID_PROPERTY]: id,
-  }) as z.ZodBranded<T, Identifier>;
+	const r = schema.brand<Identifier>();
+	return addHiddenProperties<Identifier, typeof r>(r, {
+		[HIDDEN_ID_PROPERTY]: id,
+	}) as z.core.$ZodBranded<T, Identifier>;
 }
