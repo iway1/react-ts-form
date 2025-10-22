@@ -7,28 +7,27 @@ import {
   UseControllerReturn,
 } from "react-hook-form";
 import { errorFromRhfErrorObject } from "./zodObjectErrors";
-import { RTFSupportedZodTypes } from "./supportedZodTypes";
+import { RTFSupportedZodTypes, ZodTypeInstance } from "./supportedZodTypes";
 import { UnwrapZodType, unwrap } from "./unwrap";
 import {
   RTFSupportedZodFirstPartyTypeKind,
   RTFSupportedZodFirstPartyTypeKindMap,
   isTypeOf,
   isZodArray,
-  isZodDefaultDef,
 } from "./isZodTypeEqual";
 
 import {
   PickPrimitiveObjectProperties,
   pickPrimitiveObjectProperties,
 } from "./utilities";
-import { ZodDefaultDef } from "zod";
+import { EnumValue } from "zod/v4/core/util.cjs";
 
 export const FieldContext = createContext<null | {
   control: Control<any>;
   name: string;
   label?: string;
   placeholder?: string;
-  enumValues?: string[];
+  enumValues?: readonly EnumValue[];
   zodType: RTFSupportedZodTypes;
   addToCoerceUndefined: (v: string) => void;
   removeFromCoerceUndefined: (v: string) => void;
@@ -49,7 +48,7 @@ export function FieldContextProvider({
   control: Control<any>;
   label?: string;
   placeholder?: string;
-  enumValues?: string[];
+  enumValues?: readonly EnumValue[];
   children: ReactNode;
   zodType: RTFSupportedZodTypes;
   addToCoerceUndefined: (v: string) => void;
@@ -269,10 +268,8 @@ function getFieldInfo<
   const { type, _rtf_id } = unwrap(zodType);
 
   function getDefaultValue() {
-    const def = zodType._def;
-    if (isZodDefaultDef(def)) {
-      const defaultValue = (def as ZodDefaultDef<TZodType>).defaultValue();
-      return defaultValue;
+    if ("defaultValue" in zodType.def) {
+      return zodType.def.defaultValue;
     }
     return undefined;
   }
@@ -319,7 +316,9 @@ export function useFieldInfo() {
 export function usePickZodFields<
   TZodKindName extends RTFSupportedZodFirstPartyTypeKind,
   TZodType extends RTFSupportedZodFirstPartyTypeKindMap[TZodKindName] = RTFSupportedZodFirstPartyTypeKindMap[TZodKindName],
-  TUnwrappedZodType extends UnwrapZodType<TZodType> = UnwrapZodType<TZodType>,
+  TUnwrappedZodType extends ZodTypeInstance<
+    UnwrapZodType<TZodType>
+  > = ZodTypeInstance<UnwrapZodType<TZodType>>,
   TPick extends Partial<
     PickPrimitiveObjectProperties<TUnwrappedZodType, true>
   > = Partial<PickPrimitiveObjectProperties<TUnwrappedZodType, true>>
@@ -331,7 +330,7 @@ export function usePickZodFields<
   function getType() {
     const { type } = fieldInfo;
 
-    if (zodKindName !== "ZodArray" && isZodArray(type)) {
+    if (zodKindName !== "array" && isZodArray(type)) {
       const element = type.element;
       return element as any;
     }
@@ -371,7 +370,7 @@ export function usePickZodFields<
  */
 export function useStringFieldInfo() {
   return usePickZodFields(
-    "ZodString",
+    "string",
     {
       description: true,
       isCUID: true,
@@ -404,7 +403,7 @@ export function useStringFieldInfo() {
  */
 export function useArrayFieldInfo() {
   return usePickZodFields(
-    "ZodArray",
+    "array",
     {
       description: true,
     },
@@ -426,7 +425,7 @@ export function useArrayFieldInfo() {
  */
 export function useDateFieldInfo() {
   const result = usePickZodFields(
-    "ZodDate",
+    "date",
     {
       description: true,
       maxDate: true,
@@ -461,7 +460,7 @@ export function useDateFieldInfo() {
  */
 export function useNumberFieldInfo() {
   return usePickZodFields(
-    "ZodNumber",
+    "number",
     {
       description: true,
       isFinite: true,

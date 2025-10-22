@@ -1,15 +1,15 @@
 import {
-  AnyZodObject,
+  ZodObject,
   ZodArray,
   ZodBoolean,
   ZodDate,
-  ZodDefaultDef,
-  ZodFirstPartyTypeKind,
   ZodNumber,
   ZodString,
-  z,
 } from "zod";
-import { RTFSupportedZodTypes } from "./supportedZodTypes";
+import {
+  RTFSupportedZodTypes,
+  ZodFormSupportedTypeStrings,
+} from "./supportedZodTypes";
 import { unwrap } from "./unwrap";
 
 export function isZodTypeEqual(
@@ -17,7 +17,7 @@ export function isZodTypeEqual(
   _b: RTFSupportedZodTypes
 ) {
   // Recursively check objects
-  // if typeNames are equal Unwrap Appropriate Types:
+  // if types are equal Unwrap Appropriate Types:
   // optional
 
   let { type: a, _rtf_id: idA } = unwrap(_a);
@@ -27,37 +27,33 @@ export function isZodTypeEqual(
     return idA === idB;
   }
 
-  if (a._def.typeName !== b._def.typeName) return false;
+  if (a.def.type !== b.def.type) return false;
 
   // array
 
-  if (
-    a._def.typeName === ZodFirstPartyTypeKind.ZodArray &&
-    b._def.typeName === ZodFirstPartyTypeKind.ZodArray
-  ) {
-    if (isZodTypeEqual(a._def.type, b._def.type)) return true;
+  if (a.def.type === "array" && b.def.type === "array") {
+    // TODO: this is any right now
+    if (isZodTypeEqual(a.def.element, b.def.element)) return true;
     return false;
   }
 
   // set
 
-  if (
-    a._def.typeName === ZodFirstPartyTypeKind.ZodSet &&
-    b._def.typeName === ZodFirstPartyTypeKind.ZodSet
-  ) {
-    if (isZodTypeEqual(a._def.valueType, b._def.valueType)) return true;
+  if (a.def.type === "set" && b.def.type === "set") {
+    // TODO: this is any right now
+    if (isZodTypeEqual(a.def.valueType, b.def.valueType)) return true;
     return false;
   }
 
   // map
 
-  if (
-    a._def.typeName === ZodFirstPartyTypeKind.ZodMap &&
-    b._def.typeName === ZodFirstPartyTypeKind.ZodMap
-  ) {
+  if (a.def.type === "map" && b.def.type === "map") {
     if (
-      isZodTypeEqual(a._def.keyType, b._def.keyType) &&
-      isZodTypeEqual(a._def.valueType, b._def.valueType)
+      isZodTypeEqual(a.def.keyType, b.def.keyType) &&
+      isZodTypeEqual(
+        a.def.valueType as RTFSupportedZodTypes,
+        b.def.valueType as RTFSupportedZodTypes
+      )
     )
       return true;
 
@@ -65,21 +61,21 @@ export function isZodTypeEqual(
   }
 
   // record
-  if (
-    a._def.typeName === ZodFirstPartyTypeKind.ZodRecord &&
-    b._def.typeName === ZodFirstPartyTypeKind.ZodRecord
-  ) {
-    if (isZodTypeEqual(a._def.valueType, b._def.valueType)) return true;
+  if (a.def.type === "record" && b.def.type === "record") {
+    // TODO: this is any right now
+    if (
+      isZodTypeEqual(a.def.valueType, b.def.valueType) &&
+      isZodTypeEqual(a.def.keyType, b.def.keyType)
+    )
+      return true;
     return false;
   }
 
   // tuple
-  if (
-    a._def.typeName === ZodFirstPartyTypeKind.ZodTuple &&
-    b._def.typeName === ZodFirstPartyTypeKind.ZodTuple
-  ) {
-    const itemsA = a._def.items;
-    const itemsB = b._def.items;
+  if (a.def.type === "tuple" && b.def.type === "tuple") {
+    // TODO: this is any right now
+    const itemsA = a.def.items;
+    const itemsB = b.def.items;
     if (itemsA.length !== itemsB.length) return false;
     for (let i = 0; i < itemsA.length; i++) {
       if (!isZodTypeEqual(itemsA[i], itemsB[i])) return false;
@@ -88,12 +84,10 @@ export function isZodTypeEqual(
   }
 
   // Recursively check if objects are equal
-  if (
-    a._def.typeName === ZodFirstPartyTypeKind.ZodObject &&
-    b._def.typeName === ZodFirstPartyTypeKind.ZodObject
-  ) {
-    const shapeA = a._def.shape();
-    const shapeB = b._def.shape();
+  if (a.def.type === "object" && b.def.type === "object") {
+    // TODO: this is any right now
+    const shapeA = a.def.shape;
+    const shapeB = b.def.shape;
     if (!shapeA || !shapeB) {
       if (!shapeA && !shapeB) return true;
       return false;
@@ -114,7 +108,14 @@ export function isZodTypeEqual(
     for (var key of keysA) {
       const valA = shapeA[key];
       const valB = shapeB[key];
-      if (!valB || !isZodTypeEqual(valA, valB)) return false;
+      if (
+        !valB ||
+        !isZodTypeEqual(
+          valA as RTFSupportedZodTypes,
+          valB as RTFSupportedZodTypes
+        )
+      )
+        return false;
     }
   }
   return true;
@@ -125,59 +126,49 @@ export function isZodTypeEqual(
 export function isZodString(
   zodType: RTFSupportedZodTypes
 ): zodType is ZodString {
-  return isTypeOf(zodType, "ZodString");
+  return isTypeOf(zodType, "string");
 }
 
 export function isZodNumber(
   zodType: RTFSupportedZodTypes
 ): zodType is ZodNumber {
-  return isTypeOf(zodType, "ZodNumber");
+  return isTypeOf(zodType, "number");
 }
 
 export function isZodBoolean(
   zodType: RTFSupportedZodTypes
 ): zodType is ZodBoolean {
-  return isTypeOf(zodType, "ZodBoolean");
+  return isTypeOf(zodType, "boolean");
 }
 
 export function isZodArray(
   zodType: RTFSupportedZodTypes
 ): zodType is ZodArray<any> {
-  return isTypeOf(zodType, "ZodArray");
+  return isTypeOf(zodType, "array");
 }
 
 export function isZodObject(
   zodType: RTFSupportedZodTypes
-): zodType is AnyZodObject {
-  return isTypeOf(zodType, "ZodObject");
-}
-
-export function isZodDefaultDef(zodDef: unknown): zodDef is ZodDefaultDef {
-  return Boolean(
-    zodDef &&
-      typeof zodDef === "object" &&
-      "defaultValue" in zodDef &&
-      typeof zodDef.defaultValue === "function"
-  );
+): zodType is ZodObject {
+  return isTypeOf(zodType, "object");
 }
 
 export function isZodDate(zodType: RTFSupportedZodTypes): zodType is ZodDate {
-  return isTypeOf(zodType, "ZodDate");
+  return isTypeOf(zodType, "date");
 }
 
-export function isTypeOf(zodType: RTFSupportedZodTypes, type: ZodKindName) {
-  return zodType._def.typeName === ZodFirstPartyTypeKind[type];
+export function isTypeOf(
+  zodType: RTFSupportedZodTypes,
+  type: ZodFormSupportedTypeStrings
+) {
+  return zodType.def.type === type;
 }
-
-type ZodKindName = keyof typeof z.ZodFirstPartyTypeKind;
-
-export type ZodKindNameToType<K extends keyof typeof z.ZodFirstPartyTypeKind> =
-  InstanceType<(typeof z)[K]>;
 
 export type RTFSupportedZodFirstPartyTypeKindMap = {
-  [K in ZodKindName as ZodKindNameToType<K> extends RTFSupportedZodTypes
-    ? K
-    : never]: ZodKindNameToType<K>;
+  [K in RTFSupportedZodTypes["def"]["type"]]: Extract<
+    RTFSupportedZodTypes,
+    { def: { type: K } }
+  >;
 };
 
 export type RTFSupportedZodFirstPartyTypeKind =

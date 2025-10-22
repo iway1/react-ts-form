@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 import type { FormComponentMapping } from "./createSchemaForm";
 import { RTFBaseZodType, RTFSupportedZodTypes } from "./supportedZodTypes";
 import { UnwrapZodType } from "./unwrap";
@@ -55,7 +55,7 @@ export type SafeOmit<T, Key extends keyof T> = IsEmpty<
 /**
  * @internal
  */
-export type DistributiveOmit<T, K extends keyof T> = T extends T
+export type DistributiveOmit<T, K extends keyof any> = T extends T
   ? // Typescript actually is fine with Omit<T, K>, but this is surprising because
     // K might include elements that are not in every member of the union T. In other words,
     // K does not extend keyof T.
@@ -72,12 +72,8 @@ export type Indexes<V extends readonly any[]> = {
 /**
  * @internal
  */
-export type UnwrapZodBrand<T extends RTFBaseZodType> = T extends z.ZodBranded<
-  z.ZodTypeAny,
-  infer ID
->
-  ? ID
-  : T;
+export type UnwrapZodBrand<T extends RTFBaseZodType> =
+  T extends z.core.$ZodBranded<z.ZodTypeAny, infer ID> ? ID : T;
 
 /**
  * @internal
@@ -92,7 +88,7 @@ export type UnwrapMapping<T extends FormComponentMapping> = {
  * @internal
  */
 export type IndexOfUnwrapZodType<T extends RTFSupportedZodTypes> =
-  T extends z.ZodBranded<z.ZodTypeAny, infer ID> ? ID : UnwrapZodType<T>;
+  T extends z.core.$ZodBranded<z.ZodTypeAny, infer ID> ? ID : UnwrapZodType<T>;
 
 /**
  * @internal

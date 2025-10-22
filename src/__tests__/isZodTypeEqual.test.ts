@@ -227,15 +227,22 @@ describe("isZodTypeEqual", () => {
     expect(isZodTypeEqual(A, B)).toStrictEqual(true);
   });
   //records
-  it("should return false if two records with different types are compared", () => {
-    const A = z.record(z.string());
-    const B = z.record(z.number());
+  it("should return false if two records with different value types are compared", () => {
+    const A = z.record(z.string(), z.string());
+    const B = z.record(z.string(), z.number());
 
     expect(isZodTypeEqual(A, B)).toStrictEqual(false);
   });
+  it("should return false if two records with different key types are compared", () => {
+    const A = z.record(z.string(), z.string());
+    const B = z.record(z.number(), z.string());
+
+    expect(isZodTypeEqual(A, B)).toStrictEqual(false);
+  });
+
   it("should return true if two records with the same types are compared", () => {
-    const A = z.record(z.string());
-    const B = z.record(z.string());
+    const A = z.record(z.string(), z.string());
+    const B = z.record(z.string(), z.string());
 
     expect(isZodTypeEqual(A, B)).toStrictEqual(true);
   });

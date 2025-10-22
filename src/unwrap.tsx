@@ -1,32 +1,14 @@
-import {
-  z,
-  ZodArray,
-  ZodDefault,
-  ZodEnum,
-  ZodNullable,
-  ZodOptional,
-} from "zod";
+import { ZodArray, ZodEnum } from "zod";
 import {
   HIDDEN_ID_PROPERTY,
   isSchemaWithHiddenProperties,
 } from "./createFieldSchema";
 import { RTFSupportedZodTypes } from "./supportedZodTypes";
 
-const unwrappable = new Set<z.ZodFirstPartyTypeKind>([
-  z.ZodFirstPartyTypeKind.ZodOptional,
-  z.ZodFirstPartyTypeKind.ZodNullable,
-  z.ZodFirstPartyTypeKind.ZodBranded,
-  z.ZodFirstPartyTypeKind.ZodDefault,
-]);
-
 export type UnwrappedRTFSupportedZodTypes = {
   type: RTFSupportedZodTypes;
   [HIDDEN_ID_PROPERTY]: string | null;
 };
-
-const type = z.string().optional().default('').nullable()
-
-const a = type.unwrap()
 
 export function unwrap(
   type: RTFSupportedZodTypes
@@ -34,31 +16,20 @@ export function unwrap(
   // Realized zod has a built in "unwrap()" function after writing this.
   // Not sure if it's super necessary.
   let r = type;
-  
+
   let unwrappedHiddenId: null | string = null;
-  while (unwrappable.has(r._def.typeName)) {
+  while ("unwrap" in r && !("element" in r)) {
     if (isSchemaWithHiddenProperties(r)) {
-      unwrappedHiddenId = r._def[HIDDEN_ID_PROPERTY];
+      unwrappedHiddenId = r.def[HIDDEN_ID_PROPERTY];
     }
-    switch (r._def.typeName) {
-      case z.ZodFirstPartyTypeKind.ZodOptional:
-        r = r._def.innerType;
-        break;
-      case z.ZodFirstPartyTypeKind.ZodNullable:
-        r = r._def.innerType;
-        break;
-      // @ts-ignore
-      case z.ZodFirstPartyTypeKind.ZodDefault:
-        // @ts-ignore
-        r = r._def.innerType;
-        break;
-    }
+
+    r = r.unwrap();
   }
 
   let innerHiddenId: null | string = null;
 
   if (isSchemaWithHiddenProperties(r)) {
-    innerHiddenId = r._def[HIDDEN_ID_PROPERTY];
+    innerHiddenId = r.def[HIDDEN_ID_PROPERTY];
   }
 
   return {
@@ -87,8 +58,8 @@ export type UnwrapZodType<
   Level extends UnwrapPreviousLevel[number] = UnwrapMaxRecursionDepth
 > = [Level] extends [never]
   ? never
-  : T extends ZodOptional<any> | ZodNullable<any> | ZodDefault<any>
-  ? UnwrapZodType<T["_def"]["innerType"], UnwrapPreviousLevel[Level]>
+  : T extends { unwrap: () => any; element?: never }
+  ? UnwrapZodType<ReturnType<T["unwrap"]>, UnwrapPreviousLevel[Level]>
   : T extends ZodArray<any>
   ? // allow another 3 levels of recursion for the array
     ZodArray<UnwrapZodType<T["element"], UnwrapMaxRecursionDepth>>

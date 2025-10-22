@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { RTFSupportedZodTypes } from "./supportedZodTypes";
 import { unwrap } from "./unwrap";
 
@@ -17,8 +16,8 @@ export function parseDescription(description?: string) {
 }
 
 export function getEnumValues(type: RTFSupportedZodTypes) {
-  if (!(type._def.typeName === z.ZodFirstPartyTypeKind.ZodEnum)) return;
-  return type._def.values as readonly string[];
+  if (!(type.type === "enum")) return;
+  return type.options;
 }
 
 function isSchemaWithUnwrapMethod(
@@ -29,10 +28,10 @@ function isSchemaWithUnwrapMethod(
 
 function recursivelyGetDescription(type: RTFSupportedZodTypes) {
   let t = type;
-  if (t._def.description) return t._def.description;
+  if (t.description) return t.description;
   while (isSchemaWithUnwrapMethod(t)) {
     t = t.unwrap();
-    if (t._def.description) return t._def.description;
+    if (t.description) return t.description;
   }
   return;
 }

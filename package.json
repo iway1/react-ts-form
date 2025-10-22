@@ -9,6 +9,7 @@
 	"scripts": {
 		"dev": "jest --watchAll",
 		"test:cov": "jest --coverage",
+    "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
 		"test": "jest",
 		"build": "npx rollup -c rollup.config.js",
 		"build-test:dryrun": "act -j build-test -P ubuntu-latest=ghcr.io/catthehacker/ubuntu:js-latest",
@@ -26,7 +27,7 @@
 	},
 	"homepage": "https://github.com/iway1/react-ts-form#readme",
 	"devDependencies": {
-		"@hookform/resolvers": "^2.9.10",
+		"@hookform/resolvers": "^5.2.2",
 		"@rollup/plugin-terser": "^0.2.1",
 		"@rollup/plugin-typescript": "^10.0.1",
 		"@testing-library/jest-dom": "^5.16.5",
@@ -42,7 +43,7 @@
 		"prettier": "^2.8.4",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
-		"react-hook-form": "^7.41.3",
+		"react-hook-form": "^7.63.0",
 		"ts-jest": "^29.0.3",
 		"tslib": "^2.4.1",
 		"typescript": "^5.9.0",
