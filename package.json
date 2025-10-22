@@ -1,6 +1,6 @@
 {
-	"name": "@ts-react/form",
-	"version": "1.0.6",
+	"name": "zod-form",
+	"version": "2.0.0-alpha.1",
 	"description": "Build forms faster!",
 	"module": "lib/index.mjs",
 	"main": "lib/index.cjs",
