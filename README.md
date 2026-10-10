@@ -1,3 +1,8 @@
+> [!CAUTION]
+> **This project is no longer maintained and should not be used.**
+>
+> This repository has been archived. `@ts-react/form` will not receive bug fixes, security patches, or updates, and issues and pull requests are no longer accepted.
+
 ![banner](https://user-images.githubusercontent.com/12774588/210178528-2eb928f9-fbad-414b-9f69-a57550d05363.png)
 
 <p align="center">Build maintainable, typesafe forms faster 🏃💨</p>
